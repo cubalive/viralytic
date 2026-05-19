@@ -1,0 +1,20 @@
+{
+  "name": "@viralytic/workers",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node --import=tsx/esm src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bullmq": "^5.10.0",
+    "ioredis": "^5.4.0",
+    "dotenv": "^16.4.0",
+    "@viralytic/db": "workspace:*",
+    "@viralytic/shared": "workspace:*",
+    "@viralytic/ai": "workspace:*",
+    "@viralytic/integrations": "workspace:*",
+    "@viralytic/scrapers": "workspace:*"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@viralytic/db": [
+        "../../packages/db/src"
+      ],
+      "@viralytic/shared": [
+        "../../packages/shared/src"
+      ],
+      "@viralytic/ai": [
+        "../../packages/ai/src"
+      ],
+      "@viralytic/integrations": [
+        "../../packages/integrations/src"
+      ],
+      "@viralytic/scrapers": [
+        "../../packages/scrapers/src"
+      ],
+      "@viralytic/video": [
+        "../../packages/video/src"
+      ]
+    },
+    "allowJs": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

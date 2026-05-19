@@ -1,0 +1,22 @@
+{
+  "name": "viralytic",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > packages/db/src/types.ts",
+    "workers:dev": "pnpm --filter @viralytic/workers dev",
+    "web:dev": "pnpm --filter @viralytic/web dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0"
+  }
+}

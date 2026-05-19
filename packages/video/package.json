@@ -1,0 +1,22 @@
+{
+  "name": "@viralytic/video",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "render": "remotion render TikTokVideo out.mp4",
+    "preview": "remotion preview src/Root.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "remotion": "^4.0.200",
+    "@remotion/cli": "^4.0.200",
+    "@remotion/bundler": "^4.0.200",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@viralytic/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0"
+  }
+}
