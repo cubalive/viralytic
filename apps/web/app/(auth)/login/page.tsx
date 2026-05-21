@@ -5,22 +5,39 @@ import { ArrowUpRight, Check } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const getClient = () => createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+
+  const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
-    await supabase.auth.signInWithOtp({
+    await getClient().auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${window.location.origin}/api/auth/callback` },
     });
     setSent(true);
     setLoading(false);
+  };
+
+  const handlePassword = async () => {
+    setError(null);
+    setPwLoading(true);
+    const { error: signInError } = await getClient().auth.signInWithPassword({ email, password });
+    if (signInError) {
+      setError(signInError.message);
+      setPwLoading(false);
+      return;
+    }
+    window.location.href = '/trending';
   };
 
   return (
@@ -49,18 +66,41 @@ export default function LoginPage() {
             <p className="text-zinc-500 text-sm">We sent a magic link to <span className="text-zinc-300">{email}</span>. Click it to continue.</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              type="email" required value={email} onChange={e => setEmail(e.target.value)}
-              placeholder="you@founder.com"
-              className="w-full bg-graphite-50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-magenta focus:outline-none transition"
-            />
-            <button type="submit" disabled={loading || !email}
-              className="w-full py-3.5 bg-magenta hover:bg-magenta-600 disabled:opacity-40 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2 group">
-              {loading ? 'Sending...' : 'Send magic link'}
-              <ArrowUpRight size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition" />
-            </button>
-          </form>
+          <>
+            <form onSubmit={handleMagicLink} className="space-y-3">
+              <input
+                type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="you@founder.com"
+                className="w-full bg-graphite-50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-magenta focus:outline-none transition"
+              />
+              <button type="submit" disabled={loading || !email}
+                className="w-full py-3.5 bg-magenta hover:bg-magenta-600 disabled:opacity-40 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2 group">
+                {loading ? 'Sending...' : 'Send magic link'}
+                <ArrowUpRight size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition" />
+              </button>
+            </form>
+
+            <div className="my-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">or continue with password</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+
+            <div className="space-y-3">
+              <input
+                type="password" value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full bg-graphite-50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-magenta focus:outline-none transition"
+              />
+              <button type="button" onClick={handlePassword} disabled={pwLoading || !email || !password}
+                className="w-full py-3.5 border border-white/10 hover:bg-white/5 disabled:opacity-40 text-zinc-200 font-medium rounded-xl transition">
+                {pwLoading ? 'Signing in...' : 'Sign in with password'}
+              </button>
+              {error && (
+                <p className="text-sm text-red-400">{error}</p>
+              )}
+            </div>
+          </>
         )}
 
         <p className="text-zinc-600 text-xs mt-12 font-mono uppercase tracking-widest">
