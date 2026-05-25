@@ -1,9 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { ArrowUpRight, Check } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get('error');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [sent, setSent] = useState(false);
@@ -59,6 +62,12 @@ export default function LoginPage() {
         <h1 className="font-display text-5xl leading-tight mb-3">Welcome <span className="italic">back.</span></h1>
         <p className="text-zinc-400 mb-10">Sign in with a magic link. No password.</p>
 
+        {urlError && (
+          <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-400">
+            {urlError}
+          </div>
+        )}
+
         {sent ? (
           <div className="p-6 bg-graphite-50 border border-white/5 rounded-2xl">
             <Check className="text-neon mb-3" size={24} />
@@ -108,5 +117,13 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
