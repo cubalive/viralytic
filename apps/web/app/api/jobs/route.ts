@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseServer, getActiveOrgId } from '@/lib/supabase';
-import { VideoModeSchema } from '@viralytic/shared';
+import { VideoModeSchema, logger } from '@viralytic/shared';
+import { enqueueProductAnalysis } from '@/lib/queue';
 
 const BodySchema = z.object({
   productUrl: z.string().url(),
@@ -15,7 +16,6 @@ export async function POST(req: Request) {
 
   const body = BodySchema.parse(await req.json());
 
-  // Create product placeholder
   const { data: product, error: pErr } = await supabase
     .from('products').insert({
       organization_id: orgId,
@@ -24,7 +24,6 @@ export async function POST(req: Request) {
     }).select().single();
   if (pErr) return new NextResponse(pErr.message, { status: 500 });
 
-  // Create job
   const { data: job, error: jErr } = await supabase
     .from('video_jobs').insert({
       organization_id: orgId,
@@ -34,11 +33,17 @@ export async function POST(req: Request) {
     }).select().single();
   if (jErr) return new NextResponse(jErr.message, { status: 500 });
 
-  // Enqueue the pipeline (call workers HTTP endpoint OR add to BullMQ directly)
-  // For now, the worker process picks it up via polling. Cleaner: REST trigger.
-  // TODO: POST to /workers/trigger with jobId
-
-  return NextResponse.json({ jobId: job.id });
+  try {
+    await enqueueProductAnalysis({ jobId: job.id, productId: product.id });
+    return NextResponse.json({ jobId: job.id, queued: true });
+  } catch (err) {
+    logger.error({ err, jobId: job.id }, 'queue.enqueue_failed');
+    return NextResponse.json({
+      jobId: job.id,
+      queued: false,
+      message: 'Job created but not enqueued. Stays in pending for manual retry.',
+    });
+  }
 }
 
 function detectPlatform(url: string): string {

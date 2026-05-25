@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseServer, getActiveOrgId } from '@/lib/supabase';
-import { VideoModeSchema } from '@viralytic/shared';
+import { VideoModeSchema, logger } from '@viralytic/shared';
+import { enqueueProductAnalysis } from '@/lib/queue';
 
 const JsonBodySchema = z.object({
   // Accept both the documented name and the field the trending page form sends.
@@ -57,7 +58,6 @@ export async function POST(req: Request) {
     }).select('id').single();
   if (pErr) return new NextResponse(pErr.message, { status: 500 });
 
-  // Create the job. Enqueue to BullMQ is handled by another phase.
   const { data: job, error: jErr } = await supabase
     .from('video_jobs').insert({
       organization_id: orgId,
@@ -67,11 +67,19 @@ export async function POST(req: Request) {
     }).select('id').single();
   if (jErr) return new NextResponse(jErr.message, { status: 500 });
 
+  let queued = true;
+  try {
+    await enqueueProductAnalysis({ jobId: job.id, productId: product.id });
+  } catch (err) {
+    queued = false;
+    logger.error({ err, jobId: job.id }, 'queue.enqueue_failed');
+  }
+
   // PRG redirect for the native form submit; JSON for programmatic callers.
   if (isForm) {
     return NextResponse.redirect(new URL(`/jobs/${job.id}`, req.url), 303);
   }
-  return NextResponse.json({ jobId: job.id });
+  return NextResponse.json({ jobId: job.id, queued });
 }
 
 function detectPlatform(url: string | null | undefined): string {
