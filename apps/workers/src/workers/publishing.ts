@@ -3,7 +3,7 @@ import { WORKER_DEFAULTS, type JobPayload } from '../queues';
 import { tiktok } from '@viralytic/integrations';
 import { getServiceClient } from '@viralytic/db';
 import { setStatus } from '../lib/orchestrator';
-import { QUEUE_NAMES, logger } from '@viralytic/shared';
+import { QUEUE_NAMES, logger, decrypt } from '@viralytic/shared';
 
 export const publishingWorker = new Worker<JobPayload['publishing']>(
   QUEUE_NAMES.publishing,
@@ -25,8 +25,7 @@ export const publishingWorker = new Worker<JobPayload['publishing']>(
 
     const videoUrl = asset.public_url ?? db.storage.from('assets').getPublicUrl(asset.storage_path).data.publicUrl;
 
-    // TODO: decrypt access_token_encrypted
-    const accessToken = account.access_token_encrypted; // placeholder
+    const accessToken = decrypt(account.access_token_encrypted);
 
     const { publishId } = await tiktok.postVideo({
       accessToken,
