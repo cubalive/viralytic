@@ -12,8 +12,9 @@ export interface ClaudeCallOptions<T> {
   schema: z.ZodType<T>;
   model?: string;
   maxTokens?: number;
-  /** Accepted for backwards-compat but NOT sent: current Opus/Sonnet models
-   *  reject a custom `temperature` (HTTP 400 "temperature is deprecated"). */
+  /** Forwarded only to models that accept it. Verified against the live API:
+   *  Opus 4.7/4.8 reject a custom `temperature` (HTTP 400 "deprecated");
+   *  Sonnet/Haiku accept 0–1. See the model guard in callClaude. */
   temperature?: number;
 }
 
@@ -60,7 +61,11 @@ export async function callClaude<T>(opts: ClaudeCallOptions<T>): Promise<{
     schema,
     model = DEFAULT_MODEL,
     maxTokens = 4096,
+    temperature,
   } = opts;
+
+  // Opus 4.7/4.8 reject a custom temperature (HTTP 400); Sonnet/Haiku accept it.
+  const acceptsTemperature = !model.includes('opus');
 
   // Convert zod schema to JSON Schema for the tool definition
   // (uses zod-to-json-schema package, kept simple here)
@@ -71,6 +76,7 @@ export async function callClaude<T>(opts: ClaudeCallOptions<T>): Promise<{
     const response = await client.messages.create({
       model,
       max_tokens: maxTokens,
+      ...(temperature !== undefined && acceptsTemperature ? { temperature } : {}),
       system: systemPrompt,
       tools: [{
         name: 'return_structured_output',
