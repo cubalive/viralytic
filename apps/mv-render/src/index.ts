@@ -388,9 +388,13 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     // only that scene's voice — fits the plan's per-clip limit AND aligns the
     // mouth to the right lyric (the full 131s vocal both exceeded the plan and
     // synced the wrong segment).
-    const hasCloseup = scenes.some((s: any) => s.is_closeup);
+    // Only need the vocal if some closeup still has to be synced (no cached
+    // lipsync for THIS language). If every closeup is already synced, skip the
+    // download entirely — and we never touch sync.so again.
+    const needsVocal = scenes.some((s: any) => s.is_closeup &&
+      !(s.lipsync_clip_path && String(s.lipsync_clip_path).endsWith(`_${vl.language}.mp4`)));
     const vocalLocal = path.join(dir, 'vocal_full.wav');
-    if (hasCloseup) {
+    if (needsVocal) {
       const vocalUrl = await signedUrl(vl.vocal_stem_url ?? vl.music_url);
       await fs.writeFile(vocalLocal, await download(vocalUrl));
     }
@@ -422,21 +426,27 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
         scene.veo_clip_path = veoPath;
       }
 
-      // Lip-sync IS language-specific. mv_scenes is per-video, so we never reuse
-      // lipsync across languages — always re-run sync.so with this language's
-      // vocal, storing a language-suffixed object.
+      // Lip-sync IS language-specific (stored as a language-suffixed object on
+      // the per-video scene row). It's idempotent and sync.so is pay/quota-
+      // limited, so reuse this language's cached clip if present — re-running
+      // sync.so on an already-synced scene burned the free quota and caused 402s.
       let clipBuf = veoBuf;
       if (scene.is_closeup) {
-        // Cut THIS scene's vocal window, capped at the Veo clip's real duration
-        // so audio and video are ~equal length (sync.so needs that to align).
-        const veoLocal = path.join(dir, `scene_${scene.ordinal}_veo.mp4`);
-        await fs.writeFile(veoLocal, veoBuf);
-        const clipDur = await probeDuration(veoLocal);
-        const segUrl = await sceneVocalSegmentUrl(dir, vl, scene, vocalLocal, clipDur);
-        clipBuf = await sync(await signedUrl(scene.veo_clip_path), segUrl);
         const lsPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}_lipsync_${vl.language}.mp4`;
-        await db.storage.from(cfg.bucket).upload(lsPath, clipBuf, { contentType: 'video/mp4', upsert: true });
-        await db.from('mv_scenes').update({ lipsync_clip_path: lsPath }).eq('id', scene.id);
+        if (scene.lipsync_clip_path && String(scene.lipsync_clip_path).endsWith(`_${vl.language}.mp4`)) {
+          clipBuf = await download(await signedUrl(scene.lipsync_clip_path));
+          log('lipsync.reused', { vlId: vl.id, ordinal: scene.ordinal });
+        } else {
+          // Cut THIS scene's vocal window, capped at the Veo clip's real duration
+          // so audio and video are ~equal length (sync.so needs that to align).
+          const veoLocal = path.join(dir, `scene_${scene.ordinal}_veo.mp4`);
+          await fs.writeFile(veoLocal, veoBuf);
+          const clipDur = await probeDuration(veoLocal);
+          const segUrl = await sceneVocalSegmentUrl(dir, vl, scene, vocalLocal, clipDur);
+          clipBuf = await sync(await signedUrl(scene.veo_clip_path), segUrl);
+          await db.storage.from(cfg.bucket).upload(lsPath, clipBuf, { contentType: 'video/mp4', upsert: true });
+          await db.from('mv_scenes').update({ lipsync_clip_path: lsPath }).eq('id', scene.id);
+        }
       }
 
       await fs.writeFile(scenePath, clipBuf);
@@ -583,17 +593,28 @@ async function tick(): Promise<void> {
     }
   }
 
-  // Completion: ready only when zero variants remain unrendered; otherwise back
-  // to generating so a later tick retries the failed ones.
-  const { count } = await db
-    .from('mv_video_languages').select('id', { count: 'exact', head: true }).eq('video_id', video.id).neq('status', 'rendered');
-  if (count === 0) {
-    await db.from('mv_videos').update({ status: 'ready' }).eq('id', video.id);
-    log('video.ready', { videoId: video.id });
-  } else {
-    await db.from('mv_videos').update({ status: 'generating' }).eq('id', video.id);
-    log('video.incomplete', { videoId: video.id, remaining: count });
-  }
+  // Completion. Re-queue to 'generating' ONLY if real renderable work remains —
+  // a variant that HAS audio and is neither rendered nor failed. Variants with
+  // no audio are just waiting (not loopable), and failed ones must NOT auto-retry
+  // (that was the infinite, quota-burning loop). So:
+  //   • all rendered                  -> ready
+  //   • renderable pending exists      -> generating (legit next pass)
+  //   • otherwise (only awaiting-audio
+  //     and/or failed remain)          -> failed if any failed, else ready
+  // Awaiting-audio languages render on a later, user-triggered pass once their
+  // music_url is set (re-arm by setting the video back to 'generating').
+  const { data: vls } = await db
+    .from('mv_video_languages').select('status, music_url').eq('video_id', video.id);
+  const all = vls ?? [];
+  const allRendered = all.length > 0 && all.every((v: any) => v.status === 'rendered');
+  const renderablePending = all.some((v: any) => v.music_url && v.status !== 'rendered' && v.status !== 'failed');
+  const anyFailed = all.some((v: any) => v.status === 'failed');
+  let next: string;
+  if (allRendered) next = 'ready';
+  else if (renderablePending) next = 'generating';
+  else next = anyFailed ? 'failed' : 'ready';
+  await db.from('mv_videos').update({ status: next }).eq('id', video.id);
+  log('video.completion', { videoId: video.id, next, rendered: all.filter((v: any) => v.status === 'rendered').length, total: all.length, anyFailed });
 }
 
 async function main(): Promise<void> {
