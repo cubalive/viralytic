@@ -277,6 +277,40 @@ async function ffmpeg(args: string[]): Promise<void> {
   await exec('ffmpeg', ['-y', ...args], { maxBuffer: 1 << 26 });
 }
 
+async function probeDuration(file: string): Promise<number> {
+  try {
+    const { stdout } = await exec('ffprobe', [
+      '-v', 'error', '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1', file,
+    ], { maxBuffer: 1 << 20 });
+    return Number(String(stdout).trim()) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Build the per-scene vocal segment for lip-sync: trim the full vocal to this
+ * closeup's window [start_seconds, +duration_seconds], capped at the Veo clip's
+ * real length so sync.so receives audio that matches the video duration (and
+ * stays under the plan's per-clip limit). Uploads to a scratch path and returns
+ * a signed URL; the scratch object is removed in renderVideoLanguage's finally.
+ */
+async function sceneVocalSegmentUrl(
+  dir: string, vl: any, scene: any, vocalLocal: string, clipDurationSeconds: number,
+): Promise<string> {
+  const start = Math.max(0, Number(scene.start_seconds) || 0);
+  const window = Number(scene.duration_seconds) || clipDurationSeconds || 8;
+  const len = Math.min(window, clipDurationSeconds || window);
+  const segLocal = path.join(dir, `scene_${scene.ordinal}_vocal.wav`);
+  // -ss before -i: fast seek; re-encode to pcm so the cut is sample-accurate.
+  await ffmpeg(['-ss', String(start), '-i', vocalLocal, '-t', String(len), '-c:a', 'pcm_s16le', segLocal]);
+  const segPath = `mv/_tmp/${vl.id}/scene_${scene.ordinal}_vocal_${vl.language}.wav`;
+  await db.storage.from(cfg.bucket).upload(segPath, await fs.readFile(segLocal), { contentType: 'audio/wav', upsert: true });
+  log('sync.segment', { vlId: vl.id, ordinal: scene.ordinal, start, len });
+  return await signedUrl(segPath);
+}
+
 async function assemble(opts: {
   dir: string;
   sceneClips: string[];     // ordered local mp4 paths
@@ -349,7 +383,17 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
       .from('mv_scenes').select('*').eq('video_id', video.id).order('ordinal', { ascending: true });
     if (!scenes?.length) throw new Error('No scenes planned for this video');
 
-    const vocalUrl = await signedUrl(vl.vocal_stem_url ?? vl.music_url);
+    // For closeups we lip-sync per scene: download the full vocal once, then
+    // trim each closeup's window (capped at its Veo clip length) so sync.so gets
+    // only that scene's voice — fits the plan's per-clip limit AND aligns the
+    // mouth to the right lyric (the full 131s vocal both exceeded the plan and
+    // synced the wrong segment).
+    const hasCloseup = scenes.some((s: any) => s.is_closeup);
+    const vocalLocal = path.join(dir, 'vocal_full.wav');
+    if (hasCloseup) {
+      const vocalUrl = await signedUrl(vl.vocal_stem_url ?? vl.music_url);
+      await fs.writeFile(vocalLocal, await download(vocalUrl));
+    }
     const sceneClips: string[] = [];
 
     for (const scene of scenes) {
@@ -383,7 +427,13 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
       // vocal, storing a language-suffixed object.
       let clipBuf = veoBuf;
       if (scene.is_closeup) {
-        clipBuf = await sync(await signedUrl(scene.veo_clip_path), vocalUrl);
+        // Cut THIS scene's vocal window, capped at the Veo clip's real duration
+        // so audio and video are ~equal length (sync.so needs that to align).
+        const veoLocal = path.join(dir, `scene_${scene.ordinal}_veo.mp4`);
+        await fs.writeFile(veoLocal, veoBuf);
+        const clipDur = await probeDuration(veoLocal);
+        const segUrl = await sceneVocalSegmentUrl(dir, vl, scene, vocalLocal, clipDur);
+        clipBuf = await sync(await signedUrl(scene.veo_clip_path), segUrl);
         const lsPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}_lipsync_${vl.language}.mp4`;
         await db.storage.from(cfg.bucket).upload(lsPath, clipBuf, { contentType: 'video/mp4', upsert: true });
         await db.from('mv_scenes').update({ lipsync_clip_path: lsPath }).eq('id', scene.id);
