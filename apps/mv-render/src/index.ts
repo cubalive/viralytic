@@ -158,15 +158,25 @@ async function generateSceneImage(prompt: string, refs: Buffer[]): Promise<Buffe
 // 3. Veo 3 motion (UNVERIFIED — confirm model id + response on first run).
 //    Vertex predictLongRunning: submit, then poll the operation.
 // ===========================================================================
-async function veoImageToVideo(imageB64: string, prompt: string): Promise<Buffer> {
+async function veoImageToVideo(imageB64: string, prompt: string, lastFrameB64?: string): Promise<Buffer> {
   const token = await vertexToken();
   const base = `https://${cfg.vertexLocation}-aiplatform.googleapis.com/v1/projects/${cfg.vertexProject}/locations/${cfg.vertexLocation}/publishers/google/models/${cfg.veoModel}`;
+
+  // First/last-frame interpolation: when a last frame is supplied, Veo interpolates
+  // motion from `image` (A) to `lastFrame` (B). REQUIRES a model that supports it —
+  // veo-3.1-* accept `lastFrame`; veo-3.0-fast/standard reject it (400). Without a
+  // last frame this is plain single-image image-to-video.
+  const instance: Record<string, unknown> = {
+    prompt,
+    image: { bytesBase64Encoded: imageB64, mimeType: 'image/png' },
+  };
+  if (lastFrameB64) instance.lastFrame = { bytesBase64Encoded: lastFrameB64, mimeType: 'image/png' };
 
   const submit = await fetch(`${base}:predictLongRunning`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      instances: [{ prompt, image: { bytesBase64Encoded: imageB64, mimeType: 'image/png' } }],
+      instances: [instance],
       parameters: { aspectRatio: '16:9', durationSeconds: 8, sampleCount: 1 },
     }),
   });
@@ -325,6 +335,21 @@ async function probeDuration(file: string): Promise<number> {
   } catch {
     return 0;
   }
+}
+
+/**
+ * Cut a side-by-side split keyframe (LEFT = start/A, RIGHT = end/B, one render so
+ * both halves are the same character) into two equal halves. Returns the two
+ * frames as PNG buffers, ready for Veo first/last-frame interpolation.
+ */
+async function splitImage(dir: string, buf: Buffer): Promise<{ a: Buffer; b: Buffer }> {
+  const src = path.join(dir, 'split_src.png');
+  await fs.writeFile(src, buf);
+  const aPath = path.join(dir, 'split_a.png');
+  const bPath = path.join(dir, 'split_b.png');
+  await ffmpeg(['-i', src, '-vf', 'crop=iw/2:ih:0:0', aPath]);      // left half  -> A (first frame)
+  await ffmpeg(['-i', src, '-vf', 'crop=iw/2:ih:iw/2:0', bPath]);   // right half -> B (last frame)
+  return { a: await fs.readFile(aPath), b: await fs.readFile(bPath) };
 }
 
 /**
