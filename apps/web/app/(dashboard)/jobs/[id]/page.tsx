@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Loader2, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { getSupabaseServer, getActiveOrgId } from '@/lib/supabase';
+import { ScriptSelector } from './ScriptSelector';
 
 const statusIcons: Record<string, any> = {
   pending: Clock, analyzing: Loader2, scripting: Loader2,
@@ -50,6 +51,17 @@ export default async function JobDetailPage({
   const costUsd = ((j.total_cost_cents ?? 0) / 100).toFixed(2);
   const product = Array.isArray(j.products) ? j.products[0] : j.products;
 
+  // Scripts to choose from — only while the job waits for a selection.
+  let scripts: any[] = [];
+  if (j.status === 'awaiting_script_selection') {
+    const { data } = await supabase
+      .from('scripts')
+      .select('id, variant, framework, hook, body, cta, estimated_duration_seconds')
+      .eq('job_id', id)
+      .order('variant', { ascending: true });
+    scripts = data ?? [];
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       <Link href="/jobs" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition mb-6">
@@ -89,6 +101,10 @@ export default async function JobDetailPage({
         </div>
         <p className="text-right text-xs text-zinc-500 mt-1.5">{progress}%</p>
       </section>
+
+      {j.status === 'awaiting_script_selection' && scripts.length > 0 && (
+        <ScriptSelector jobId={id} scripts={scripts} />
+      )}
 
       {j.error_message && (
         <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl mb-4 text-sm text-red-400">
