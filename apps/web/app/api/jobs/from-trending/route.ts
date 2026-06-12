@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSupabaseServer, getActiveOrgId } from '@/lib/supabase';
+import { getSupabaseServer, getActiveOrgId, getActiveBrandId } from '@/lib/supabase';
 import { VideoModeSchema, logger } from '@viralytic/shared';
 import { enqueueProductAnalysis } from '@/lib/queue';
 
@@ -46,6 +46,14 @@ export async function POST(req: Request) {
 
   const t: any = trending;
 
+  const brandId = await getActiveBrandId(supabase, orgId);
+  if (!brandId) {
+    return new NextResponse(
+      'Organization has no brand configured. Create a brand first.',
+      { status: 400 },
+    );
+  }
+
   // Create product from the trending snapshot.
   const { data: product, error: pErr } = await supabase
     .from('products').insert({
@@ -62,6 +70,7 @@ export async function POST(req: Request) {
     .from('video_jobs').insert({
       organization_id: orgId,
       product_id: product.id,
+      brand_id: brandId,
       mode,
       status: 'pending',
     }).select('id').single();

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { logger, QUEUE_NAMES } from '@viralytic/shared';
 import { queues } from './queues';
+import { startHttpServer } from './http';
 
 // Import all workers (they auto-register on import)
 import './workers/trending-discovery';
@@ -37,9 +38,14 @@ async function scheduleCrons() {
 
 scheduleCrons().catch(err => logger.error({ err }, 'cron.schedule.failed'));
 
+const httpServer = startHttpServer();
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  logger.info('SIGTERM received, closing queues');
+  logger.info('SIGTERM received, closing HTTP server + queues');
+  if (httpServer) {
+    await new Promise<void>(resolve => httpServer.close(() => resolve()));
+  }
   await Promise.all(Object.values(queues).map(q => q.close()));
   process.exit(0);
 });

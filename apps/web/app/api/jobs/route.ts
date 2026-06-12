@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSupabaseServer, getActiveOrgId } from '@/lib/supabase';
+import { getSupabaseServer, getActiveOrgId, getActiveBrandId } from '@/lib/supabase';
 import { VideoModeSchema, logger } from '@viralytic/shared';
 import { enqueueProductAnalysis } from '@/lib/queue';
 
@@ -16,6 +16,14 @@ export async function POST(req: Request) {
 
   const body = BodySchema.parse(await req.json());
 
+  const brandId = await getActiveBrandId(supabase, orgId);
+  if (!brandId) {
+    return new NextResponse(
+      'Organization has no brand configured. Create a brand first.',
+      { status: 400 },
+    );
+  }
+
   const { data: product, error: pErr } = await supabase
     .from('products').insert({
       organization_id: orgId,
@@ -28,6 +36,7 @@ export async function POST(req: Request) {
     .from('video_jobs').insert({
       organization_id: orgId,
       product_id: product.id,
+      brand_id: brandId,
       mode: body.mode,
       status: 'pending',
     }).select().single();

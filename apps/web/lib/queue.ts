@@ -1,38 +1,32 @@
-import IORedis from 'ioredis';
-import { Queue } from 'bullmq';
-import { QUEUE_NAMES } from '@viralytic/shared';
-
-// HMR-safe singletons: Next dev reloads the module repeatedly; without
-// reusing the same Redis connection and Queue we leak FDs and event
-// listeners on every save.
-const globalForQueue = globalThis as unknown as {
-  __viralyticRedis?: IORedis;
-  __viralyticProductAnalysisQueue?: Queue;
-};
-
-function getRedis(): IORedis {
-  if (!globalForQueue.__viralyticRedis) {
-    globalForQueue.__viralyticRedis = new IORedis(process.env.REDIS_URL!, {
-      maxRetriesPerRequest: null,
-      enableReadyCheck: false,
-    });
-  }
-  return globalForQueue.__viralyticRedis;
-}
-
-function getProductAnalysisQueue(): Queue {
-  if (!globalForQueue.__viralyticProductAnalysisQueue) {
-    globalForQueue.__viralyticProductAnalysisQueue = new Queue(
-      QUEUE_NAMES.productAnalysis,
-      { connection: getRedis() },
-    );
-  }
-  return globalForQueue.__viralyticProductAnalysisQueue;
-}
+// Web → workers bridge. The web app does NOT use BullMQ directly.
+// Instead it POSTs to the internal /enqueue endpoint that workers expose.
+// This keeps bullmq and ioredis out of Next.js bundles entirely.
 
 export async function enqueueProductAnalysis(payload: {
   jobId: string;
   productId: string;
 }): Promise<void> {
-  await getProductAnalysisQueue().add('product-analysis', payload);
+  const workersUrl = process.env.WORKERS_URL ?? 'http://localhost:4001';
+  const secret = process.env.ENQUEUE_SECRET;
+  if (!secret) {
+    throw new Error('ENQUEUE_SECRET is not set in the web environment');
+  }
+
+  const res = await fetch(`${workersUrl}/enqueue`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-enqueue-secret': secret,
+    },
+    body: JSON.stringify({
+      queue: 'productAnalysis',
+      jobId: payload.jobId,
+      productId: payload.productId,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`workers enqueue failed: ${res.status} ${text}`);
+  }
 }
