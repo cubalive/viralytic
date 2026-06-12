@@ -1,7 +1,8 @@
-# mv-render worker — Node 20 + ffmpeg. Standalone service (no @viralytic
+# mv-render worker — Node 22 + ffmpeg. Standalone service (no @viralytic
 # workspace deps), run via tsx at runtime (no dist build). Build context is
 # this folder (apps/mv-render) — set the Railway service Root Directory here.
-FROM node:20-slim
+# Node 22 (not 20): @supabase/realtime-js needs native WebSocket (Node 22+).
+FROM node:22-slim
 
 # ffmpeg is required for assembly; ca-certificates for HTTPS fetches.
 RUN apt-get update \
