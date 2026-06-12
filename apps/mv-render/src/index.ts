@@ -42,6 +42,9 @@ const cfg = {
   veoModel: process.env.VEO_MODEL ?? 'veo-3.0-generate-001',
   syncApiKey: req('SYNC_API_KEY'),
   syncModel: process.env.SYNC_MODEL ?? 'lipsync-2',
+  // Lip-sync master switch. When 'off', closeups use Veo's mouth motion directly
+  // (no sync.so call) — used while the sync.so quota is exhausted / for regens.
+  lipsyncEnabled: (process.env.MV_LIPSYNC ?? 'on').toLowerCase() !== 'off',
   bucket: process.env.MV_BUCKET ?? 'assets',
   pollMs: Number(process.env.POLL_MS ?? 10000),
   veoCostCents: Number(process.env.MV_VEO_COST_CENTS ?? 500),  // rough Veo cost per scene
@@ -422,7 +425,7 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     // Only need the vocal if some closeup still has to be synced (no cached
     // lipsync for THIS language). If every closeup is already synced, skip the
     // download entirely — and we never touch sync.so again.
-    const needsVocal = scenes.some((s: any) => s.is_closeup &&
+    const needsVocal = cfg.lipsyncEnabled && scenes.some((s: any) => s.is_closeup &&
       !(s.lipsync_clip_path && String(s.lipsync_clip_path).endsWith(`_${vl.language}.mp4`)));
     const vocalLocal = path.join(dir, 'vocal_full.wav');
     if (needsVocal) {
@@ -464,7 +467,7 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
       // limited, so reuse this language's cached clip if present — re-running
       // sync.so on an already-synced scene burned the free quota and caused 402s.
       let clipBuf = veoBuf;
-      if (scene.is_closeup) {
+      if (scene.is_closeup && cfg.lipsyncEnabled) {
         const lsPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}_lipsync_${vl.language}.mp4`;
         if (scene.lipsync_clip_path && String(scene.lipsync_clip_path).endsWith(`_${vl.language}.mp4`)) {
           clipBuf = await download(await signedUrl(scene.lipsync_clip_path));
