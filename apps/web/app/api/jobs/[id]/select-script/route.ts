@@ -24,11 +24,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // Job must belong to the active org.
   const { data: job } = await supabase
     .from('video_jobs')
-    .select('id, voice_id, brand_id')
+    .select('id, status, voice_id, brand_id')
     .eq('id', jobId)
     .eq('organization_id', orgId)
     .maybeSingle();
   if (!job) return new NextResponse('Job not found', { status: 404 });
+
+  // Only selectable while waiting (or already voicing — safe re-select).
+  // Prevents re-selecting from resetting a job that already advanced.
+  if (!['awaiting_script_selection', 'voicing'].includes(job.status)) {
+    return new NextResponse('El job no está esperando selección de guion', { status: 409 });
+  }
 
   // Script must belong to this job.
   const { data: script } = await supabase
