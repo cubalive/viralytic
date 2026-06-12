@@ -106,7 +106,7 @@ async function generateSceneImage(prompt: string, refs: Buffer[]): Promise<Buffe
     model: 'gpt-image-1',
     image: files as any,
     prompt,
-    size: '1024x1536', // closest 9:16-ish; cropped later in ffmpeg
+    size: '1536x1024', // 16:9 landscape, matches the horizontal assembly
   });
   const b64 = result.data?.[0]?.b64_json;
   if (!b64) throw new Error('gpt-image-1 returned no image');
@@ -126,7 +126,7 @@ async function veoImageToVideo(imageB64: string, prompt: string): Promise<Buffer
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       instances: [{ prompt, image: { bytesBase64Encoded: imageB64, mimeType: 'image/png' } }],
-      parameters: { aspectRatio: '9:16', durationSeconds: 8, sampleCount: 1 },
+      parameters: { aspectRatio: '16:9', durationSeconds: 8, sampleCount: 1 },
     }),
   });
   if (!submit.ok) throw new Error(`Veo submit ${submit.status}: ${(await submit.text()).slice(0, 200)}`);
