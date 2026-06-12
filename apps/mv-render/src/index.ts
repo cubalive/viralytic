@@ -43,6 +43,8 @@ const cfg = {
   wav2lipVersion: req('WAV2LIP_REPLICATE_VERSION'), // Replicate model version hash
   bucket: process.env.MV_BUCKET ?? 'assets',
   pollMs: Number(process.env.POLL_MS ?? 10000),
+  veoCostCents: Number(process.env.MV_VEO_COST_CENTS ?? 500),  // rough Veo cost per scene
+  maxCostCents: process.env.MV_MAX_COST_CENTS ? Number(process.env.MV_MAX_COST_CENTS) : null,
 };
 
 function req(name: string): string {
@@ -218,11 +220,25 @@ async function assemble(opts: {
   const { dir, sceneClips, musicPath, srtPath, introPath, outroPath } = opts;
   const clips = [introPath, ...sceneClips, outroPath].filter(Boolean) as string[];
 
-  // Concat the visual clips (re-encode for uniformity).
+  // Normalize EVERY clip to 1080x1920 / 30fps / yuv420p (audio stripped) before
+  // concat — Veo/lip-sync clips can come back at varying dims/fps, which would
+  // corrupt a concat-demuxer join. Never trust the source dimensions.
+  const normalized: string[] = [];
+  for (let i = 0; i < clips.length; i++) {
+    const n = path.join(dir, `norm_${i}.mp4`);
+    await ffmpeg([
+      '-i', clips[i]!,
+      '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920',
+      '-r', '30', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-an', n,
+    ]);
+    normalized.push(n);
+  }
+
+  // Concat the now-uniform clips (safe stream copy).
   const listFile = path.join(dir, 'concat.txt');
-  await fs.writeFile(listFile, clips.map((c) => `file '${c}'`).join('\n'));
+  await fs.writeFile(listFile, normalized.map((c) => `file '${c}'`).join('\n'));
   const concat = path.join(dir, 'concat.mp4');
-  await ffmpeg(['-f', 'concat', '-safe', '0', '-i', listFile, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920', concat]);
+  await ffmpeg(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', concat]);
 
   // Mux music + burn captions.
   const out = path.join(dir, 'final.mp4');
@@ -252,21 +268,45 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     const sceneClips: string[] = [];
 
     for (const scene of scenes) {
-      // image -> motion
-      const img = await generateSceneImage(scenePrompt(scene, project, characters), refs);
-      let clipBuf = await veoImageToVideo(img.toString('base64'), scene.prompt ?? scenePrompt(scene, project, characters));
-
-      // close-ups: lip-sync to the vocal stem
-      if (scene.is_closeup) {
-        const clipPath = path.join(dir, `scene_${scene.ordinal}_raw.mp4`);
-        await fs.writeFile(clipPath, clipBuf);
-        const clipUrl = await uploadTmp(vl.id, `scene_${scene.ordinal}_raw.mp4`, clipBuf);
-        clipBuf = await wav2lip(clipUrl, vocalUrl);
-      }
       const scenePath = path.join(dir, `scene_${scene.ordinal}.mp4`);
+      const reusedVeo = !!scene.veo_clip_path;
+
+      // Veo motion is language-agnostic → reuse across language variants and
+      // retries (the expensive step). Generate the keyframe + Veo only if not
+      // cached, persisting image_path / veo_clip_path on the scene.
+      let veoBuf: Buffer;
+      if (scene.veo_clip_path) {
+        veoBuf = await download(await signedUrl(scene.veo_clip_path));
+      } else {
+        const img = scene.image_path
+          ? await download(await signedUrl(scene.image_path))
+          : await generateSceneImage(scenePrompt(scene, project, characters), refs);
+        if (!scene.image_path) {
+          const imgPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}.png`;
+          await db.storage.from(cfg.bucket).upload(imgPath, img, { contentType: 'image/png', upsert: true });
+          await db.from('mv_scenes').update({ image_path: imgPath }).eq('id', scene.id);
+        }
+        veoBuf = await veoImageToVideo(img.toString('base64'), scene.prompt ?? scenePrompt(scene, project, characters));
+        const veoPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}_veo.mp4`;
+        await db.storage.from(cfg.bucket).upload(veoPath, veoBuf, { contentType: 'video/mp4', upsert: true });
+        await db.from('mv_scenes').update({ veo_clip_path: veoPath }).eq('id', scene.id);
+        scene.veo_clip_path = veoPath;
+      }
+
+      // Lip-sync IS language-specific. mv_scenes is per-video, so we never reuse
+      // lipsync across languages — always re-run wav2lip (cheap) with this
+      // language's vocal, storing a language-suffixed object.
+      let clipBuf = veoBuf;
+      if (scene.is_closeup) {
+        clipBuf = await wav2lip(await signedUrl(scene.veo_clip_path), vocalUrl);
+        const lsPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}_lipsync_${vl.language}.mp4`;
+        await db.storage.from(cfg.bucket).upload(lsPath, clipBuf, { contentType: 'video/mp4', upsert: true });
+        await db.from('mv_scenes').update({ lipsync_clip_path: lsPath }).eq('id', scene.id);
+      }
+
       await fs.writeFile(scenePath, clipBuf);
       sceneClips.push(scenePath);
-      log('scene.done', { vlId: vl.id, ordinal: scene.ordinal, closeup: scene.is_closeup });
+      log('scene.done', { vlId: vl.id, ordinal: scene.ordinal, closeup: scene.is_closeup, reusedVeo });
     }
 
     // Music + captions.
@@ -293,6 +333,13 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     log('video_language.rendered', { vlId: vl.id, sizeBytes: finalBuf.length });
   } finally {
     await fs.rm(dir, { recursive: true, force: true }).catch(() => {});
+    // Best-effort: drop this variant's scratch objects from the bucket.
+    try {
+      const { data: tmp } = await db.storage.from(cfg.bucket).list(`mv/_tmp/${vl.id}`);
+      if (tmp?.length) {
+        await db.storage.from(cfg.bucket).remove(tmp.map((f) => `mv/_tmp/${vl.id}/${f.name}`));
+      }
+    } catch { /* ignore cleanup errors */ }
   }
 }
 
@@ -313,11 +360,6 @@ async function signedUrl(storagePathOrUrl: string): Promise<string> {
 async function download(url: string): Promise<Buffer> {
   return Buffer.from(await (await fetch(url)).arrayBuffer());
 }
-async function uploadTmp(vlId: string, name: string, buf: Buffer): Promise<string> {
-  const p = `mv/_tmp/${vlId}/${name}`;
-  await db.storage.from(cfg.bucket).upload(p, buf, { contentType: 'video/mp4', upsert: true });
-  return signedUrl(p);
-}
 async function uploadAsset(projectId: string, storagePath: string, buf: Buffer, contentType: string, vl: any, field: string): Promise<void> {
   await db.storage.from(cfg.bucket).upload(storagePath, buf, { contentType, upsert: true });
   await db.from('mv_video_languages').update({ [field]: storagePath }).eq('id', vl.id);
@@ -337,10 +379,20 @@ async function localizeAsset(dir: string, projectId: string, kind: 'intro' | 'ou
 // 8. Poll loop — claim a video in `generating`, render its language variants.
 // ===========================================================================
 async function tick(): Promise<void> {
-  // Idempotent claim: one video at a time, oldest first.
+  // Find the oldest queued video.
   const { data: video } = await db
     .from('mv_videos').select('*').eq('status', 'generating').order('created_at', { ascending: true }).limit(1).maybeSingle();
   if (!video) return;
+
+  // Atomic claim: flip generating -> rendering only if still generating. If no
+  // row comes back, another instance grabbed it first — bail out (no double render).
+  const { data: claimed } = await db
+    .from('mv_videos').update({ status: 'rendering' })
+    .eq('id', video.id).eq('status', 'generating').select('id');
+  if (!claimed || claimed.length === 0) {
+    log('video.claimed_elsewhere', { videoId: video.id });
+    return;
+  }
 
   const { data: project } = await db.from('mv_projects').select('*').eq('id', video.project_id).single();
   const { data: characters } = await db.from('mv_characters').select('*').eq('project_id', video.project_id);
@@ -349,6 +401,18 @@ async function tick(): Promise<void> {
 
   const { data: variants } = await db
     .from('mv_video_languages').select('*').eq('video_id', video.id).neq('status', 'rendered');
+
+  // Cost guard: estimate Veo spend (scenes × variants × per-scene) and refuse to
+  // render if it exceeds the optional ceiling.
+  const { count: sceneCount } = await db
+    .from('mv_scenes').select('id', { count: 'exact', head: true }).eq('video_id', video.id);
+  const estCents = (sceneCount ?? 0) * (variants?.length ?? 0) * cfg.veoCostCents;
+  log('cost.estimate', { videoId: video.id, scenes: sceneCount ?? 0, variants: variants?.length ?? 0, estCents });
+  if (cfg.maxCostCents !== null && estCents > cfg.maxCostCents) {
+    log('cost.exceeded', { videoId: video.id, estCents, maxCents: cfg.maxCostCents });
+    await db.from('mv_videos').update({ status: 'failed' }).eq('id', video.id);
+    return;
+  }
 
   for (const vl of variants ?? []) {
     try {
@@ -359,10 +423,17 @@ async function tick(): Promise<void> {
     }
   }
 
-  // Mark the video ready when every variant rendered.
-  const { data: remaining } = await db
+  // Completion: ready only when zero variants remain unrendered; otherwise back
+  // to generating so a later tick retries the failed ones.
+  const { count } = await db
     .from('mv_video_languages').select('id', { count: 'exact', head: true }).eq('video_id', video.id).neq('status', 'rendered');
-  await db.from('mv_videos').update({ status: remaining === null ? 'ready' : 'ready' }).eq('id', video.id);
+  if (count === 0) {
+    await db.from('mv_videos').update({ status: 'ready' }).eq('id', video.id);
+    log('video.ready', { videoId: video.id });
+  } else {
+    await db.from('mv_videos').update({ status: 'generating' }).eq('id', video.id);
+    log('video.incomplete', { videoId: video.id, remaining: count });
+  }
 }
 
 async function main(): Promise<void> {
