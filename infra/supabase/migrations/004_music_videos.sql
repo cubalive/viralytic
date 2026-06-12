@@ -78,7 +78,8 @@ create table mv_video_languages (
   music_url text,                       -- full mix (Suno)
   vocal_stem_url text,                  -- vocals only, for caption alignment
   srt_path text,                        -- generated .srt in storage
-  final_video_path text,
+  final_video_path text,                -- 16:9 horizontal master
+  short_video_path text,                -- 9:16 Short (blurred-bg) derived from the master
   youtube_video_id text,
   status text not null default 'draft' check (status in (
     'draft','captioned','rendered','scheduled','published','failed'

@@ -254,6 +254,22 @@ async function assemble(opts: {
   return out;
 }
 
+/**
+ * Derive a 9:16 Short (1080x1920) from the 16:9 master: a blurred, upscaled copy
+ * fills the vertical frame; the original is overlaid centered. Returns the local
+ * output path (audio copied from the master).
+ */
+async function makeVerticalShort(horizontalPath: string): Promise<string> {
+  const out = horizontalPath.replace(/\.mp4$/, '_short.mp4');
+  await ffmpeg([
+    '-i', horizontalPath,
+    '-filter_complex',
+    '[0:v]scale=1080:1920,boxblur=40:5[bg];[0:v]scale=1080:-1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2',
+    '-c:a', 'copy', out,
+  ]);
+  return out;
+}
+
 // ===========================================================================
 // 7. Per-video pipeline
 // ===========================================================================
@@ -329,6 +345,15 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     const finalBuf = await fs.readFile(finalPath);
     const storagePath = `mv/${project.id}/${vl.id}/final.mp4`;
     await uploadAsset(project.id, storagePath, finalBuf, 'video/mp4', vl, 'final_video_path');
+
+    // Spanish: also produce a 9:16 Short (blurred bg). Other languages later.
+    if (vl.language === 'es') {
+      const shortLocal = await makeVerticalShort(finalPath);
+      const shortStorage = `mv/${project.id}/${vl.id}/final_short.mp4`;
+      await db.storage.from(cfg.bucket).upload(shortStorage, await fs.readFile(shortLocal), { contentType: 'video/mp4', upsert: true });
+      await db.from('mv_video_languages').update({ short_video_path: shortStorage }).eq('id', vl.id);
+      log('short.created', { vlId: vl.id, storagePath: shortStorage });
+    }
 
     await db.from('mv_video_languages').update({ status: 'rendered', final_video_path: storagePath }).eq('id', vl.id);
     log('video_language.rendered', { vlId: vl.id, sizeBytes: finalBuf.length });
