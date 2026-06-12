@@ -4,7 +4,11 @@ import { tiktok } from '@viralytic/integrations';
 import { getServiceClient } from '@viralytic/db';
 import { setStatus } from '../lib/orchestrator';
 import { getFreshAccessToken } from '../lib/tiktok-auth';
+import { signedUrl } from '../lib/storage';
 import { QUEUE_NAMES, logger, IntegrationError } from '@viralytic/shared';
+
+// TikTok pulls the video server-side; give it a comfortably long window.
+const VIDEO_URL_TTL = 24 * 60 * 60;
 
 // PULL_FROM_URL publishing is async on TikTok's side; poll the status endpoint
 // until the post is live or fails.
@@ -49,14 +53,13 @@ export const publishingWorker = new Worker<JobPayload['publishing']>(
     // Final video must exist.
     const { data: asset } = await db
       .from('assets')
-      .select('public_url, storage_path')
+      .select('storage_path')
       .eq('job_id', jobId)
       .eq('type', 'final_video')
       .single();
     if (!asset) throw new IntegrationError('NO_FINAL_VIDEO', 'No final video asset to publish', { jobId });
 
-    const videoUrl =
-      asset.public_url ?? db.storage.from('assets').getPublicUrl(asset.storage_path).data.publicUrl;
+    const videoUrl = await signedUrl(db, asset.storage_path, VIDEO_URL_TTL);
 
     const accessToken = await getFreshAccessToken(db, account);
 

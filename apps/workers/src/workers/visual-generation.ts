@@ -90,22 +90,45 @@ export const visualGenerationWorker = new Worker<JobPayload['visualGeneration']>
         });
         totalCost += img.costCents;
       } else if (asset.type === 'ai_video') {
-        const vid = await fal.generateVideo({
-          prompt: asset.prompt,
-          durationSeconds: asset.durationSeconds > 5 ? 10 : 5,
-          aspectRatio: '9:16',
-        });
-        const buf = await fal.downloadAsset(vid.url);
-        const path = `jobs/${jobId}/visual_${asset.cueIndex}.mp4`;
-        await db.storage.from('assets').upload(path, buf, { contentType: 'video/mp4', upsert: true });
-        await db.from('assets').insert({
-          organization_id: videoJob.organization_id,
-          job_id: jobId, type: 'ai_video', provider: 'fal',
-          storage_path: path, mime_type: 'video/mp4',
-          duration_seconds: vid.durationSeconds,
-          metadata: { cueIndex: asset.cueIndex, timestamp: asset.timestampSeconds, prompt: asset.prompt },
-        });
-        totalCost += vid.costCents;
+        try {
+          const vid = await fal.generateVideo({
+            prompt: asset.prompt,
+            durationSeconds: asset.durationSeconds > 5 ? 10 : 5,
+            aspectRatio: '9:16',
+          });
+          const buf = await fal.downloadAsset(vid.url);
+          const path = `jobs/${jobId}/visual_${asset.cueIndex}.mp4`;
+          await db.storage.from('assets').upload(path, buf, { contentType: 'video/mp4', upsert: true });
+          await db.from('assets').insert({
+            organization_id: videoJob.organization_id,
+            job_id: jobId, type: 'ai_video', provider: 'fal',
+            storage_path: path, mime_type: 'video/mp4',
+            duration_seconds: vid.durationSeconds,
+            metadata: { cueIndex: asset.cueIndex, timestamp: asset.timestampSeconds, prompt: asset.prompt },
+          });
+          totalCost += vid.costCents;
+        } catch (err) {
+          // Video generation (Kling) is flaky and expensive; degrade to a still
+          // image (with Ken Burns motion at assembly) so the cue still renders.
+          logger.warn({ err, jobId, cueIndex: asset.cueIndex }, 'visual.video_failed.fallback_image');
+          const img = await fal.generateImage({
+            prompt: asset.prompt,
+            negativePrompt: asset.negativePrompt,
+            aspectRatio: '9:16',
+            seed: asset.seed,
+          });
+          const buf = await fal.downloadAsset(img.url);
+          const path = `jobs/${jobId}/visual_${asset.cueIndex}.png`;
+          await db.storage.from('assets').upload(path, buf, { contentType: 'image/png', upsert: true });
+          await db.from('assets').insert({
+            organization_id: videoJob.organization_id,
+            job_id: jobId, type: 'ai_image', provider: 'fal',
+            storage_path: path, mime_type: 'image/png',
+            width: img.width, height: img.height,
+            metadata: { cueIndex: asset.cueIndex, timestamp: asset.timestampSeconds, prompt: asset.prompt, fallbackFromVideo: true },
+          });
+          totalCost += img.costCents;
+        }
       }
     }
 
@@ -119,3 +142,10 @@ export const visualGenerationWorker = new Worker<JobPayload['visualGeneration']>
   },
   { ...WORKER_DEFAULTS, concurrency: 2 },
 );
+
+visualGenerationWorker.on('failed', async (job, err) => {
+  if (job) {
+    logger.error({ jobId: job.data.jobId, err }, 'visual.worker.failed');
+    await setStatus(job.data.jobId, 'failed', 'visual-generation', err.message);
+  }
+});

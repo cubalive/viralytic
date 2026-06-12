@@ -101,4 +101,17 @@ export async function recordUsage(input: {
     quantity: input.quantity,
     cost_cents: input.costCents,
   });
+
+  // Roll the cost up onto the job so the dashboard can show a running total.
+  if (input.jobId && input.costCents > 0) {
+    const { data: job } = await db
+      .from('video_jobs')
+      .select('total_cost_cents')
+      .eq('id', input.jobId)
+      .single();
+    await db
+      .from('video_jobs')
+      .update({ total_cost_cents: (job?.total_cost_cents ?? 0) + input.costCents })
+      .eq('id', input.jobId);
+  }
 }

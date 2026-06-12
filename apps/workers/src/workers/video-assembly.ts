@@ -4,7 +4,11 @@ import { WORKER_DEFAULTS, type JobPayload } from '../queues';
 import { renderTikTokVideo, type TikTokVideoProps } from '@viralytic/video';
 import { getServiceClient } from '@viralytic/db';
 import { advanceJob, setStatus, recordUsage } from '../lib/orchestrator';
+import { signedUrl } from '../lib/storage';
 import { QUEUE_NAMES, logger, VIDEO_CONFIG, PLAN_QUOTAS, IntegrationError } from '@viralytic/shared';
+
+// Render inputs only need to be reachable for the duration of the render.
+const RENDER_URL_TTL = 3600;
 
 type Visual = TikTokVideoProps['visuals'][number];
 type Caption = TikTokVideoProps['captions'][number];
@@ -60,7 +64,7 @@ export const videoAssemblyWorker = new Worker<JobPayload['videoAssembly']>(
     // Voice audio is required to assemble.
     const { data: voiceAsset } = await db
       .from('assets')
-      .select('storage_path, public_url, duration_seconds')
+      .select('storage_path, duration_seconds')
       .eq('job_id', jobId)
       .eq('type', 'voice_audio')
       .order('created_at', { ascending: false })
@@ -71,19 +75,16 @@ export const videoAssemblyWorker = new Worker<JobPayload['videoAssembly']>(
     // Visual assets, placed along the timeline.
     const { data: visualAssets } = await db
       .from('assets')
-      .select('type, storage_path, public_url, duration_seconds, metadata')
+      .select('type, storage_path, duration_seconds, metadata')
       .eq('job_id', jobId)
       .in('type', ['ai_image', 'ai_video', 'user_clip']);
-
-    const toPublicUrl = (storagePath: string, existing: string | null): string =>
-      existing ?? db.storage.from('assets').getPublicUrl(storagePath).data.publicUrl;
 
     const durationSeconds =
       Number(script.estimated_duration_seconds) ||
       Number(voiceAsset.duration_seconds) ||
       VIDEO_CONFIG.optimalDurationSeconds;
 
-    const visuals = buildVisualTrack(visualAssets ?? [], durationSeconds, toPublicUrl);
+    const visuals = await buildVisualTrack(db, visualAssets ?? [], durationSeconds);
     const captions = buildCaptions(script.full_text ?? '', durationSeconds);
 
     const plan = ((videoJob as any).organizations?.plan ?? 'free') as keyof typeof PLAN_QUOTAS;
@@ -92,7 +93,7 @@ export const videoAssemblyWorker = new Worker<JobPayload['videoAssembly']>(
     logger.info({ jobId, visuals: visuals.length, durationSeconds }, 'assembly.render.start');
 
     const outPath = await renderTikTokVideo({
-      voiceUrl: toPublicUrl(voiceAsset.storage_path, voiceAsset.public_url),
+      voiceUrl: await signedUrl(db, voiceAsset.storage_path, RENDER_URL_TTL),
       captions,
       visuals,
       ctaText: script.cta ?? 'Link in bio',
@@ -109,14 +110,14 @@ export const videoAssemblyWorker = new Worker<JobPayload['videoAssembly']>(
     if (upErr) throw new IntegrationError('UPLOAD_FAILED', upErr.message, { jobId, storagePath });
     await fs.unlink(outPath).catch(() => {});
 
-    const publicUrl = db.storage.from('assets').getPublicUrl(storagePath).data.publicUrl;
+    // public_url stays null: the bucket is private, so the publishing worker
+    // mints a fresh signed URL from storage_path when TikTok needs to pull it.
     await db.from('assets').insert({
       organization_id: orgId,
       job_id: jobId,
       type: 'final_video',
       provider: 'remotion',
       storage_path: storagePath,
-      public_url: publicUrl,
       mime_type: 'video/mp4',
       width: VIDEO_CONFIG.width,
       height: VIDEO_CONFIG.height,
@@ -154,37 +155,38 @@ videoAssemblyWorker.on('failed', async (job, err) => {
 interface VisualAssetRow {
   type: string;
   storage_path: string;
-  public_url: string | null;
   duration_seconds: number | null;
   metadata: any;
 }
 
 /** Order visuals by their planned timestamp and build a gapless timeline. */
-function buildVisualTrack(
+async function buildVisualTrack(
+  db: ReturnType<typeof getServiceClient>,
   assets: VisualAssetRow[],
   totalDuration: number,
-  toPublicUrl: (storagePath: string, existing: string | null) => string,
-): Visual[] {
+): Promise<Visual[]> {
   if (assets.length === 0) return [];
   const sorted = [...assets].sort(
     (a, b) => Number(a.metadata?.timestamp ?? 0) - Number(b.metadata?.timestamp ?? 0),
   );
-  return sorted.map((a, i) => {
-    const start = Number(a.metadata?.timestamp ?? (i * totalDuration) / sorted.length);
-    const nextAsset = sorted[i + 1];
-    const next = nextAsset
-      ? Number(nextAsset.metadata?.timestamp ?? ((i + 1) * totalDuration) / sorted.length)
-      : totalDuration;
-    const durationSeconds = a.duration_seconds ? Number(a.duration_seconds) : Math.max(0.8, next - start);
-    const type: Visual['type'] =
-      a.type === 'ai_image' ? 'image' : a.type === 'user_clip' ? 'user_clip' : 'video';
-    return {
-      type,
-      url: toPublicUrl(a.storage_path, a.public_url),
-      startSeconds: start,
-      durationSeconds,
-    };
-  });
+  return Promise.all(
+    sorted.map(async (a, i) => {
+      const start = Number(a.metadata?.timestamp ?? (i * totalDuration) / sorted.length);
+      const nextAsset = sorted[i + 1];
+      const next = nextAsset
+        ? Number(nextAsset.metadata?.timestamp ?? ((i + 1) * totalDuration) / sorted.length)
+        : totalDuration;
+      const durationSeconds = a.duration_seconds ? Number(a.duration_seconds) : Math.max(0.8, next - start);
+      const type: Visual['type'] =
+        a.type === 'ai_image' ? 'image' : a.type === 'user_clip' ? 'user_clip' : 'video';
+      return {
+        type,
+        url: await signedUrl(db, a.storage_path, RENDER_URL_TTL),
+        startSeconds: start,
+        durationSeconds,
+      };
+    }),
+  );
 }
 
 /**
