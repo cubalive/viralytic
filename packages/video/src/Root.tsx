@@ -1,7 +1,9 @@
 import type { ComponentType } from 'react';
 import { Composition } from 'remotion';
 import { TikTokVideo } from './compositions/TikTokVideo';
-import { VIDEO_CONFIG } from '@viralytic/shared';
+// Import the pure constants module directly (not the barrel) so the Remotion
+// browser bundle never pulls in shared's Node-only code (pino logger, node:crypto).
+import { VIDEO_CONFIG } from '@viralytic/shared/src/constants';
 
 export const RemotionRoot: React.FC = () => (
   <>

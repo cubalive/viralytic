@@ -1,5 +1,5 @@
 import { useCurrentFrame, useVideoConfig } from 'remotion';
-import { CAPTION_STYLE } from '@viralytic/shared';
+import { CAPTION_STYLE } from '@viralytic/shared/src/constants';
 
 interface Token { text: string; start: number; end: number }
 
