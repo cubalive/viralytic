@@ -15,6 +15,7 @@
     "@viralytic/shared": "workspace:*",
     "@viralytic/ai": "workspace:*",
     "@viralytic/integrations": "workspace:*",
-    "@viralytic/scrapers": "workspace:*"
+    "@viralytic/scrapers": "workspace:*",
+    "@viralytic/video": "workspace:*"
   }
 }

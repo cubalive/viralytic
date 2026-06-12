@@ -105,6 +105,9 @@ importers:
       '@viralytic/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@viralytic/video':
+        specifier: workspace:*
+        version: link:../../packages/video
       bullmq:
         specifier: ^5.10.0
         version: 5.76.10
@@ -177,6 +180,9 @@ importers:
       '@remotion/cli':
         specifier: ^4.0.200
         version: 4.0.462(@swc/helpers@0.5.15)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@remotion/renderer':
+        specifier: ^4.0.200
+        version: 4.0.462(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@viralytic/shared':
         specifier: workspace:*
         version: link:../shared
