@@ -61,8 +61,8 @@ create table mv_videos (
   title text not null,
   song_title text,
   status text not null default 'draft' check (status in (
-    'draft','scripting','generating','assembling','ready','scheduled','published','failed'
-  )),
+    'draft','scripting','generating','rendering','assembling','ready','scheduled','published','failed'
+  )),  -- 'rendering' is a transient claim state set by the mv-render worker
   duration_seconds numeric,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
