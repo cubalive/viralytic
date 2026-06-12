@@ -64,6 +64,12 @@ const syncClient = new SyncClient({ apiKey: cfg.syncApiKey });
 const log = (msg: string, extra: Record<string, unknown> = {}) =>
   console.log(JSON.stringify({ t: new Date().toISOString(), msg, ...extra }));
 
+// Prepended to every Veo prompt: Veo only receives the short scene line (which
+// names "Zuri" but not her species), so on a weak/empty keyframe it would invent
+// a human performer. This forces the meerkat identity at the motion stage too.
+const VEO_CHARACTER_PREFIX =
+  '3D animated anthropomorphic MEERKAT named Zuri, an animal character NOT a human, caramel fur, do not transform into a human.';
+
 // ===========================================================================
 // 1. Vertex auth (VERIFIED) — JWT -> access token, cached until expiry.
 // ===========================================================================
@@ -313,27 +319,52 @@ async function sceneVocalSegmentUrl(
 
 async function assemble(opts: {
   dir: string;
-  sceneClips: string[];     // ordered local mp4 paths
-  musicPath: string;        // full mix
+  sceneClips: string[];        // ordered local mp4 paths
+  sceneDurations: number[];    // target seconds per scene clip (its song window)
+  musicPath: string;           // full mix
   srtPath: string | null;
   introPath: string | null;
   outroPath: string | null;
 }): Promise<string> {
-  const { dir, sceneClips, musicPath, srtPath, introPath, outroPath } = opts;
-  const clips = [introPath, ...sceneClips, outroPath].filter(Boolean) as string[];
+  const { dir, sceneClips, sceneDurations, musicPath, srtPath, introPath, outroPath } = opts;
+
+  // Each item carries an optional fit target: scene clips are stretched to cover
+  // their song window (Veo only returns ~8s, but a scene may span 12-33s, so the
+  // video would be short and the 131s song cut off). Intro/outro keep their own
+  // length (fit = null).
+  const items: { path: string; fit: number | null }[] = [
+    ...(introPath ? [{ path: introPath, fit: null }] : []),
+    ...sceneClips.map((p, i) => ({ path: p, fit: sceneDurations[i] && sceneDurations[i]! > 0 ? sceneDurations[i]! : null })),
+    ...(outroPath ? [{ path: outroPath, fit: null }] : []),
+  ];
 
   // Normalize EVERY clip to 1920x1080 (16:9 horizontal) / 30fps / yuv420p (audio
   // stripped) before concat — Veo/lip-sync clips can come back at varying
   // dims/fps, which would corrupt a concat-demuxer join. Letterbox/pillarbox to
   // fit; never trust the source dimensions.
+  const baseVf = 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1';
   const normalized: string[] = [];
-  for (let i = 0; i < clips.length; i++) {
+  for (let i = 0; i < items.length; i++) {
+    const { path: clip, fit } = items[i]!;
     const n = path.join(dir, `norm_${i}.mp4`);
-    await ffmpeg([
-      '-i', clips[i]!,
-      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1',
-      '-r', '30', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-an', n,
-    ]);
+    if (fit) {
+      // Smoothly slow the clip (setpts) to fill its scene window, then trim to the
+      // exact length — keeps natural framing (no hard loop cuts). A short clip
+      // stretched to a long window becomes gentle slow-motion.
+      const src = await probeDuration(clip);
+      const factor = src > 0 ? fit / src : 1;
+      await ffmpeg([
+        '-i', clip,
+        '-vf', `setpts=${factor.toFixed(5)}*PTS,${baseVf}`,
+        '-r', '30', '-t', fit.toFixed(3), '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-an', n,
+      ]);
+    } else {
+      await ffmpeg([
+        '-i', clip,
+        '-vf', baseVf,
+        '-r', '30', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-an', n,
+      ]);
+    }
     normalized.push(n);
   }
 
@@ -399,6 +430,7 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
       await fs.writeFile(vocalLocal, await download(vocalUrl));
     }
     const sceneClips: string[] = [];
+    const sceneDurations: number[] = [];   // each scene's song window (seconds)
 
     for (const scene of scenes) {
       const scenePath = path.join(dir, `scene_${scene.ordinal}.mp4`);
@@ -419,7 +451,8 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
           await db.storage.from(cfg.bucket).upload(imgPath, img, { contentType: 'image/png', upsert: true });
           await db.from('mv_scenes').update({ image_path: imgPath }).eq('id', scene.id);
         }
-        veoBuf = await veoImageToVideo(img.toString('base64'), scene.prompt ?? scenePrompt(scene, project, characters));
+        const veoPrompt = `${VEO_CHARACTER_PREFIX} ${scene.prompt ?? scenePrompt(scene, project, characters)}`;
+        veoBuf = await veoImageToVideo(img.toString('base64'), veoPrompt);
         const veoPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}_veo.mp4`;
         await db.storage.from(cfg.bucket).upload(veoPath, veoBuf, { contentType: 'video/mp4', upsert: true });
         await db.from('mv_scenes').update({ veo_clip_path: veoPath }).eq('id', scene.id);
@@ -451,6 +484,7 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
 
       await fs.writeFile(scenePath, clipBuf);
       sceneClips.push(scenePath);
+      sceneDurations.push(Number(scene.duration_seconds) || 0);
       log('scene.done', { vlId: vl.id, ordinal: scene.ordinal, closeup: scene.is_closeup, reusedVeo });
     }
 
@@ -459,8 +493,12 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     await fs.writeFile(musicPath, await download(await signedUrl(vl.music_url)));
     let srtPath: string | null = null;
     const cleanLyrics = sanitizeLyrics(vl.lyrics ?? '');
+    // The video now spans the sum of the scene windows (each clip is stretched to
+    // its duration_seconds), so caption timing must use that real length — not the
+    // old 8s-per-scene fallback that drifted once clips were extended.
+    const totalSceneSeconds = sceneDurations.reduce((a, b) => a + (b || 0), 0);
     if (cleanLyrics) {
-      const srt = buildSrt(cleanLyrics, Number(video.duration_seconds) || sceneClips.length * 8);
+      const srt = buildSrt(cleanLyrics, Number(video.duration_seconds) || totalSceneSeconds || sceneClips.length * 8);
       srtPath = path.join(dir, 'captions.srt');
       await fs.writeFile(srtPath, srt);
       await uploadAsset(project.id, `mv/${project.id}/${vl.id}/captions.srt`, Buffer.from(srt), 'text/plain', vl, 'srt_path');
@@ -470,7 +508,7 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     const introPath = await localizeAsset(dir, project.id, 'intro');
     const outroPath = await localizeAsset(dir, project.id, 'outro');
 
-    const finalPath = await assemble({ dir, sceneClips, musicPath, srtPath, introPath, outroPath });
+    const finalPath = await assemble({ dir, sceneClips, sceneDurations, musicPath, srtPath, introPath, outroPath });
     const finalBuf = await fs.readFile(finalPath);
     const storagePath = `mv/${project.id}/${vl.id}/final.mp4`;
     await uploadAsset(project.id, storagePath, finalBuf, 'video/mp4', vl, 'final_video_path');
@@ -498,10 +536,14 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
   }
 }
 
-function scenePrompt(scene: any, project: any, characters: any[]): string {
+function scenePrompt(scene: any, _project: any, characters: any[]): string {
+  // We intentionally do NOT append project.scenario_bible.stageBasePrompt here:
+  // it contains "no main character on stage", which made gpt-image-1 render the
+  // empty set (Zuri absent) for scenes that must contain her. The protagonist
+  // basePrompt already describes the stage; the stage-plate prompt is only for
+  // character-free background plates.
   const protagonist = characters.find((c) => c.role === 'protagonist')?.dna?.basePrompt ?? '';
-  const stage = project.scenario_bible?.stageBasePrompt ?? '';
-  return [protagonist, `Camera: ${scene.camera_position ?? 'front'}.`, scene.prompt ?? '', stage]
+  return [protagonist, `Camera: ${scene.camera_position ?? 'front'}.`, scene.prompt ?? '']
     .filter(Boolean).join('\n');
 }
 
