@@ -42,3 +42,17 @@ export async function getActiveBrandId(
     .from('brands').select('id').eq('organization_id', orgId).limit(1).maybeSingle();
   return data?.id ?? null;
 }
+
+// The voice whose elevenlabs_voice_id voice-synthesis will use. Scoped to the
+// org (and the brand when given). Returns null when none is configured yet —
+// callers must decide whether that blocks them.
+export async function getActiveVoiceId(
+  supabase: SupabaseServer,
+  orgId: string,
+  brandId?: string,
+): Promise<string | null> {
+  let query = supabase.from('voices').select('id').eq('organization_id', orgId);
+  if (brandId) query = query.eq('brand_id', brandId);
+  const { data } = await query.order('created_at', { ascending: true }).limit(1).maybeSingle();
+  return data?.id ?? null;
+}
