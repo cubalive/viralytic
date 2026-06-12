@@ -12,7 +12,36 @@ export interface ClaudeCallOptions<T> {
   schema: z.ZodType<T>;
   model?: string;
   maxTokens?: number;
+  /** Accepted for backwards-compat but NOT sent: current Opus/Sonnet models
+   *  reject a custom `temperature` (HTTP 400 "temperature is deprecated"). */
   temperature?: number;
+}
+
+/**
+ * Validate a tool_use payload against the schema, tolerating a flaky failure
+ * mode where the model wraps the real payload under spurious placeholder keys
+ * (observed in the wild: "$PARAMETER_NAME", "$PARAMETER_VALUE"). Tries the
+ * payload directly, then probes nested object values; on failure throws the
+ * descriptive ZodError from the direct attempt.
+ */
+function parseToolInput<T>(schema: z.ZodType<T>, input: unknown): T {
+  const direct = schema.safeParse(input);
+  if (direct.success) return direct.data;
+
+  if (input && typeof input === 'object' && !Array.isArray(input)) {
+    const obj = input as Record<string, unknown>;
+    const candidates: unknown[] = [];
+    if ('$PARAMETER_VALUE' in obj) candidates.push(obj['$PARAMETER_VALUE']);
+    for (const v of Object.values(obj)) {
+      if (v && typeof v === 'object') candidates.push(v);
+    }
+    for (const candidate of candidates) {
+      const attempt = schema.safeParse(candidate);
+      if (attempt.success) return attempt.data;
+    }
+  }
+
+  return schema.parse(input); // throws the original descriptive ZodError
 }
 
 /**
@@ -31,7 +60,6 @@ export async function callClaude<T>(opts: ClaudeCallOptions<T>): Promise<{
     schema,
     model = DEFAULT_MODEL,
     maxTokens = 4096,
-    temperature = 0.7,
   } = opts;
 
   // Convert zod schema to JSON Schema for the tool definition
@@ -43,7 +71,6 @@ export async function callClaude<T>(opts: ClaudeCallOptions<T>): Promise<{
     const response = await client.messages.create({
       model,
       max_tokens: maxTokens,
-      temperature,
       system: systemPrompt,
       tools: [{
         name: 'return_structured_output',
@@ -59,7 +86,7 @@ export async function callClaude<T>(opts: ClaudeCallOptions<T>): Promise<{
       throw new AIError('NO_TOOL_USE', 'Claude did not return a tool_use block', { response });
     }
 
-    const parsed = schema.parse(toolUse.input);
+    const parsed = parseToolInput(schema, toolUse.input);
 
     const inputTokens = response.usage.input_tokens;
     const outputTokens = response.usage.output_tokens;

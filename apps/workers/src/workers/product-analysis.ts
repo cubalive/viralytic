@@ -60,3 +60,10 @@ export const productAnalysisWorker = new Worker<JobPayload['productAnalysis']>(
   },
   WORKER_DEFAULTS,
 );
+
+productAnalysisWorker.on('failed', async (job, err) => {
+  if (job) {
+    logger.error({ jobId: job.data.jobId, err }, 'product.analysis.worker.failed');
+    await setStatus(job.data.jobId, 'failed', 'product-analysis', err.message);
+  }
+});
