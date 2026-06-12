@@ -4,3 +4,4 @@ export * from './agents/product-analyzer';
 export * from './agents/shot-list';
 export * from './agents/visual-prompter';
 export * from './prompts/loader';
+export { embedText, EMBEDDING_MODEL } from './clients/embeddings';

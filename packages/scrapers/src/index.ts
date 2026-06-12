@@ -1,6 +1,7 @@
 export { scrapeTikTokShop } from './platforms/tiktok-shop';
 export { scrapeAmazon } from './platforms/amazon';
 export { discoverTrendingProducts } from './trending/aggregator';
+export { scrapeCompetitorVideos, type RawCompetitorVideo } from './competitors/tiktok-videos';
 
 import { scrapeTikTokShop } from './platforms/tiktok-shop';
 import { scrapeAmazon } from './platforms/amazon';
