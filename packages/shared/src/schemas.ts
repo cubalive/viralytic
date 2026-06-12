@@ -229,3 +229,26 @@ export const PublicationInputSchema = z.object({
   scheduledFor: z.string().datetime().optional(),
 });
 export type PublicationInput = z.infer<typeof PublicationInputSchema>;
+
+// ============================================================
+// BRAND & VOICE SETUP (onboarding)
+// ============================================================
+
+export const BrandInputSchema = z.object({
+  name: z.string().min(1),
+  tone: z.string().optional(),
+  targetAudience: z.string().optional(),
+  uniqueSellingPoints: z.array(z.string()).optional(),
+  forbiddenWords: z.array(z.string()).optional(),
+  language: z.string().default('es'),
+});
+export type BrandInput = z.infer<typeof BrandInputSchema>;
+
+export const VoiceInputSchema = z.object({
+  name: z.string().min(1),
+  elevenlabsVoiceId: z.string().min(1),
+  stability: z.number().min(0).max(1).optional(),
+  similarity: z.number().min(0).max(1).optional(),
+  style: z.number().min(0).max(1).optional(),
+});
+export type VoiceInput = z.infer<typeof VoiceInputSchema>;
