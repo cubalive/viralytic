@@ -88,3 +88,10 @@ export const QUEUE_NAMES = {
   publishing: 'publishing',
   metricsCollection: 'metrics-collection',
 } as const;
+
+// Self-reinforcing learning loop: a published video whose views clear this
+// bar is treated as a "winner" — its selected script gets embedded so future
+// script generation can retrieve it as a historical winner.
+export const LEARNING = {
+  winnerMinViews: 10_000,
+} as const;

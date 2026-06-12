@@ -132,3 +132,58 @@ export async function getPublishStatus(publishId: string, accessToken: string): 
     failReason: data.data.fail_reason,
   };
 }
+
+export interface VideoMetrics {
+  videoId: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+}
+
+/**
+ * Fetch engagement metrics for the account's own posts via the Display API
+ * `/video/query/` endpoint (requires the `video.list` scope). Returns one row
+ * per resolvable video id.
+ */
+export async function getVideoMetrics(
+  accessToken: string,
+  videoIds: string[],
+): Promise<VideoMetrics[]> {
+  if (videoIds.length === 0) return [];
+
+  const fields = 'id,view_count,like_count,comment_count,share_count';
+  const res = await fetch(`${API_BASE}/video/query/?fields=${fields}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ filters: { video_ids: videoIds } }),
+  });
+  if (!res.ok) {
+    throw new IntegrationError('TIKTOK_METRICS', `Metrics query failed: ${res.status}`, {
+      body: await res.text(),
+    });
+  }
+
+  const data = (await res.json()) as {
+    data?: {
+      videos?: Array<{
+        id: string;
+        view_count?: number;
+        like_count?: number;
+        comment_count?: number;
+        share_count?: number;
+      }>;
+    };
+  };
+
+  return (data.data?.videos ?? []).map((v) => ({
+    videoId: v.id,
+    views: v.view_count ?? 0,
+    likes: v.like_count ?? 0,
+    comments: v.comment_count ?? 0,
+    shares: v.share_count ?? 0,
+  }));
+}

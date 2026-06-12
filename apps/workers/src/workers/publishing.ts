@@ -3,13 +3,13 @@ import { WORKER_DEFAULTS, type JobPayload, queues } from '../queues';
 import { tiktok } from '@viralytic/integrations';
 import { getServiceClient } from '@viralytic/db';
 import { setStatus } from '../lib/orchestrator';
-import { QUEUE_NAMES, logger, encrypt, decrypt, IntegrationError } from '@viralytic/shared';
+import { getFreshAccessToken } from '../lib/tiktok-auth';
+import { QUEUE_NAMES, logger, IntegrationError } from '@viralytic/shared';
 
 // PULL_FROM_URL publishing is async on TikTok's side; poll the status endpoint
 // until the post is live or fails.
 const MAX_POLLS = 18;
 const POLL_INTERVAL_MS = 10_000;
-const TOKEN_REFRESH_BUFFER_MS = 60_000;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -131,36 +131,6 @@ publishingWorker.on('failed', async (job, err) => {
 // ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Return a valid access token, refreshing + persisting it first if the stored
- * one is expired (or about to expire).
- */
-async function getFreshAccessToken(
-  db: ReturnType<typeof getServiceClient>,
-  account: {
-    id: string;
-    access_token_encrypted: string;
-    refresh_token_encrypted: string;
-    expires_at: string | null;
-  },
-): Promise<string> {
-  const expiresAt = account.expires_at ? new Date(account.expires_at).getTime() : 0;
-  const stillValid = expiresAt - TOKEN_REFRESH_BUFFER_MS > Date.now();
-  if (stillValid) return decrypt(account.access_token_encrypted);
-
-  const refreshed = await tiktok.refreshAccessToken(decrypt(account.refresh_token_encrypted));
-  await db
-    .from('tiktok_accounts')
-    .update({
-      access_token_encrypted: encrypt(refreshed.accessToken),
-      refresh_token_encrypted: encrypt(refreshed.refreshToken),
-      expires_at: new Date(Date.now() + refreshed.expiresIn * 1000).toISOString(),
-    })
-    .eq('id', account.id);
-  logger.info({ accountId: account.id }, 'publish.token.refreshed');
-  return refreshed.accessToken;
-}
 
 /** Combine caption text with hashtags, capped to TikTok's title limit. */
 function buildCaption(caption: string | null, hashtags: string[] | null): string {
