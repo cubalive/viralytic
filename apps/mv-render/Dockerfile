@@ -9,16 +9,15 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ffmpeg ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g pnpm
-
 WORKDIR /app
 
-# Install deps first for better layer caching.
+# Install deps with npm (runs esbuild's build script — pnpm v11 refuses to,
+# which broke the build). Standalone: no workspace deps.
 COPY package.json ./
-RUN pnpm install
+RUN npm install
 
 # App source (tsconfig + src). Runs via tsx — no compile step.
 COPY . .
 
 # Worker: no HTTP port, just the infinite poll loop.
-CMD ["pnpm", "start"]
+CMD ["npm", "start"]
