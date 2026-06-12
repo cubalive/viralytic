@@ -509,6 +509,12 @@ async function tick(): Promise<void> {
   }
 
   for (const vl of variants ?? []) {
+    // Skip (don't fail) variants whose audio isn't loaded yet — they stay in
+    // their current status and render on a later tick once music_url is set.
+    if (!vl.music_url) {
+      log('variant.skipped_no_audio', { vlId: vl.id, language: vl.language });
+      continue;
+    }
     try {
       await renderVideoLanguage(vl, video, project, characters ?? [], refs);
     } catch (err) {
