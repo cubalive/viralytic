@@ -21,6 +21,18 @@ importers:
         specifier: ^5.4.0
         version: 5.9.3
 
+  apps/mv-render:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.45.0
+        version: 2.105.4
+      dotenv:
+        specifier: ^16.4.0
+        version: 16.6.1
+      openai:
+        specifier: ^4.65.0
+        version: 4.104.0(ws@8.17.1)(zod@3.25.76)
+
   apps/web:
     dependencies:
       '@supabase/ssr':
