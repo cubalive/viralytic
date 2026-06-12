@@ -220,15 +220,16 @@ async function assemble(opts: {
   const { dir, sceneClips, musicPath, srtPath, introPath, outroPath } = opts;
   const clips = [introPath, ...sceneClips, outroPath].filter(Boolean) as string[];
 
-  // Normalize EVERY clip to 1080x1920 / 30fps / yuv420p (audio stripped) before
-  // concat — Veo/lip-sync clips can come back at varying dims/fps, which would
-  // corrupt a concat-demuxer join. Never trust the source dimensions.
+  // Normalize EVERY clip to 1920x1080 (16:9 horizontal) / 30fps / yuv420p (audio
+  // stripped) before concat — Veo/lip-sync clips can come back at varying
+  // dims/fps, which would corrupt a concat-demuxer join. Letterbox/pillarbox to
+  // fit; never trust the source dimensions.
   const normalized: string[] = [];
   for (let i = 0; i < clips.length; i++) {
     const n = path.join(dir, `norm_${i}.mp4`);
     await ffmpeg([
       '-i', clips[i]!,
-      '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920',
+      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1',
       '-r', '30', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-an', n,
     ]);
     normalized.push(n);
@@ -371,7 +372,7 @@ async function localizeAsset(dir: string, projectId: string, kind: 'intro' | 'ou
   // Still image -> 3s clip (intro/outro audio muxed in a later pass if provided).
   const img = path.join(dir, `${kind}.png`);
   await fs.writeFile(img, await download(await signedUrl(data.storage_path)));
-  await ffmpeg(['-loop', '1', '-i', img, '-t', '3', '-r', '30', '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920', '-pix_fmt', 'yuv420p', p]);
+  await ffmpeg(['-loop', '1', '-i', img, '-t', '3', '-r', '30', '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1', '-pix_fmt', 'yuv420p', p]);
   return p;
 }
 
