@@ -351,14 +351,15 @@ async function assemble(opts: {
     const { path: clip, fit } = items[i]!;
     const n = path.join(dir, `norm_${i}.mp4`);
     if (fit) {
-      // Smoothly slow the clip (setpts) to fill its scene window, then trim to the
-      // exact length — keeps natural framing (no hard loop cuts). A short clip
-      // stretched to a long window becomes gentle slow-motion.
-      const src = await probeDuration(clip);
-      const factor = src > 0 ? fit / src : 1;
+      // Loop the short clip to cover its scene window at NATURAL speed, cutting
+      // the final repeat to the exact length (-stream_loop loops the input, -t
+      // trims). Music-video friendly: Zuri keeps moving at normal speed instead
+      // of the frozen slow-motion that setpts produced on long windows (e.g. a
+      // 33s outro from an 8s clip = 4x slow). Clean cut between loops (no
+      // crossfade — variable loop count makes xfade fragile).
       await ffmpeg([
-        '-i', clip,
-        '-vf', `setpts=${factor.toFixed(5)}*PTS,${baseVf}`,
+        '-stream_loop', '-1', '-i', clip,
+        '-vf', baseVf,
         '-r', '30', '-t', fit.toFixed(3), '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-an', n,
       ]);
     } else {
