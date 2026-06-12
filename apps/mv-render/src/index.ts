@@ -112,20 +112,46 @@ async function vertexToken(): Promise<string> {
 // ===========================================================================
 // 2. Scene keyframe image (VERIFIED) — gpt-image-1 with canon photos as refs.
 // ===========================================================================
+// gpt-image-1's safety classifier is non-deterministic: the SAME prompt can be
+// rejected (HTTP 400 "rejected by the safety system") on one call and pass on a
+// fresh one. We retry ONLY that specific rejection — never other errors.
+function isSafetyRejection(err: unknown): boolean {
+  const e = err as { status?: number; statusCode?: number; message?: unknown };
+  const status = e?.status ?? e?.statusCode;
+  const msg = String(e?.message ?? '');
+  return (status === 400 || /^\s*400\b/.test(msg)) && /safety system/i.test(msg);
+}
+
 async function generateSceneImage(prompt: string, refs: Buffer[]): Promise<Buffer> {
   // images.edit accepts reference images to keep the character on-canon.
   const files = await Promise.all(
     refs.slice(0, 4).map(async (buf, i) => await OpenAI.toFile(buf, `ref_${i}.png`, { type: 'image/png' })),
   );
-  const result = await openai.images.edit({
-    model: 'gpt-image-1',
-    image: files as any,
-    prompt,
-    size: '1536x1024', // 16:9 landscape, matches the horizontal assembly
-  });
-  const b64 = result.data?.[0]?.b64_json;
-  if (!b64) throw new Error('gpt-image-1 returned no image');
-  return Buffer.from(b64, 'base64');
+  // Up to 3 attempts: retry only the flaky safety-400 (fresh request usually
+  // passes), ~2s apart. A 4th-and-final failure is treated as a real rejection.
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const result = await openai.images.edit({
+        model: 'gpt-image-1',
+        image: files as any,
+        prompt,
+        size: '1536x1024', // 16:9 landscape, matches the horizontal assembly
+      });
+      const b64 = result.data?.[0]?.b64_json;
+      if (!b64) throw new Error('gpt-image-1 returned no image');
+      return Buffer.from(b64, 'base64');
+    } catch (err) {
+      if (isSafetyRejection(err) && attempt < maxAttempts) {
+        log('image.safety_retry', { attempt, maxAttempts });
+        await sleep(2000);
+        continue;
+      }
+      throw err;
+    }
+  }
+  // Loop either returns or throws; this only satisfies the type checker.
+  throw new Error('gpt-image-1 failed after safety retries');
 }
 
 // ===========================================================================
