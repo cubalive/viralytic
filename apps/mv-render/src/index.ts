@@ -184,19 +184,70 @@ async function wav2lip(faceVideoUrl: string, audioUrl: string): Promise<Buffer> 
 }
 
 // ===========================================================================
-// 5. Captions / SRT (v1 even-timed; WhisperX forced alignment later).
+// 5. Captions / SRT — sourced ONLY from the approved lyrics, NEVER from audio
+//    transcription (which can hallucinate). v1 is even-timed; if WhisperX is
+//    added later it must run in FORCED ALIGNMENT (transcribe=false) — it
+//    contributes timings only, never new text.
 // ===========================================================================
-function buildSrt(lyrics: string, durationSeconds: number): string {
-  const lines = lyrics.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+
+/**
+ * Clean the approved lyrics before captioning so no section tag, production
+ * parenthetical, or credit/metadata line ever shows up as a subtitle. Returns
+ * only the singable lines. buildSrt() must be fed THIS, never raw lyrics.
+ */
+function sanitizeLyrics(raw: string): string {
+  let lines = (raw ?? '').split(/\r?\n/);
+
+  // Cut everything from the last [Outro]/[End] marker onward (Suno parks
+  // credits/fades there).
+  let endIdx = -1;
+  lines.forEach((l, i) => { if (/\[\s*(outro|end)\s*\]/i.test(l)) endIdx = i; });
+  if (endIdx >= 0) lines = lines.slice(0, endIdx);
+
+  const creditRe = /(\bby\s|詞曲|作詞|作曲|©|copyright|\bsuno\b|\blyrics\b|music:|\bproduced\b)/i;
+  const prodParenRe = /\(\s*(fade\s*out|fade\s*in|instrumental|outro|intro|end)\s*\)/gi;
+
+  const cleaned: string[] = [];
+  for (let line of lines) {
+    line = line.replace(/\[[^\]]*\]/g, '');     // section tags [Intro][Hook]...
+    line = line.replace(prodParenRe, '');       // production parentheticals
+    line = line.replace(/\s+/g, ' ').trim();    // collapse whitespace / blanks
+    if (!line) continue;
+    if (creditRe.test(line)) continue;          // credit / metadata lines
+    cleaned.push(line);
+  }
+
+  // Strip a trailing isolated proper-name credit (≤3 capitalized words, no
+  // sentence punctuation) sometimes left as an artist signature.
+  const last = cleaned[cleaned.length - 1];
+  if (last && last.length <= 30 && !/[.!?,;:]$/.test(last) &&
+      /^[\p{Lu}][\p{L}'’.-]*(\s+[\p{Lu}][\p{L}'’.-]*){0,2}$/u.test(last)) {
+    cleaned.pop();
+  }
+
+  return cleaned.join('\n');
+}
+
+function buildSrt(sanitizedLyrics: string, durationSeconds: number): string {
+  const lines = sanitizedLyrics.split(/\n+/).map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) return '';
-  const per = durationSeconds / lines.length;
+
+  // Anti-hallucination guard: a cue's text MUST be an approved lyric line.
+  // Trivially true here (cues ARE the lyric lines), but enforces the rule if a
+  // forced-alignment source is ever wired in — any unknown text is dropped.
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const allowed = new Set(lines.map(norm));
+  const cues = lines.filter((t) => allowed.has(norm(t)));
+  if (cues.length === 0) return '';
+
+  const per = durationSeconds / cues.length;
   const ts = (s: number) => {
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60),
       ms = Math.floor((s - Math.floor(s)) * 1000);
     const p = (n: number, w = 2) => String(n).padStart(w, '0');
     return `${p(h)}:${p(m)}:${p(sec)},${p(ms, 3)}`;
   };
-  return lines
+  return cues
     .map((text, i) => `${i + 1}\n${ts(i * per)} --> ${ts((i + 1) * per)}\n${text}\n`)
     .join('\n');
 }
@@ -330,8 +381,9 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     const musicPath = path.join(dir, 'music.mp3');
     await fs.writeFile(musicPath, await download(await signedUrl(vl.music_url)));
     let srtPath: string | null = null;
-    if (vl.lyrics) {
-      const srt = buildSrt(vl.lyrics, Number(video.duration_seconds) || sceneClips.length * 8);
+    const cleanLyrics = sanitizeLyrics(vl.lyrics ?? '');
+    if (cleanLyrics) {
+      const srt = buildSrt(cleanLyrics, Number(video.duration_seconds) || sceneClips.length * 8);
       srtPath = path.join(dir, 'captions.srt');
       await fs.writeFile(srtPath, srt);
       await uploadAsset(project.id, `mv/${project.id}/${vl.id}/captions.srt`, Buffer.from(srt), 'text/plain', vl, 'srt_path');
