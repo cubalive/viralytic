@@ -46,6 +46,7 @@ const cfg = {
   pollMs: Number(process.env.POLL_MS ?? 10000),
   veoCostCents: Number(process.env.MV_VEO_COST_CENTS ?? 500),  // rough Veo cost per scene
   maxCostCents: process.env.MV_MAX_COST_CENTS ? Number(process.env.MV_MAX_COST_CENTS) : null,
+  reclaimMinutes: Number(process.env.MV_RECLAIM_MINUTES ?? 30),  // re-queue videos stuck in 'rendering'
 };
 
 function req(name: string): string {
@@ -473,15 +474,24 @@ async function localizeAsset(dir: string, projectId: string, kind: 'intro' | 'ou
 // 8. Poll loop — claim a video in `generating`, render its language variants.
 // ===========================================================================
 async function tick(): Promise<void> {
+  // Reclaim videos stuck in 'rendering' beyond the timeout (a worker crashed
+  // mid-render): flip them back to 'generating' so they get retried.
+  const staleBefore = new Date(Date.now() - cfg.reclaimMinutes * 60_000).toISOString();
+  const { data: reclaimed } = await db
+    .from('mv_videos').update({ status: 'generating', updated_at: new Date().toISOString() })
+    .eq('status', 'rendering').lt('updated_at', staleBefore).select('id');
+  if (reclaimed?.length) log('video.reclaimed', { count: reclaimed.length, ids: reclaimed.map((r: any) => r.id) });
+
   // Find the oldest queued video.
   const { data: video } = await db
     .from('mv_videos').select('*').eq('status', 'generating').order('created_at', { ascending: true }).limit(1).maybeSingle();
   if (!video) return;
 
-  // Atomic claim: flip generating -> rendering only if still generating. If no
-  // row comes back, another instance grabbed it first — bail out (no double render).
+  // Atomic claim: flip generating -> rendering only if still generating, stamping
+  // updated_at so a crash mid-render becomes reclaimable. If no row comes back,
+  // another instance grabbed it first — bail out (no double render).
   const { data: claimed } = await db
-    .from('mv_videos').update({ status: 'rendering' })
+    .from('mv_videos').update({ status: 'rendering', updated_at: new Date().toISOString() })
     .eq('id', video.id).eq('status', 'generating').select('id');
   if (!claimed || claimed.length === 0) {
     log('video.claimed_elsewhere', { videoId: video.id });
