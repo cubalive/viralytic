@@ -45,6 +45,9 @@ const cfg = {
   // Lip-sync master switch. When 'off', closeups use Veo's mouth motion directly
   // (no sync.so call) — used while the sync.so quota is exhausted / for regens.
   lipsyncEnabled: (process.env.MV_LIPSYNC ?? 'on').toLowerCase() !== 'off',
+  // Caption burn-in switch. When 'off', no SRT is built/burned — used for
+  // validation renders (the v1 centered captions covered the character).
+  captionsEnabled: (process.env.MV_CAPTIONS ?? 'on').toLowerCase() !== 'off',
   bucket: process.env.MV_BUCKET ?? 'assets',
   pollMs: Number(process.env.POLL_MS ?? 10000),
   veoCostCents: Number(process.env.MV_VEO_COST_CENTS ?? 500),  // rough Veo cost per scene
@@ -501,7 +504,7 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     // its duration_seconds), so caption timing must use that real length — not the
     // old 8s-per-scene fallback that drifted once clips were extended.
     const totalSceneSeconds = sceneDurations.reduce((a, b) => a + (b || 0), 0);
-    if (cleanLyrics) {
+    if (cfg.captionsEnabled && cleanLyrics) {
       const srt = buildSrt(cleanLyrics, Number(video.duration_seconds) || totalSceneSeconds || sceneClips.length * 8);
       srtPath = path.join(dir, 'captions.srt');
       await fs.writeFile(srtPath, srt);
