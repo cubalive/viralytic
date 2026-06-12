@@ -550,7 +550,8 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
     if (vl.language === 'es') {
       const shortLocal = await makeVerticalShort(finalPath);
       const shortStorage = `mv/${project.id}/${vl.id}/final_short.mp4`;
-      await db.storage.from(cfg.bucket).upload(shortStorage, await fs.readFile(shortLocal), { contentType: 'video/mp4', upsert: true });
+      const { error: shortErr } = await db.storage.from(cfg.bucket).upload(shortStorage, await fs.readFile(shortLocal), { contentType: 'video/mp4', upsert: true });
+      if (shortErr) throw new Error(`upload failed for ${shortStorage}: ${shortErr.message}`);
       await db.from('mv_video_languages').update({ short_video_path: shortStorage }).eq('id', vl.id);
       log('short.created', { vlId: vl.id, storagePath: shortStorage });
     }
@@ -591,7 +592,11 @@ async function download(url: string): Promise<Buffer> {
   return Buffer.from(await (await fetch(url)).arrayBuffer());
 }
 async function uploadAsset(projectId: string, storagePath: string, buf: Buffer, contentType: string, vl: any, field: string): Promise<void> {
-  await db.storage.from(cfg.bucket).upload(storagePath, buf, { contentType, upsert: true });
+  // MUST check the error: a swallowed upload failure (e.g. file over the bucket
+  // size limit) previously reported false success — the DB field was set to a
+  // path whose object never landed. Throw so the variant is marked failed.
+  const { error } = await db.storage.from(cfg.bucket).upload(storagePath, buf, { contentType, upsert: true });
+  if (error) throw new Error(`upload failed for ${storagePath} (${buf.length} bytes): ${error.message}`);
   await db.from('mv_video_languages').update({ [field]: storagePath }).eq('id', vl.id);
 }
 async function localizeAsset(dir: string, projectId: string, kind: 'intro' | 'outro'): Promise<string | null> {
