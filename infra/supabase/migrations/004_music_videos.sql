@@ -82,7 +82,7 @@ create table mv_video_languages (
   short_video_path text,                -- 9:16 Short (blurred-bg) derived from the master
   youtube_video_id text,
   status text not null default 'draft' check (status in (
-    'draft','captioned','rendered','scheduled','published','failed'
+    'draft','generating','captioned','rendered','scheduled','published','failed'
   )),
   created_at timestamptz default now(),
   unique (video_id, language)
