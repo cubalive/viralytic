@@ -3,18 +3,18 @@
  *
  * Polls Supabase for music-video jobs and runs the full pipeline per language
  * variant: scene plan (ChatGPT) -> scene keyframes (gpt-image-1, canon refs)
- * -> motion (Veo 3 / Vertex) -> lip-sync on close-ups (Wav2Lip via Replicate,
- * serverless GPU) -> captions/SRT -> ffmpeg assembly with intro/outro -> upload
+ * -> motion (Veo 3 / Vertex) -> lip-sync on close-ups (sync.so, better close-up
+ * quality) -> captions/SRT -> ffmpeg assembly with intro/outro -> upload
  * to Supabase storage -> mark mv_video_languages.rendered.
  *
- * Heavy GPU work (Wav2Lip) is serverless/pay-per-render, so this service itself
+ * Lip-sync runs on sync.so (serverless/pay-per-render), so this service itself
  * is plain CPU (ffmpeg) and fits the cheap Railway plan; nothing runs idle.
  *
- * Swappable defaults (see env): TRIGGER=poll Supabase, LIPSYNC=Replicate Wav2Lip,
+ * Swappable defaults (see env): TRIGGER=poll Supabase, LIPSYNC=sync.so,
  * captions = even-timed v1 (WhisperX forced alignment is a later upgrade).
  *
  * UNVERIFIED until the first real run (isolated below): the exact Veo 3 Vertex
- * model id + response shape, and the Replicate Wav2Lip model version.
+ * model id + response shape, and the sync.so SDK field names / output shape.
  */
 import 'dotenv/config';
 import crypto from 'node:crypto';
@@ -25,6 +25,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import { SyncClient, SyncError } from '@sync.so/sdk';
 
 const exec = promisify(execFile);
 
@@ -39,8 +40,8 @@ const cfg = {
   vertexLocation: process.env.VERTEX_LOCATION ?? 'us-central1',
   vertexSaJson: req('GOOGLE_VERTEX_SA'),          // the service-account JSON (string)
   veoModel: process.env.VEO_MODEL ?? 'veo-3.0-generate-001',
-  replicateToken: req('REPLICATE_API_TOKEN'),
-  wav2lipVersion: req('WAV2LIP_REPLICATE_VERSION'), // Replicate model version hash
+  syncApiKey: req('SYNC_API_KEY'),
+  syncModel: process.env.SYNC_MODEL ?? 'lipsync-2',
   bucket: process.env.MV_BUCKET ?? 'assets',
   pollMs: Number(process.env.POLL_MS ?? 10000),
   veoCostCents: Number(process.env.MV_VEO_COST_CENTS ?? 500),  // rough Veo cost per scene
@@ -57,6 +58,7 @@ const db: SupabaseClient = createClient(cfg.supabaseUrl, cfg.supabaseKey, {
   auth: { persistSession: false },
 });
 const openai = new OpenAI({ apiKey: cfg.openaiKey });
+const syncClient = new SyncClient({ apiKey: cfg.syncApiKey });
 
 const log = (msg: string, extra: Record<string, unknown> = {}) =>
   console.log(JSON.stringify({ t: new Date().toISOString(), msg, ...extra }));
@@ -162,25 +164,39 @@ async function downloadGcs(gsUri: string, token: string): Promise<Buffer> {
 }
 
 // ===========================================================================
-// 4. Wav2Lip lip-sync (UNVERIFIED — confirm Replicate model version).
-//    Serverless GPU: pay per render, $0 idle.
+// 4. Lip-sync via sync.so (better close-up quality than Wav2Lip).
+//    Serverless: pay per render, $0 idle. (UNVERIFIED — confirm SDK field
+//    names / output shape on the first real run.)
 // ===========================================================================
-async function wav2lip(faceVideoUrl: string, audioUrl: string): Promise<Buffer> {
-  const create = await fetch('https://api.replicate.com/v1/predictions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${cfg.replicateToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ version: cfg.wav2lipVersion, input: { face: faceVideoUrl, audio: audioUrl } }),
-  });
-  let pred = (await create.json()) as any;
-  if (!create.ok) throw new Error(`Replicate create ${create.status}: ${JSON.stringify(pred).slice(0, 200)}`);
+async function sync(faceVideoUrl: string, audioUrl: string): Promise<Buffer> {
+  try {
+    const res = await syncClient.generations.create({
+      input: [
+        { type: 'video', url: faceVideoUrl },
+        { type: 'audio', url: audioUrl },
+      ],
+      model: cfg.syncModel,
+      options: { sync_mode: 'cut_off' },
+      outputFileName: 'zuri_lipsync',
+    } as any);
 
-  while (pred.status !== 'succeeded' && pred.status !== 'failed' && pred.status !== 'canceled') {
-    await sleep(4000);
-    pred = await (await fetch(pred.urls.get, { headers: { Authorization: `Bearer ${cfg.replicateToken}` } })).json();
+    const jobId = res.id;
+    let gen: any;
+    let status: string | undefined;
+    while (status !== 'COMPLETED' && status !== 'FAILED' && status !== 'REJECTED') {
+      await sleep(10000);
+      gen = await syncClient.generations.get(jobId);
+      status = gen.status;
+    }
+    if (status !== 'COMPLETED') throw new Error(`Sync lipsync ${status}`);
+    return Buffer.from(await (await fetch(gen.outputUrl)).arrayBuffer());
+  } catch (err) {
+    if (err instanceof SyncError) {
+      const e = err as any;
+      log('sync.error', { status_code: e.statusCode ?? e.status_code, body: e.body });
+    }
+    throw err;
   }
-  if (pred.status !== 'succeeded') throw new Error(`Wav2Lip ${pred.status}: ${pred.error ?? ''}`);
-  const out = Array.isArray(pred.output) ? pred.output[0] : pred.output;
-  return Buffer.from(await (await fetch(out)).arrayBuffer());
 }
 
 // ===========================================================================
@@ -362,11 +378,11 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
       }
 
       // Lip-sync IS language-specific. mv_scenes is per-video, so we never reuse
-      // lipsync across languages — always re-run wav2lip (cheap) with this
-      // language's vocal, storing a language-suffixed object.
+      // lipsync across languages — always re-run sync.so with this language's
+      // vocal, storing a language-suffixed object.
       let clipBuf = veoBuf;
       if (scene.is_closeup) {
-        clipBuf = await wav2lip(await signedUrl(scene.veo_clip_path), vocalUrl);
+        clipBuf = await sync(await signedUrl(scene.veo_clip_path), vocalUrl);
         const lsPath = `mv/${project.id}/${video.id}/scene_${scene.ordinal}_lipsync_${vl.language}.mp4`;
         await db.storage.from(cfg.bucket).upload(lsPath, clipBuf, { contentType: 'video/mp4', upsert: true });
         await db.from('mv_scenes').update({ lipsync_clip_path: lsPath }).eq('id', scene.id);
