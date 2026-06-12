@@ -28,6 +28,10 @@ export const voiceSynthesisWorker = new Worker<JobPayload['voiceSynthesis']>(
     await setStatus(jobId, 'voicing', 'voice-synthesis');
 
     const voice = (videoJob as any).voices;
+    if (!voice?.elevenlabs_voice_id) {
+      throw new IntegrationError('NO_VOICE', 'El job no tiene voz configurada', { jobId });
+    }
+
     const result = await elevenlabs.synthesize({
       voiceId: voice.elevenlabs_voice_id,
       text: script.full_text,
@@ -67,3 +71,10 @@ export const voiceSynthesisWorker = new Worker<JobPayload['voiceSynthesis']>(
   },
   WORKER_DEFAULTS,
 );
+
+voiceSynthesisWorker.on('failed', async (job, err) => {
+  if (job) {
+    logger.error({ jobId: job.data.jobId, err }, 'voice.worker.failed');
+    await setStatus(job.data.jobId, 'failed', 'voice-synthesis', err.message);
+  }
+});
