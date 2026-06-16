@@ -1,0 +1,3 @@
+(Copia de respaldo de la letra — la que usa el pipeline es la del campo "lyrics" en song.json.)
+
+Pega aquí la letra completa de la canción demo.

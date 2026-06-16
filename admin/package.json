@@ -1,0 +1,27 @@
+{
+  "name": "@viralytic/admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pipeline para generar videos musicales infantiles (ES/PT/IT/EN) para YouTube Kids + Reels",
+  "scripts": {
+    "verify": "tsx src/cli.ts verify",
+    "canon": "tsx src/cli.ts canon",
+    "run": "tsx src/cli.ts run",
+    "brief": "tsx src/cli.ts brief",
+    "yt-auth": "tsx scripts/yt-auth.ts",
+    "yt-setup": "tsx scripts/yt-setup.ts",
+    "yt-setup-all": "tsx scripts/yt-setup-all.ts",
+    "yt-publish-all": "tsx scripts/yt-publish-all.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "google-auth-library": "^9.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

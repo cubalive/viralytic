@@ -1,0 +1,26 @@
+{
+  "lang": "en",
+  "country": "US",
+  "defaultLanguage": "en",
+  "title": "Katharsis",
+  "handle": "@KatharsisCode",
+  "tagline": "Break. Release. Rise.",
+  "categoryId": "22",
+  "madeForKids": false,
+  "description": "Katharsis is for the ones ready to break old patterns, release emotional weight, and rise into a stronger version of themselves.\n\nThis is not empty motivation. This is transformation through truth, discipline, awareness, healing, energy, and personal awakening.\n\nWe speak to the moments nobody sees — the silent battles, the emotional resets, the nights of doubt, and the decision to become someone new. Katharsis turns pain into power, chaos into clarity, and endings into new beginnings.\n\nThrough cinematic motivational videos, deep reflections, awakening messages, and mindset shifts, this channel helps you reconnect with your inner fire and move forward with purpose.\n\nIf you are rebuilding yourself, healing from the past, or chasing a higher version of your life, you are in the right place.\n\nBreak. Release. Rise.\nWelcome to Katharsis.",
+  "keywords": [
+    "motivation", "awakening", "self improvement", "personal growth", "healing journey",
+    "discipline", "mindset shift", "inner strength", "transformation", "rise again",
+    "inner energy", "mental strength", "deep reflection", "personal development", "spiritual awakening",
+    "stoicism", "emotional intelligence", "daily motivation", "self mastery", "katharsis",
+    "self awareness", "let go of the past", "self love", "resilience", "life purpose",
+    "inner peace", "motivational quotes", "motivational video", "success mindset", "healing"
+  ],
+  "pillars": [
+    { "key": "awakening", "title": "🔥 Awakening", "desc": "Wake up your mind, escape autopilot, and see life differently. Awareness and clarity." },
+    { "key": "release", "title": "💧 Release", "desc": "Let go of emotional weight, guilt, fear and the past. You cannot rise carrying dead weight." },
+    { "key": "discipline-rebirth", "title": "⚡ Discipline & Rebirth", "desc": "Rise, focus and build a new identity. Discipline is the bridge between pain and power." },
+    { "key": "inner-energy", "title": "🌀 Inner Energy", "desc": "Frequency, energy, intuition and purpose. Protect your energy and your frequency." },
+    { "key": "after-the-chaos", "title": "🌅 After the Chaos", "desc": "For those who hit rock bottom and are rebuilding their life. You survived. Now rise." }
+  ]
+}

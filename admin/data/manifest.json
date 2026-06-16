@@ -1,0 +1,18 @@
+{
+  "characters": {
+    "sabi": {
+      "canonImages": [
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_01_wave.png",
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_02_present.png",
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_03_celebrate.png",
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_04_think.png",
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_05_clap.png",
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_06_neutral.png",
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_07_face.png",
+        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_08_point.png"
+      ],
+      "updatedAt": "2026-06-14T09:53:24.889Z"
+    }
+  },
+  "songs": {}
+}

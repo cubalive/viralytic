@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.env
+*.log
+data/output
+data/songs
+scripts
+docs
+# Se incluyen data/characters (canon de Sabi) y data/manifest.json para que el worker produzca.

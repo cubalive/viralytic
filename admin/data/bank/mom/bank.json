@@ -1,0 +1,39 @@
+[
+  {
+    "id": "tired-coffee_0",
+    "file": "C:\\Users\\alain\\kids-music-studio\\data\\bank\\mom\\clips\\tired-coffee_0.mp4",
+    "category": "tired-coffee",
+    "tags": [
+      "tired",
+      "exhausted",
+      "morning",
+      "selfcare"
+    ],
+    "durationS": 8,
+    "prompt": "a mother hands holding a coffee mug in a messy kitchen at dawn, exhausted mood, faceless, cinematic"
+  },
+  {
+    "id": "pregnant-belly_0",
+    "file": "C:\\Users\\alain\\kids-music-studio\\data\\bank\\mom\\clips\\pregnant-belly_0.mp4",
+    "category": "pregnant-belly",
+    "tags": [
+      "pregnancy",
+      "expecting",
+      "tender"
+    ],
+    "durationS": 8,
+    "prompt": "a pregnant woman hands cradling her belly by a window with soft light, faceless, warm tones"
+  },
+  {
+    "id": "window-quiet_0",
+    "file": "C:\\Users\\alain\\kids-music-studio\\data\\bank\\mom\\clips\\window-quiet_0.mp4",
+    "category": "window-quiet",
+    "tags": [
+      "selfcare",
+      "calm",
+      "reflection"
+    ],
+    "durationS": 8,
+    "prompt": "a mother silhouette standing quietly by a rainy window holding a warm cup, reflective mood, faceless"
+  }
+]

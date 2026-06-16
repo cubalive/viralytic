@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.env
+gcp-sa-key.json
+*.log
+
+# Media generada y assets pesados (la estructura y los .json sí se versionan)
+data/output/
+data/**/canon/
+data/**/refs/*.png
+data/**/refs/*.jpg
+data/**/refs/*.jpeg
+data/**/refs/*.webp
+data/songs/**/audio.*
+
+data/youtube/tokens/
+
+# Clips de video del banco (pesados, regenerables)
+data/bank/**/clips/

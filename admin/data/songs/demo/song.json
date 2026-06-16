@@ -1,0 +1,10 @@
+{
+  "id": "demo",
+  "title": "Canción Demo",
+  "lang": "es",
+  "audioPath": "data/songs/demo/audio.mp3",
+  "lyrics": "Pega aquí la letra completa de la canción.\nUna línea por verso ayuda a que las escenas y los captions queden mejor.",
+  "characters": ["principal", "secundario"],
+  "setting": "Escenario fijo colorido: un parque mágico con globos, luces suaves y colores pastel, ambiente alegre y seguro para niños",
+  "scenes": []
+}

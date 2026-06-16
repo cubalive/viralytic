@@ -1,0 +1,4 @@
+Pega aquí 3 fotos del personaje PRINCIPAL (png/jpg/webp).
+Idealmente: cara de frente, cuerpo entero y un tercer ángulo.
+Estas 3 fotos son el "ADN" del que se construye todo el canon.
+Borra este archivo cuando pongas las fotos.
