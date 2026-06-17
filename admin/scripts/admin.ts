@@ -9,11 +9,12 @@ import { log } from '../src/lib/log';
 interface ChannelDef { name: string; type: 'faceless' | 'sabikids'; gen?: string; lang?: string; pub?: string }
 const CHANNELS: Record<string, ChannelDef> = {
   'wealth': { name: 'World Wealth Mindset', type: 'faceless', gen: 'gen-wealth-batch.ts', lang: 'en', pub: 'wealth' },
+  'signal': { name: 'Signal From The Future', type: 'faceless', gen: 'gen-tech-batch.ts', lang: 'en', pub: 'signal' },
   'kat-es': { name: 'Katharsis Oficial (ES)', type: 'faceless', gen: 'gen-awakening-batch.ts', lang: 'es', pub: 'kat-es' },
   'kat-en': { name: 'Katharsis Code (EN)', type: 'faceless', gen: 'gen-awakening-batch.ts', lang: 'en', pub: 'kat-en' },
   'sabikids': { name: 'SabiKids (ES/EN/IT/ZH)', type: 'sabikids' },
 };
-const ORDER = ['wealth', 'kat-es', 'kat-en', 'sabikids'];
+const ORDER = ['wealth', 'signal', 'kat-es', 'kat-en', 'sabikids'];
 
 const arg = process.argv[2];
 const COUNT = String(Number(process.argv[3] || 5));

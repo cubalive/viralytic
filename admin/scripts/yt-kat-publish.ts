@@ -22,7 +22,7 @@ const YT = path.join(ROOT, 'data', 'youtube');
 const meta = await readJson<any>(path.join(YT, `channel_${slot}.json`), null);
 if (!meta) throw new Error(`falta channel_${slot}.json`);
 // Carpeta de origen por canal (bien separado, sin cruces)
-const DIRS: Record<string, string> = { 'kat-es': 'awakening', 'kat-en': 'awakening-en', 'wealth': 'wealth' };
+const DIRS: Record<string, string> = { 'kat-es': 'awakening', 'kat-en': 'awakening-en', 'wealth': 'wealth', 'signal': 'signal' };
 const lang = meta.lang || (slot === 'kat-en' ? 'en' : 'es');
 const localDir = path.join(OUTPUT_DIR, DIRS[slot] || slot);
 const playlists = await readJson<Record<string, string>>(path.join(YT, `kat_playlists_${slot}.json`), {});
