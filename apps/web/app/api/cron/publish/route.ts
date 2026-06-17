@@ -157,6 +157,42 @@ async function publishOneVideoLanguage(db: any, done: string[]) {
   }
 }
 
+/** Publish one ready reel (vertical Short) to its assigned channel. */
+async function publishOneReel(db: any, done: string[]) {
+  const { data: reel } = await db
+    .from('mv_reels')
+    .select('id, mode, topic, video_path, channel_id, metadata')
+    .eq('status', 'ready')
+    .not('video_path', 'is', null)
+    .not('channel_id', 'is', null)
+    .order('updated_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!reel) return;
+
+  const conn = await connectionFor(db, reel.channel_id);
+  if (!conn) return; // channel not connected — leave it ready
+
+  const { data: claimed } = await db
+    .from('mv_reels').update({ status: 'publishing' }).eq('id', reel.id).eq('status', 'ready').select('id');
+  if (!claimed?.length) return;
+
+  try {
+    const meta = (reel.metadata ?? {}) as { title?: string; description?: string; tags?: string[] };
+    const title = `${String(meta.title ?? reel.topic)} #Shorts`.slice(0, 95);
+    const videoId = await youtube.uploadVideo({
+      db, connection: conn, fileStream: await streamFromStorage(db, reel.video_path),
+      title, description: `${meta.description ?? reel.topic} #Shorts`,
+      tags: meta.tags ? [...meta.tags, 'shorts'] : ['shorts'],
+      categoryId: reel.mode === 'tech' ? '28' : '10', privacyStatus: 'public', defaultLanguage: 'es', madeForKids: false,
+    });
+    await db.from('mv_reels').update({ status: 'published', youtube_video_id: videoId }).eq('id', reel.id);
+    done.push(`reel:${reel.id}`);
+  } catch (e) {
+    await db.from('mv_reels').update({ status: 'ready', error: (e as Error).message }).eq('id', reel.id);
+  }
+}
+
 export async function GET(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const db = getServiceClient() as any;
@@ -164,6 +200,7 @@ export async function GET(req: NextRequest) {
   try {
     await publishOneCaroline(db, done);
     await publishOneVideoLanguage(db, done);
+    await publishOneReel(db, done);
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message, done }, { status: 500 });
   }
