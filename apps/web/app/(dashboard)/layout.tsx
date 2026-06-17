@@ -14,6 +14,7 @@ const adminNav: NavItem[] = [
   { href: '/stats', label: 'Estadísticas', icon: 'stats' },
   { href: '/music-videos', label: 'Music Videos', icon: 'music' },
   { href: '/caroline', label: 'Caroline', icon: 'caroline' },
+  { href: '/vallenato', label: 'Vallenatos', icon: 'vallenato' },
   { href: '/faceless', label: 'Faceless/Tech', icon: 'faceless' },
   { href: '/reels', label: 'Reels', icon: 'reels' },
   { href: '/bank', label: 'Banco', icon: 'bank' },

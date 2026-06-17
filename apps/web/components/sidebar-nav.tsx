@@ -16,6 +16,7 @@ import {
   Mic2,
   Clapperboard,
   BarChart3,
+  Radio,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -32,6 +33,7 @@ const ICONS: Record<string, LucideIcon> = {
   caroline: Mic2,
   reels: Clapperboard,
   stats: BarChart3,
+  vallenato: Radio,
 };
 
 export type NavItem = { href: string; label: string; icon: string; admin?: boolean };
