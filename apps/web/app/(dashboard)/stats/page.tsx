@@ -1,4 +1,4 @@
-import { BarChart3, Youtube, Clapperboard, Coins, CheckCircle2, Video } from 'lucide-react';
+import { BarChart3, Youtube, Clapperboard, Coins, CheckCircle2, Video, Eye, Flame } from 'lucide-react';
 import { requireAdmin } from '@/lib/admin';
 import { Reveal, Stagger, StaggerItem } from '@/components/motion';
 import { cn } from '@/lib/cn';
@@ -57,14 +57,34 @@ export default async function StatsPage() {
   const budgetCents = Number((budgetRow as any)?.value ?? 0) || 0;
   const remainingCents = budgetCents ? Math.max(0, budgetCents - spentCents) : 0;
 
+  // Rendimiento real en YouTube (puente de métricas — TODOS los canales)
+  const { data: stats } = await db
+    .from('mv_channel_stats')
+    .select('channel_name, language, views, likes, title')
+    .eq('organization_id', orgId);
+  const ytAgg = new Map<string, { videos: number; views: number; likes: number; top: number; topTitle: string; lang: string }>();
+  let totalViews = 0;
+  for (const s of (stats ?? []) as any[]) {
+    const v = Number(s.views ?? 0);
+    totalViews += v;
+    const e = ytAgg.get(s.channel_name) ?? { videos: 0, views: 0, likes: 0, top: 0, topTitle: '', lang: s.language };
+    e.videos++; e.views += v; e.likes += Number(s.likes ?? 0);
+    if (v >= e.top) { e.top = v; e.topTitle = s.title ?? ''; }
+    ytAgg.set(s.channel_name, e);
+  }
+  const ytRows = [...ytAgg.entries()]
+    .map(([name, e]) => ({ name, ...e, avg: e.videos ? Math.round(e.views / e.videos) : 0 }))
+    .sort((a, b) => b.views - a.views);
+
   const connected = list.filter((c) => connOf(c)?.connection_status === 'connected').length;
   const totalRendered = [...perChannel.values()].reduce((a, e) => a + e.rendered, 0);
   const totalPublished = [...perChannel.values()].reduce((a, e) => a + e.published, 0);
 
+  const totalTracked = (stats ?? []).length;
   const kpis = [
-    { icon: <Youtube size={18} />, label: 'Canales conectados', value: `${connected}/${list.length}` },
-    { icon: <Video size={18} />, label: 'Videos renderizados', value: String(totalRendered) },
-    { icon: <Clapperboard size={18} />, label: 'Publicados en YouTube', value: String(totalPublished) },
+    { icon: <Eye size={18} />, label: 'Vistas totales (YouTube)', value: totalViews.toLocaleString() },
+    { icon: <Clapperboard size={18} />, label: 'Videos publicados', value: String(totalTracked || totalPublished) },
+    { icon: <Youtube size={18} />, label: 'Canales activos', value: String(ytRows.length || list.length) },
     { icon: <Coins size={18} />, label: budgetCents ? 'Créditos IA restantes' : 'Gasto IA total', value: budgetCents ? usd(remainingCents) : usd(spentCents) },
   ];
 
@@ -93,6 +113,46 @@ export default async function StatsPage() {
           </StaggerItem>
         ))}
       </Stagger>
+
+      {/* Rendimiento real en YouTube (todos los canales, vía puente de métricas) */}
+      {ytRows.length > 0 && (
+        <Reveal>
+          <div className="mb-8">
+            <h2 className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-zinc-500">
+              <Flame size={13} className="text-magenta" /> Rendimiento en YouTube
+            </h2>
+            <div className="vx-card overflow-hidden p-0">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-left font-mono text-[10px] uppercase tracking-widest text-zinc-500">
+                    <th className="px-5 py-3">Canal</th>
+                    <th className="px-3 py-3">Idioma</th>
+                    <th className="px-3 py-3 text-right">Videos</th>
+                    <th className="px-3 py-3 text-right">Vistas</th>
+                    <th className="px-3 py-3 text-right">Promedio</th>
+                    <th className="px-5 py-3">Top video</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ytRows.map((r) => (
+                    <tr key={r.name} className="border-b border-white/[0.04] last:border-0">
+                      <td className="px-5 py-3">{r.name}</td>
+                      <td className="px-3 py-3 text-zinc-400">{LANG_LABEL[r.lang] ?? r.lang}</td>
+                      <td className="px-3 py-3 text-right tabular-nums">{r.videos}</td>
+                      <td className="px-3 py-3 text-right tabular-nums font-medium text-white">{r.views.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-right tabular-nums text-zinc-400">{r.avg}</td>
+                      <td className="max-w-[220px] truncate px-5 py-3 text-xs text-zinc-400" title={r.topTitle}>
+                        <span className="text-magenta">{r.top}</span> · {r.topTitle}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-xs text-zinc-600">Datos de YouTube vía el colector (`collect-stats`). Base para el ajuste automático de prompts según lo que más rinde.</p>
+          </div>
+        </Reveal>
+      )}
 
       {/* Gasto IA detalle */}
       <Reveal>
@@ -170,9 +230,9 @@ export default async function StatsPage() {
       </Reveal>
 
       <p className="mt-6 text-xs text-zinc-600">
-        Nota: los canales faceless del admin (World Wealth Mindset, Katharsis, SabiKids, Signal) publican por el sistema
-        local y aparecerán aquí al unificarlos en Supabase. Las métricas de vistas (para el ajuste automático de prompts)
-        requieren la recolección de YouTube Analytics.
+        Las vistas de todos los canales (faceless del admin + viralytic) se recolectan de YouTube y se actualizan a diario.
+        La tabla de abajo es el pipeline de render de viralytic (Zuri/Caroline); el rendimiento real de publicación está
+        arriba en “Rendimiento en YouTube”.
       </p>
     </div>
   );
