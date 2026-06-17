@@ -202,7 +202,7 @@ export async function uploadVideo(input: UploadVideoInput): Promise<string> {
 export async function updateChannelBranding(
   db: SupabaseClient,
   connection: YoutubeConnectionRow,
-  input: { description?: string; keywords?: string; country?: string },
+  input: { description?: string; keywords?: string; country?: string; defaultLanguage?: string },
 ): Promise<void> {
   if (!connection.youtube_channel_id) {
     throw new IntegrationError('YOUTUBE_NO_CHANNEL_ID', 'connection has no youtube_channel_id');
@@ -218,6 +218,7 @@ export async function updateChannelBranding(
           description: input.description?.slice(0, 1000),
           keywords: input.keywords,
           country: input.country,
+          defaultLanguage: input.defaultLanguage,
         },
       },
     },
