@@ -33,6 +33,11 @@ const pillarLines = (meta.pillars || []).map((p: any) => `${p.key}: ${p.title} �
 const stateFile = path.join(YT, `kat_published_${slot}.json`);
 const state = await readJson<Record<string, any>>(stateFile, {});
 
+// Cursor de agenda POR CANAL: última franja ya reservada, para no doble-reservar
+// entre corridas diarias (cada canal llena su grilla de forma independiente).
+const cursorFile = path.join(YT, `schedule_cursor_${slot}.json`);
+const cursor = await readJson<{ lastSlot?: string }>(cursorFile, {});
+
 // Recolecta videos listos (con frase.json)
 const dirs = fs.readdirSync(localDir, { withFileTypes: true })
   .filter((d) => d.isDirectory() && !d.name.startsWith('_'))
@@ -84,23 +89,45 @@ const SLOT_HOURS = [6, 9, 12, 15, 18, 21];
 
 /** ISO (UTC) de la hora `hour`:00 America/New_York en hoy+dayOffset. La máquina
  *  puede estar en otra zona (p.ej. LA), por eso se calcula el offset real de Miami. */
+// Offset (ms) de una zona respecto a UTC en un instante dado (positivo = adelantada).
+function tzOffsetMs(instant: number, tz: string): number {
+  const p: any = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(new Date(instant)).reduce((a: any, x) => ((a[x.type] = x.value), a), {});
+  const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second);
+  return asUTC - instant;
+}
 function miamiSlotISO(hour: number, dayOffset = 0): string {
   const ny = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
   const [y, m, d] = ny.format(new Date()).split('-').map(Number);
-  const naive = new Date(Date.UTC(y, m - 1, d + dayOffset, hour, 0, 0));
-  const off = naive.getTime() - new Date(naive.toLocaleString('en-US', { timeZone: 'America/New_York' })).getTime();
-  return new Date(naive.getTime() + off).toISOString();
+  const wall = Date.UTC(y, m - 1, d + dayOffset, hour, 0, 0); // hora de pared deseada (Miami)
+  let utc = wall - tzOffsetMs(wall, 'America/New_York');
+  utc = wall - tzOffsetMs(utc, 'America/New_York'); // 2ª pasada por bordes de DST
+  return new Date(utc).toISOString();
 }
+
+// Próximas `count` franjas Miami FUTURAS y posteriores al cursor (no doble-reserva).
+function buildDailySlots(count: number): string[] {
+  const after = Math.max(Date.now() + 60_000, cursor.lastSlot ? new Date(cursor.lastSlot).getTime() : 0);
+  const out: string[] = [];
+  for (let day = 0; out.length < count && day < 90; day++) {
+    for (const h of SLOT_HOURS) {
+      const iso = miamiSlotISO(h, day);
+      if (new Date(iso).getTime() > after) { out.push(iso); if (out.length >= count) break; }
+    }
+  }
+  return out;
+}
+const dailySlots = LAUNCH ? [] : buildDailySlots(PER_DAY);
 
 // Slot del i-ésimo video DE ESTA CORRIDA (i = 0..PER_DAY-1).
 function slotFor(i: number): string | undefined {
   if (LAUNCH) {
-    // hoy: el 1º público ya; el resto cada 1h.
+    // hoy (lanzamiento): el 1º público ya; el resto cada 1h.
     return i === 0 ? undefined : new Date(Date.now() + i * 3600_000).toISOString();
   }
-  // diario: i-ésimo en la franja Miami correspondiente; si ya pasó, público ya.
-  const iso = miamiSlotISO(SLOT_HOURS[Math.min(i, SLOT_HOURS.length - 1)], 0);
-  return new Date(iso).getTime() > Date.now() + 60_000 ? iso : undefined;
+  return dailySlots[i]; // diario: repartido en la grilla Miami, siempre futuro
 }
 
 let publishedNow = 0, scheduled = 0, placed = 0;
@@ -141,5 +168,11 @@ for (const dir of dirs) {
     log.err(`${slug} upload: ${msg.slice(0, 140)}`);
     if (/uploadLimitExceeded|quotaExceeded|exceeded.*number/i.test(msg)) { log.warn('Límite de subidas del canal alcanzado — paro aquí (reanudable).'); break; }
   }
+}
+// Avanza el cursor a la última franja reservada (modo diario), para que la
+// próxima corrida continúe desde ahí sin doble-reservar.
+if (!LAUNCH && placed > 0 && dailySlots[placed - 1]) {
+  cursor.lastSlot = dailySlots[placed - 1];
+  await writeJson(cursorFile, cursor);
 }
 console.log(`\n✅ ${slot}: ${publishedNow} públicos hoy + ${scheduled} programados. Total acumulado: ${Object.keys(state).length}/${dirs.length}.`);
