@@ -35,17 +35,16 @@ const SCHEMA = {
   },
   required: ['titulo', 'descripcion', 'tags', 'pillar'],
 };
-const SYS = lang === 'en'
-  ? `You are the #1 YouTube SEO strategist for the channel "${brandName}"${nicheHint}. Produce METICULOUS, SPECIFIC metadata tied to THIS video's message AND the "${brandName}" niche — NEVER mention any other brand or channel name.
-- titulo: click-worthy, MAX 100 chars, hook + real keyword, emotional (1-2 emojis ok). No templates.
-- descripcion: strong SEO. Hook + keywords first line; 2-3 lines of depth; clear CTA; close with the brand line "${brandLine}" + 8-12 specific hashtags.
-- tags: 18-26 specific tags for THIS channel's niche (~500 chars total). Never another brand's name.
-- pillar: best key from:\n${pillarLines}\nReturn ONLY JSON.`
-  : `Eres el estratega #1 de YouTube SEO para el canal "${brandName}"${nicheHint}. Crea metadata MINUCIOSA y ESPECÍFICA atada al mensaje de ESTE video Y al nicho de "${brandName}" — NUNCA menciones otra marca o canal.
-- titulo: invita al clic, MÁX 100 chars, gancho + keyword real, emocional (1-2 emojis ok). Sin plantillas.
-- descripcion: SEO fuerte. Gancho + keywords 1ª línea; 2-3 líneas de profundidad; CTA claro; cierra con la frase de marca "${brandLine}" + 8-12 hashtags específicos.
-- tags: 18-26 etiquetas del nicho de ESTE canal (~500 chars total). Nunca la marca de otro canal.
-- pillar: mejor clave de:\n${pillarLines}\nDevuelve SOLO JSON.`;
+const LANG_FULL: Record<string, string> = { es: 'Spanish', en: 'English', it: 'Italian', zh: 'Simplified Chinese' };
+const langName = LANG_FULL[lang] ?? 'English';
+const SYS =
+  `You are the world's #1 YouTube SEO strategist (2026 best practices) for the channel "${brandName}"${nicheHint}. ` +
+  `Write ALL output STRICTLY in ${langName}, tied to THIS video's message and the "${brandName}" niche. NEVER mention any other brand or channel name. Natural, human, professional — no keyword stuffing, no AI clichés.\n` +
+  `Return ONLY JSON with:\n` +
+  `- titulo: ≤100 characters. Structure "primary keyword | emotional hook | ${brandName}". Primary keyword near the start, natural (no clickbait), 1-2 emojis ok.\n` +
+  `- descripcion: a RICH SEO description (aim 1500-3000+ characters, use the space). Structure: (1) INTRO — hook + what the viewer will learn, with primary and secondary keywords; (2) BODY — depth on the topic, related concepts and entities, answer common audience questions, weave long-tail phrases, synonyms and LSI keywords naturally, and one line on what "${brandName}" is about and why to follow it (channel authority); (3) END — clear CTA (subscribe, watch another video, a playlist), a community invitation, then a final line with 8-12 specific hashtags. Close the brand voice with "${brandLine}".\n` +
+  `- tags: 18-26 specific tags (mix of high-volume, medium, long-tail, brand, related entities and question searches) for THIS niche, ~500 characters total, no duplicates, never another brand's name.\n` +
+  `- pillar: best key from:\n${pillarLines}`;
 
 function capTags(tags: string[]): string[] {
   const out: string[] = []; let total = 0;

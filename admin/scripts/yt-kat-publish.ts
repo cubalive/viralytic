@@ -59,17 +59,16 @@ const SCHEMA = {
 const brandName: string = meta.title || slot;
 const brandLine: string = meta.brandLine || meta.tagline || brandName;
 const nicheHint: string = meta.tagline ? ` (brand line: "${meta.tagline}")` : '';
-const SYS = lang === 'en'
-  ? `You are the #1 YouTube SEO strategist for the channel "${brandName}"${nicheHint}. You are given the EXACT phrase of one vertical Short. Produce METICULOUS, SPECIFIC metadata (never generic, always tied to THIS video's message AND to the "${brandName}" niche — NEVER mention any other brand or channel name):
-- titulo: a powerful click-worthy title, MAX 100 characters, with a hook + a real search keyword, emotional, specific to the phrase (1-2 emojis allowed). No templates.
-- descripcion: strong SEO. First line = hook + keywords. Then 2-3 lines expanding the video's message with depth. A clear CTA (subscribe / comment / save). Close with the brand line "${brandLine}" and a final line of 8-12 relevant, specific hashtags.
-- tags: 18-26 specific tags (mix long-tail + niche + broad) tied to THIS channel's niche; enough to fill ~500 characters total. Never include another brand's name.
-- pillar: choose the single best key from:\n${pillarLines}\nReturn ONLY JSON.`
-  : `Eres el estratega #1 de YouTube SEO para el canal "${brandName}"${nicheHint}. Te doy la FRASE EXACTA de un Short vertical. Creas metadata MINUCIOSA y ESPECÍFICA (nunca genérica, siempre atada al mensaje de ESTE video Y al nicho de "${brandName}" — NUNCA menciones otra marca o canal):
-- titulo: un título potente que invite al clic, MÁXIMO 100 caracteres, con gancho + una keyword real de búsqueda, emocional, específico a la frase (1-2 emojis permitidos). Sin plantillas.
-- descripcion: SEO fuerte. Primera línea = gancho + keywords. Luego 2-3 líneas que amplíen el mensaje del video con profundidad. Un CTA claro (suscribirse / comentar / guardar). Cierra con la frase de marca "${brandLine}" y una línea final de 8-12 hashtags relevantes y específicos.
-- tags: 18-26 etiquetas específicas (mezcla long-tail + nicho + generales) atadas al nicho de ESTE canal; suficientes para llenar ~500 caracteres en total. Nunca incluyas la marca de otro canal.
-- pillar: elige la mejor clave de:\n${pillarLines}\nDevuelve SOLO JSON.`;
+const LANG_FULL: Record<string, string> = { es: 'Spanish', en: 'English', it: 'Italian', zh: 'Simplified Chinese' };
+const langName = LANG_FULL[lang] ?? 'English';
+const SYS =
+  `You are the world's #1 YouTube SEO strategist (2026 best practices) for the channel "${brandName}"${nicheHint}. ` +
+  `You are given the EXACT phrase of one video. Write ALL output STRICTLY in ${langName}, tied to THIS video's message and the "${brandName}" niche. NEVER mention any other brand or channel name. Natural, human, professional — no keyword stuffing.\n` +
+  `Return ONLY JSON with:\n` +
+  `- titulo: ≤100 characters. Structure "primary keyword | emotional hook | ${brandName}". Primary keyword near the start, natural (no clickbait), 1-2 emojis ok.\n` +
+  `- descripcion: a RICH SEO description (aim 1200-3000+ characters). (1) INTRO: hook + what the viewer gets, with primary/secondary keywords; (2) BODY: depth, related concepts/entities, answer common audience questions, long-tail phrases, synonyms and LSI keywords woven naturally, plus one line on what "${brandName}" is about and why to follow (channel authority); (3) END: clear CTA (subscribe / comment / save / watch another), community invite, brand line "${brandLine}", and a final line of 8-12 specific hashtags.\n` +
+  `- tags: 18-26 specific tags (high-volume + medium + long-tail + brand + related entities + question searches) for THIS niche, ~500 chars total, no duplicates, never another brand.\n` +
+  `- pillar: best key from:\n${pillarLines}`;
 
 // Sanea + llena tags hasta ~480 chars (YouTube rechaza < > comillas y suma > 500)
 function capTags(tags: string[]): string[] {
