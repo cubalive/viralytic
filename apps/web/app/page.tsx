@@ -1,96 +1,70 @@
 import Link from 'next/link';
-import { ArrowUpRight, Sparkles, Zap, TrendingUp } from 'lucide-react';
+import { Reveal } from '@/components/motion';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen">
+    <main className="grain relative flex min-h-screen flex-col overflow-hidden">
+      {/* ambient background */}
+      <div className="pointer-events-none absolute inset-0 bg-aurora" />
+      <div className="pointer-events-none absolute inset-0 bg-grid [background-size:44px_44px] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_20%,transparent_70%)] opacity-60" />
+      <div className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] rounded-full bg-magenta/20 blur-[130px]" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-cyan-brand/15 blur-[130px]" />
+
       {/* NAV */}
-      <nav className="border-b border-white/5 backdrop-blur-xl bg-graphite/70 sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 max-w-6xl flex items-center justify-between">
+      <nav className="relative z-50 border-b border-white/[0.06]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Logo />
-          <Link href="/login" className="font-mono text-xs uppercase tracking-widest px-5 py-2 bg-white text-graphite rounded-full font-semibold hover:scale-105 transition">
-            Start free
+          {/* discreet access for the owner — no public product yet */}
+          <Link href="/login" className="font-mono text-[11px] uppercase tracking-widest text-zinc-500 transition-colors hover:text-zinc-200">
+            Sign in
           </Link>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section className="relative overflow-hidden py-24 px-6">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-magenta/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-brand/15 blur-[120px] rounded-full" />
+      {/* HERO — teaser only, nothing concrete */}
+      <section className="relative z-10 flex flex-1 items-center px-6">
+        <div className="mx-auto w-full max-w-3xl py-24 text-center">
+          <Reveal>
+            <div className="vx-eyebrow mb-8 justify-center">
+              <span className="h-px w-8 bg-zinc-500" />
+              Where data meets virality
+              <span className="h-px w-8 bg-zinc-500" />
+            </div>
+          </Reveal>
 
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <div className="font-mono text-xs uppercase tracking-widest text-zinc-500 mb-8 flex items-center gap-3">
-            <span className="w-8 h-px bg-zinc-500" />
-            Where data meets virality
-          </div>
+          <Reveal delay={0.05}>
+            <h1 className="mb-8 font-display text-6xl font-normal leading-[0.95] tracking-tight md:text-7xl">
+              Intelligence,
+              <br />
+              <span className="italic text-gradient">in motion.</span>
+            </h1>
+          </Reveal>
 
-          <h1 className="font-display text-7xl md:text-8xl font-normal leading-[0.95] tracking-tight mb-8">
-            Your product.<br />
-            A viral{' '}
-            <span className="italic bg-gradient-to-r from-magenta to-cyan-brand bg-clip-text text-transparent">
-              TikTok.
-            </span>
-            <br />
-            In ten minutes.
-          </h1>
+          <Reveal delay={0.1}>
+            <p className="mx-auto mb-12 max-w-xl text-lg leading-relaxed text-zinc-400 md:text-xl">
+              We turn signal into story. Something is being built here — quietly, and on purpose.
+            </p>
+          </Reveal>
 
-          <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed mb-12">
-            The intelligence platform that analyzes what converts, ensembles two frontier models with a Judge, and ships videos that sell.
-          </p>
-
-          <div className="flex flex-wrap gap-4">
-            <Link href="/login" className="px-8 py-4 bg-magenta hover:bg-magenta-600 text-white font-semibold rounded-full transition group">
-              Generate your first video
-              <ArrowUpRight className="inline ml-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition" size={18} />
-            </Link>
-            <Link href="/trending" className="px-8 py-4 border border-white/10 rounded-full hover:bg-white/5 transition font-medium">
-              Browse trending products
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-0 mt-20 border-y border-white/10 py-8">
-            {[
-              { v: '3', l: 'Creation modes' },
-              { v: '8', l: 'Pipeline stages' },
-              { v: '5', l: 'Trending sources' },
-              { v: '~10', l: 'Minutes URL→post', suffix: 'min' },
-            ].map((s, i) => (
-              <div key={i} className={`px-6 ${i > 0 ? 'border-l border-white/10' : ''}`}>
-                <div className="font-display text-5xl">{s.v}{s.suffix && <span className="font-mono text-sm text-zinc-500 ml-1">{s.suffix}</span>}</div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-zinc-500 mt-2">{s.l}</div>
-              </div>
-            ))}
-          </div>
+          <Reveal delay={0.15}>
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 backdrop-blur-xl">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-magenta opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-magenta" />
+              </span>
+              <span className="font-mono text-xs uppercase tracking-[0.25em] text-zinc-300">Coming soon</span>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* THREE PILLARS */}
-      <section className="border-t border-white/5 py-24 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-3 gap-6">
-            <Pillar
-              icon={<TrendingUp />}
-              tag="01 · Discover"
-              title="Trending sourced from 5 channels"
-              desc="TikTok Creative Center, hashtags, Google Trends, Reddit, Amazon Movers. Refreshed every 12 hours. Ranked by composite virality."
-            />
-            <Pillar
-              icon={<Sparkles />}
-              tag="02 · Generate"
-              title="Claude + GPT + Judge ensemble"
-              desc="Two frontier models write three variants each. A Judge agent ranks all six against your brand's historical winners. You get the top three."
-            />
-            <Pillar
-              icon={<Zap />}
-              tag="03 · Ship"
-              title="Voice, visuals, captions, posted"
-              desc="ElevenLabs voice clone with SSML emphasis. Flux Pro + Kling visuals. Remotion-rendered captions. Auto-published to TikTok."
-            />
-          </div>
+      {/* FOOTER */}
+      <footer className="relative z-10 border-t border-white/[0.06]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 font-mono text-[10px] uppercase tracking-widest text-zinc-600">
+          <span>© viralytic</span>
+          <span>All rights reserved</span>
         </div>
-      </section>
+      </footer>
     </main>
   );
 }
@@ -98,26 +72,13 @@ export default function LandingPage() {
 function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 font-display text-xl">
-      <div className="w-7 h-7 rounded-md bg-gradient-to-br from-magenta to-cyan-brand relative">
-        <div className="absolute inset-[3px] bg-graphite rounded-sm" />
-        <div className="absolute inset-[8px] bg-gradient-to-br from-magenta to-cyan-brand rounded-[1px]" />
+      <div className="relative h-7 w-7 rounded-md bg-brand-gradient">
+        <div className="absolute inset-[3px] rounded-sm bg-graphite" />
+        <div className="absolute inset-[8px] rounded-[1px] bg-brand-gradient" />
       </div>
       <span className="font-semibold tracking-tight">
-        viral<span className="italic font-display">ytic</span>
+        viral<span className="italic">ytic</span>
       </span>
     </Link>
-  );
-}
-
-function Pillar({ icon, tag, title, desc }: any) {
-  return (
-    <div className="p-8 rounded-2xl border border-white/5 bg-graphite-50 hover:border-white/10 transition group">
-      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-cyan-brand mb-6 group-hover:text-magenta transition">
-        {icon}
-      </div>
-      <div className="font-mono text-[10px] uppercase tracking-widest text-zinc-500 mb-3">{tag}</div>
-      <h3 className="font-display text-2xl mb-3 leading-tight">{title}</h3>
-      <p className="text-zinc-400 text-sm leading-relaxed">{desc}</p>
-    </div>
   );
 }

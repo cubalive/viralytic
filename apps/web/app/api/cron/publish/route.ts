@@ -15,33 +15,46 @@ const BUCKET = 'assets';
 const CAROLINE_HANDLE = '@CarolineMusicShow';
 
 /**
- * Resolve the Caroline mv_channels id robustly. Prefers the channel carrying the
- * current YouTube handle (so a duplicate "Caroline" project can't misroute the
- * publish), then falls back to the newest Caroline project's es channel.
+ * Resolve the Caroline mv_channels id robustly. A duplicate/empty "Caroline"
+ * project (same handle, no connection) must never win, so we gather every
+ * candidate channel (any project named "Caroline" + any channel carrying the
+ * Caroline handle) and PREFER the one that actually has a connected YouTube
+ * connection. Only if none is connected do we fall back to the handle-carrying
+ * channel, then the newest candidate.
  */
 async function carolineChannelId(db: any): Promise<string | null> {
-  const { data: byHandle } = await db
-    .from('mv_channels')
-    .select('id')
-    .eq('youtube_handle', CAROLINE_HANDLE)
-    .limit(1);
-  if (byHandle?.length) return byHandle[0].id as string;
+  const { data: projects } = await db.from('mv_projects').select('id').eq('name', 'Caroline');
+  const projIds: string[] = (projects ?? []).map((p: any) => p.id);
 
-  const { data: proj } = await db
-    .from('mv_projects')
-    .select('id')
-    .eq('name', 'Caroline')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (!proj) return null;
-  const { data: chan } = await db
+  const orFilter = [
+    projIds.length ? `project_id.in.(${projIds.join(',')})` : '',
+    `youtube_handle.eq.${CAROLINE_HANDLE}`,
+  ]
+    .filter(Boolean)
+    .join(',');
+  const { data: channels } = await db
     .from('mv_channels')
-    .select('id')
-    .eq('project_id', proj.id)
-    .eq('language', 'es')
-    .maybeSingle();
-  return chan?.id ?? null;
+    .select('id, youtube_handle, created_at')
+    .or(orFilter)
+    .order('created_at', { ascending: false });
+  const cands = (channels ?? []) as Array<{ id: string; youtube_handle: string | null }>;
+  if (!cands.length) return null;
+
+  // Prefer the candidate that actually has a connected YouTube connection.
+  const { data: conns } = await db
+    .from('mv_youtube_connections')
+    .select('channel_id')
+    .in(
+      'channel_id',
+      cands.map((c) => c.id),
+    )
+    .eq('connection_status', 'connected')
+    .limit(1);
+  if (conns?.length) return conns[0].channel_id as string;
+
+  // No connection yet: fall back to the handle-carrying channel, else newest.
+  const chosen = cands.find((c) => c.youtube_handle === CAROLINE_HANDLE) ?? cands[0];
+  return chosen?.id ?? null;
 }
 
 function authorized(req: NextRequest): boolean {

@@ -5,6 +5,16 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node --import=tsx/esm src/index.ts",
+    "plan": "node --import=tsx/esm src/plan-scenes.ts",
+    "plan:dev": "tsx watch src/plan-scenes.ts",
+    "bank": "node --import=tsx/esm src/bank-enrich.ts",
+    "faceless": "node --import=tsx/esm src/faceless-render.ts",
+    "canon": "node --import=tsx/esm src/canon-builder.ts",
+    "song": "node --import=tsx/esm src/caroline-song.ts",
+    "caroline:poll": "node --import=tsx/esm src/caroline-poll.ts",
+    "sync:bank": "tsx src/sync-bank.ts",
+    "worker": "node --import=tsx/esm src/worker.ts",
+    "faceless:dev": "tsx watch src/faceless-render.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
