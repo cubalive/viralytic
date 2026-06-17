@@ -59,7 +59,8 @@ const NICHE = {
     : 'You generate fresh, distinct TOPICS for an AWAKENING / consciousness Shorts channel. Each topic = a short English title of an uncomfortable societal truth or a self-realization theme. Return ONLY JSON {topics:[...]}.',
   ask: LANG === 'es' ? 'Canal de despertar/consciencia en español.' : 'Awakening / consciousness channel in English.',
 };
-const MOODS = ['esperanzador', 'retencion-tiktok', 'exotico-premium', 'ensueno', 'emotivo', 'tenso-suave'];
+// Sonidos virales/impactantes (trap) de TikTok — pegan fuerte en los cortes al beat.
+const MOODS = ['retencion-tiktok'];
 const THEMES = [
   'a breathtaking modern city skyline at golden hour', 'a person on a mountain cliff facing a vast glowing sunrise',
   'a stunning ocean horizon at dawn with dramatic light', 'a serene forest with sun rays piercing the trees',
@@ -122,7 +123,7 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const final = path.join(dir, 'video.mp4');
   if (fs.existsSync(final) && fs.statSync(final).size > 10000) { log.ok(`${topic} ya existe`); return final; }
 
-  const music = await getMoodTrack(mood, path.join(dir, 'music.mp3'));
+  const music = await getMoodTrack(mood, path.join(dir, 'music.mp3'), idx);
   const dur = await probeDuration(music);
   const all = await detectBeats(music, { minGap: 0.3 });
   const beats = all.filter((b) => b >= 0.2 && b < Math.min(dur, 28));

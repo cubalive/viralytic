@@ -107,7 +107,7 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const final = path.join(dir, 'video.mp4');
   if (fs.existsSync(final) && fs.statSync(final).size > 10000) { log.ok(`${topic} ya existe`); return final; }
 
-  const music = await getMoodTrack(mood, path.join(dir, 'music.mp3'));
+  const music = await getMoodTrack(mood, path.join(dir, 'music.mp3'), idx);
   const dur = await probeDuration(music);
   const all = await detectBeats(music, { minGap: 0.3 });
   const beats = all.filter((b) => b >= 0.2 && b < Math.min(dur, 28));
@@ -167,7 +167,8 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   return final;
 }
 
-const MOODS = ['tenso-suave', 'esperanzador', 'retencion-tiktok', 'exotico-premium', 'ensueno', 'emotivo'];
+// Sonidos virales/impactantes (trap) de TikTok — pegan fuerte en los cortes al beat.
+const MOODS = ['retencion-tiktok'];
 log.step(`Temas frescos (${N_TARGET})`);
 const TOPICS = await freshTopics(`wealth-${LANG}`, NICHE, N_TARGET, SEED);
 log.ok(`temas: ${TOPICS.join(' · ').slice(0, 120)}…`);
