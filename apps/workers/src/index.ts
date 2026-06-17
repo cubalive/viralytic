@@ -13,6 +13,12 @@ import './workers/visual-generation';
 import './workers/video-assembly';
 import './workers/publishing';
 import './workers/metrics-collection';
+import './workers/mv-notify';
+// NOTE: mv-publish (BullMQ) is intentionally NOT registered. The single source of
+// truth for YouTube publishing is the Vercel cron apps/web/app/api/cron/publish.
+// This app (apps/workers) is not deployed (no Redis host); registering mv-publish
+// here too would double-publish mv_video_languages. See route.ts for the live path.
+// import './workers/mv-publish';
 
 // ===========================================================
 // Cron schedules
@@ -30,6 +36,17 @@ async function scheduleCrons() {
     { region: 'US', language: 'en', timeframe: '7d' },
     { repeat: { pattern: '0 */12 * * *' }, jobId: 'cron-trending-us-en' },
   );
+
+  // mv-notify: every 5 minutes, emails when a Zuri video finishes rendering.
+  await queues.mvNotify.add(
+    'cron-mv-notify',
+    {},
+    { repeat: { pattern: '*/5 * * * *' }, jobId: 'cron-mv-notify' },
+  );
+
+  // mv-publish: DISABLED here — YouTube publishing is owned by the Vercel cron
+  // (apps/web/app/api/cron/publish). Re-enabling this alongside the cron would
+  // double-publish. If you ever move publishing back to BullMQ, remove it there.
 
   // Metrics collection: every 6 hours, picks up active publications
   // (the worker itself fans out per publication)

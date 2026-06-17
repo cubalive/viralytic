@@ -18,3 +18,11 @@ coverage
 supabase/.temp/
 
 .claude/
+.vercel
+
+# secrets — never commit (also catches stray mangled-path files like "C:Users...secrets...key.txt")
+.secrets/
+*secret*.txt
+*-key.txt
+*-key.json
+*-oauth-*.json
