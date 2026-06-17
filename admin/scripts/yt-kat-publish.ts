@@ -13,7 +13,10 @@ import { log } from '../src/lib/log';
 
 const slot = process.argv[2];
 if (!slot) throw new Error('Uso: tsx scripts/yt-kat-publish.ts <kat-es|kat-en> [perDay]');
-const PER_DAY = Number(process.argv[3] || 5);
+const PER_DAY = Number(process.argv[3] || 6);
+// LAUNCH=1 → hoy: el 1º público ya y el resto cada 1h hasta PER_DAY.
+// (por defecto) diario → reparte en los slots fijos de Miami 6,9,12,15,18,21.
+const LAUNCH = process.env.LAUNCH === '1';
 const YT = path.join(ROOT, 'data', 'youtube');
 
 const meta = await readJson<any>(path.join(YT, `channel_${slot}.json`), null);
@@ -47,16 +50,20 @@ const SCHEMA = {
   },
   required: ['titulo', 'descripcion', 'tags', 'pillar'],
 };
+// Branding por canal (desde channel_<slot>.json): nunca usar la marca de otro canal.
+const brandName: string = meta.title || slot;
+const brandLine: string = meta.brandLine || meta.tagline || brandName;
+const nicheHint: string = meta.tagline ? ` (brand line: "${meta.tagline}")` : '';
 const SYS = lang === 'en'
-  ? `You are the #1 YouTube SEO strategist for KATHARSIS, a cinematic motivation/awakening Shorts channel (brand line: "Break. Release. Rise."). You are given the EXACT phrase of one vertical Short. Produce METICULOUS, SPECIFIC metadata (never generic, always tied to THIS video's message):
+  ? `You are the #1 YouTube SEO strategist for the channel "${brandName}"${nicheHint}. You are given the EXACT phrase of one vertical Short. Produce METICULOUS, SPECIFIC metadata (never generic, always tied to THIS video's message AND to the "${brandName}" niche — NEVER mention any other brand or channel name):
 - titulo: a powerful click-worthy title, MAX 100 characters, with a hook + a real search keyword, emotional, specific to the phrase (1-2 emojis allowed). No templates.
-- descripcion: strong SEO. First line = hook + keywords. Then 2-3 lines expanding the video's message with depth. A clear CTA (subscribe / comment / save). Close with the brand line "Break. Release. Rise." and a final line of 8-12 relevant, specific hashtags.
-- tags: 18-26 specific tags (mix long-tail + niche + broad) tied to the theme; enough to fill ~500 characters total.
+- descripcion: strong SEO. First line = hook + keywords. Then 2-3 lines expanding the video's message with depth. A clear CTA (subscribe / comment / save). Close with the brand line "${brandLine}" and a final line of 8-12 relevant, specific hashtags.
+- tags: 18-26 specific tags (mix long-tail + niche + broad) tied to THIS channel's niche; enough to fill ~500 characters total. Never include another brand's name.
 - pillar: choose the single best key from:\n${pillarLines}\nReturn ONLY JSON.`
-  : `Eres el estratega #1 de YouTube SEO para KATHARSIS, un canal de Shorts de motivación/despertar cinematográfico (frase de marca: "Rompe. Suelta. Renace."). Te doy la FRASE EXACTA de un Short vertical. Creas metadata MINUCIOSA y ESPECÍFICA (nunca genérica, siempre atada al mensaje de ESTE video):
+  : `Eres el estratega #1 de YouTube SEO para el canal "${brandName}"${nicheHint}. Te doy la FRASE EXACTA de un Short vertical. Creas metadata MINUCIOSA y ESPECÍFICA (nunca genérica, siempre atada al mensaje de ESTE video Y al nicho de "${brandName}" — NUNCA menciones otra marca o canal):
 - titulo: un título potente que invite al clic, MÁXIMO 100 caracteres, con gancho + una keyword real de búsqueda, emocional, específico a la frase (1-2 emojis permitidos). Sin plantillas.
-- descripcion: SEO fuerte. Primera línea = gancho + keywords. Luego 2-3 líneas que amplíen el mensaje del video con profundidad. Un CTA claro (suscribirse / comentar / guardar). Cierra con la frase de marca "Rompe. Suelta. Renace." y una línea final de 8-12 hashtags relevantes y específicos.
-- tags: 18-26 etiquetas específicas (mezcla long-tail + nicho + generales) atadas al tema; suficientes para llenar ~500 caracteres en total.
+- descripcion: SEO fuerte. Primera línea = gancho + keywords. Luego 2-3 líneas que amplíen el mensaje del video con profundidad. Un CTA claro (suscribirse / comentar / guardar). Cierra con la frase de marca "${brandLine}" y una línea final de 8-12 hashtags relevantes y específicos.
+- tags: 18-26 etiquetas específicas (mezcla long-tail + nicho + generales) atadas al nicho de ESTE canal; suficientes para llenar ~500 caracteres en total. Nunca incluyas la marca de otro canal.
 - pillar: elige la mejor clave de:\n${pillarLines}\nDevuelve SOLO JSON.`;
 
 // Sanea + llena tags hasta ~480 chars (YouTube rechaza < > comillas y suma > 500)
@@ -72,20 +79,35 @@ function capTags(tags: string[]): string[] {
   return out;
 }
 
-// Slot de publicación: primeros PER_DAY = ahora (hoy público); resto programado 5/día a horas pico.
-const HOURS = [6, 9, 13, 18, 21];
-function slotFor(scheduledIndex: number): string | undefined {
-  if (scheduledIndex < PER_DAY) return undefined; // público ya
-  const j = scheduledIndex - PER_DAY;
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1 + Math.floor(j / PER_DAY), HOURS[j % PER_DAY], 0, 0);
-  return d.toISOString();
+// Franjas fijas en hora de Miami (America/New_York), 6/día dentro de 6am–9pm, ≥1h aparte.
+const SLOT_HOURS = [6, 9, 12, 15, 18, 21];
+
+/** ISO (UTC) de la hora `hour`:00 America/New_York en hoy+dayOffset. La máquina
+ *  puede estar en otra zona (p.ej. LA), por eso se calcula el offset real de Miami. */
+function miamiSlotISO(hour: number, dayOffset = 0): string {
+  const ny = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const [y, m, d] = ny.format(new Date()).split('-').map(Number);
+  const naive = new Date(Date.UTC(y, m - 1, d + dayOffset, hour, 0, 0));
+  const off = naive.getTime() - new Date(naive.toLocaleString('en-US', { timeZone: 'America/New_York' })).getTime();
+  return new Date(naive.getTime() + off).toISOString();
 }
 
-let publishedNow = 0, scheduled = 0, idx = Object.keys(state).length;
+// Slot del i-ésimo video DE ESTA CORRIDA (i = 0..PER_DAY-1).
+function slotFor(i: number): string | undefined {
+  if (LAUNCH) {
+    // hoy: el 1º público ya; el resto cada 1h.
+    return i === 0 ? undefined : new Date(Date.now() + i * 3600_000).toISOString();
+  }
+  // diario: i-ésimo en la franja Miami correspondiente; si ya pasó, público ya.
+  const iso = miamiSlotISO(SLOT_HOURS[Math.min(i, SLOT_HOURS.length - 1)], 0);
+  return new Date(iso).getTime() > Date.now() + 60_000 ? iso : undefined;
+}
+
+let publishedNow = 0, scheduled = 0, placed = 0;
 for (const dir of dirs) {
   const slug = path.basename(dir);
   if (state[slug]) continue;
+  if (placed >= PER_DAY) { log.ok(`Tope de ${PER_DAY} por corrida alcanzado — el resto queda para la próxima.`); break; }
   const fr = await readJson<any>(path.join(dir, 'frase.json'), null);
   if (!fr?.frase) { log.warn(`${slug}: sin frase, salto`); continue; }
 
@@ -98,7 +120,7 @@ for (const dir of dirs) {
 
   const title = (md.titulo || fr.topic).slice(0, 100);
   const tags = capTags(md.tags || []);
-  const publishAt = slotFor(idx);
+  const publishAt = slotFor(placed);
   try {
     const res = await uploadVideo(slot, {
       title, description: md.descripcion || '', tags,
@@ -113,7 +135,7 @@ for (const dir of dirs) {
     if (plId) { try { await addToPlaylist(slot, plId, videoId); } catch (e) { log.warn(`playlist ${slug}: ${(e as Error).message.slice(0, 60)}`); } }
     if (publishAt) { scheduled++; log.ok(`📅 ${slug} → ${publishAt.slice(0, 16)} [${md.pillar}] "${title.slice(0, 50)}"`); }
     else { publishedNow++; log.ok(`🔴 PÚBLICO ${slug} [${md.pillar}] "${title.slice(0, 50)}"`); }
-    idx++;
+    placed++;
   } catch (e) {
     const msg = (e as Error).message;
     log.err(`${slug} upload: ${msg.slice(0, 140)}`);
