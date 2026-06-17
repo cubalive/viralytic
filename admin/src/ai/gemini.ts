@@ -1,37 +1,39 @@
-import { config } from '../config';
-import { publisherModelUrl, vertexPost } from '../lib/vertex';
+// Text/JSON/vision generation — now backed by OpenAI ChatGPT (switched from
+// Gemini/Vertex per request). The exported names (geminiText/geminiJson/
+// geminiVision) are kept so the ~20 callers don't change; only the engine did.
+import OpenAI from 'openai';
 import { toBase64 } from '../lib/files';
 
-interface Part {
-  text?: string;
-  inlineData?: { mimeType: string; data: string };
-}
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const TEXT_MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o';
+const VISION_MODEL = process.env.OPENAI_VISION_MODEL ?? TEXT_MODEL;
 
-async function generate(
-  model: string,
-  parts: Part[],
-  opts: { json?: boolean; schema?: unknown; system?: string } = {},
-): Promise<string> {
-  const body: any = { contents: [{ role: 'user', parts }], generationConfig: {} };
-  if (opts.system) body.systemInstruction = { parts: [{ text: opts.system }] };
-  if (opts.json) {
-    body.generationConfig.responseMimeType = 'application/json';
-    if (opts.schema) body.generationConfig.responseSchema = opts.schema;
-  }
-  // Gemini responde en la región 'global' (verificado).
-  const url = publisherModelUrl(model, 'generateContent', 'global');
-  const res = await vertexPost(url, body);
-  const parts2 = res?.candidates?.[0]?.content?.parts ?? [];
-  return parts2.map((p: any) => p.text ?? '').join('');
-}
-
-export function geminiText(prompt: string, system?: string) {
-  return generate(config.models.gemini, [{ text: prompt }], { system });
+export async function geminiText(prompt: string, system?: string): Promise<string> {
+  const res = await openai.chat.completions.create({
+    model: TEXT_MODEL,
+    messages: [
+      ...(system ? [{ role: 'system' as const, content: system }] : []),
+      { role: 'user' as const, content: prompt },
+    ],
+  });
+  return res.choices[0]?.message?.content ?? '';
 }
 
 export async function geminiJson<T>(prompt: string, schema: unknown, system?: string): Promise<T> {
-  const out = await generate(config.models.gemini, [{ text: prompt }], { json: true, schema, system });
-  return JSON.parse(out) as T;
+  // OpenAI json_object mode + the schema as an explicit instruction (the word
+  // "JSON" must appear in the messages, which the schema hint guarantees).
+  const schemaHint = schema
+    ? `\n\nReturn ONLY valid JSON matching this schema (no prose):\n${JSON.stringify(schema)}`
+    : '\n\nReturn ONLY valid JSON.';
+  const res = await openai.chat.completions.create({
+    model: TEXT_MODEL,
+    response_format: { type: 'json_object' },
+    messages: [
+      ...(system ? [{ role: 'system' as const, content: system }] : []),
+      { role: 'user' as const, content: prompt + schemaHint },
+    ],
+  });
+  return JSON.parse(res.choices[0]?.message?.content ?? '{}') as T;
 }
 
 export async function geminiVision(
@@ -39,9 +41,17 @@ export async function geminiVision(
   imagePaths: string[],
   opts: { json?: boolean; schema?: unknown } = {},
 ): Promise<string> {
-  const parts: Part[] = [{ text: prompt }];
+  const hint = opts.json
+    ? `\n\nReturn ONLY valid JSON${opts.schema ? ` matching: ${JSON.stringify(opts.schema)}` : '.'}`
+    : '';
+  const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [{ type: 'text', text: prompt + hint }];
   for (const p of imagePaths) {
-    parts.push({ inlineData: { mimeType: 'image/png', data: await toBase64(p) } });
+    content.push({ type: 'image_url', image_url: { url: `data:image/png;base64,${await toBase64(p)}` } });
   }
-  return generate(config.models.geminiVision, parts, opts);
+  const res = await openai.chat.completions.create({
+    model: VISION_MODEL,
+    ...(opts.json ? { response_format: { type: 'json_object' as const } } : {}),
+    messages: [{ role: 'user', content }],
+  });
+  return res.choices[0]?.message?.content ?? '';
 }

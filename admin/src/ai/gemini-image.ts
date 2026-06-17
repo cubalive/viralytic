@@ -1,6 +1,13 @@
-import { config } from '../config';
-import { publisherModelUrl, vertexPost } from '../lib/vertex';
-import { saveBase64, toBase64 } from '../lib/files';
+// Image generation — now backed by OpenAI gpt-image-1 (switched from Gemini's
+// image model per request). Export name `geminiImage` kept so callers don't
+// change. Reference images (canon) use images.edit; plain prompts use
+// images.generate. aspectRatio maps to the nearest gpt-image-1 size.
+import fs from 'node:fs';
+import OpenAI from 'openai';
+import { saveBase64 } from '../lib/files';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-1';
 
 export interface GeminiImageOptions {
   aspectRatio?: '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -8,57 +15,39 @@ export interface GeminiImageOptions {
   refImagePaths?: string[];
 }
 
-function extractImage(res: any): string | undefined {
-  const parts = res?.candidates?.[0]?.content?.parts ?? [];
-  return parts.find((p: any) => p.inlineData?.data)?.inlineData?.data;
-}
-
-async function buildParts(prompt: string, refs?: string[]) {
-  const parts: any[] = [];
-  // Las imágenes de referencia van primero; Gemini las usa para mantener consistencia.
-  for (const p of (refs ?? []).slice(0, 6)) {
-    parts.push({ inlineData: { mimeType: 'image/png', data: await toBase64(p) } });
-  }
-  parts.push({ text: prompt });
-  return parts;
+type ImgSize = '1024x1024' | '1536x1024' | '1024x1536';
+function sizeFor(ar?: string): ImgSize {
+  if (ar === '16:9' || ar === '4:3') return '1536x1024'; // landscape
+  if (ar === '9:16' || ar === '3:4') return '1024x1536'; // portrait
+  return '1024x1024';
 }
 
 /**
- * Genera una imagen con Gemini (modelo de imagen, p.ej. gemini-2.5-flash-image).
- * Si se pasan refImagePaths, las usa como referencia para mantener el personaje
- * consistente — esta es la base del "canon de personajes".
+ * Genera una imagen con gpt-image-1. Si se pasan refImagePaths, las usa como
+ * referencia (images.edit) para mantener el personaje consistente — la base del
+ * "canon de personajes".
  */
 export async function geminiImage(
   prompt: string,
   outPath: string,
   opts: GeminiImageOptions = {},
 ): Promise<string> {
-  const url = publisherModelUrl(config.models.geminiImage, 'generateContent', 'global');
+  const size = sizeFor(opts.aspectRatio);
+  const refs = (opts.refImagePaths ?? []).slice(0, 4);
 
-  // A veces el modelo responde NO_IMAGE (no genera). Reintentamos reforzando la orden.
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const extra = attempt === 1 ? '' : ' Generate a single illustrated image now. Do not reply with text.';
-    const parts = await buildParts(prompt + extra, opts.refImagePaths);
-    const generationConfig: any = { responseModalities: ['IMAGE'] };
-    if (opts.aspectRatio) generationConfig.imageConfig = { aspectRatio: opts.aspectRatio };
-
-    let res: any;
-    try {
-      res = await vertexPost(url, { contents: [{ role: 'user', parts }], generationConfig });
-    } catch (e) {
-      if (opts.aspectRatio && /imageConfig|aspectRatio|INVALID_ARGUMENT|400/i.test((e as Error).message)) {
-        res = await vertexPost(url, { contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['IMAGE'] } });
-      } else {
-        throw e;
-      }
-    }
-
-    const b64 = extractImage(res);
-    if (b64) {
-      await saveBase64(outPath, b64);
-      return outPath;
-    }
-    // NO_IMAGE → siguiente intento
+  let b64: string | undefined;
+  if (refs.length) {
+    const files = await Promise.all(
+      refs.map((p, i) => OpenAI.toFile(fs.readFileSync(p), `ref_${i}.png`, { type: 'image/png' })),
+    );
+    const result = await openai.images.edit({ model: IMAGE_MODEL, image: files, prompt, size });
+    b64 = result.data?.[0]?.b64_json;
+  } else {
+    const result = await openai.images.generate({ model: IMAGE_MODEL, prompt, size });
+    b64 = result.data?.[0]?.b64_json;
   }
-  throw new Error('Gemini no devolvió imagen tras 3 intentos (NO_IMAGE)');
+
+  if (!b64) throw new Error('gpt-image-1 no devolvió imagen');
+  await saveBase64(outPath, b64);
+  return outPath;
 }
