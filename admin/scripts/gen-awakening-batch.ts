@@ -185,6 +185,12 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   for (const c of clips) await fsp.unlink(c).catch(() => {});
   await fsp.unlink(silent).catch(() => {});
   await uploadPublic(final, `${storagePrefix}/${slug}.mp4`, 'video/mp4');
+  // Miniatura SIN TEXTO (16:9) que invita al clic — al no tener texto sirve en todos los idiomas.
+  const thumb = path.join(dir, 'thumb.png');
+  if (!fs.existsSync(thumb)) {
+    try { await geminiImage(`Cinematic YouTube thumbnail about "${topic}", one bold dramatic focal subject, awakening/emotional mood, high-contrast dramatic lighting, vivid colors, curiosity-driving, photorealistic, absolutely NO text and NO words`, thumb, { aspectRatio: '16:9' }); }
+    catch (e) { log.warn(`thumb ${slug}: ${(e as Error).message.slice(0, 40)}`); }
+  }
   return final;
 }
 

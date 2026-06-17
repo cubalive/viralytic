@@ -15,6 +15,7 @@ import {
   Cpu,
   Mic2,
   Clapperboard,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -30,6 +31,7 @@ const ICONS: Record<string, LucideIcon> = {
   youtube: Youtube,
   caroline: Mic2,
   reels: Clapperboard,
+  stats: BarChart3,
 };
 
 export type NavItem = { href: string; label: string; icon: string; admin?: boolean };

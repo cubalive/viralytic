@@ -5,7 +5,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { geminiJson } from '../src/ai/gemini';
-import { uploadVideo } from '../src/youtube/upload';
+import { uploadVideo, setThumbnail } from '../src/youtube/upload';
 import { addToPlaylist } from '../src/youtube/playlists';
 import { readJson, writeJson } from '../src/lib/files';
 import { ROOT, OUTPUT_DIR } from '../src/config';
@@ -157,6 +157,12 @@ for (const dir of dirs) {
     const videoId = res.id;
     state[slug] = { videoId, publishAt: publishAt || 'now', pillar: md.pillar, title };
     await writeJson(stateFile, state);
+    // Miniatura sin texto (si el motor la generó). Requiere canal verificado.
+    const thumbFile = path.join(dir, 'thumb.png');
+    if (fs.existsSync(thumbFile)) {
+      try { await setThumbnail(slot, videoId, thumbFile); }
+      catch (e) { log.warn(`thumb ${slug}: ${(e as Error).message.slice(0, 60)}`); }
+    }
     // Asignar a playlist del pilar
     const plId = playlists[md.pillar] || playlists[pillarKeys[0]];
     if (plId) { try { await addToPlaylist(slot, plId, videoId); } catch (e) { log.warn(`playlist ${slug}: ${(e as Error).message.slice(0, 60)}`); } }

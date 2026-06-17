@@ -66,3 +66,16 @@ export async function uploadVideo(channel: string, meta: VideoMeta, publishAt?: 
   if (!r.ok) throw new Error(`videos.insert ${r.status}: ${JSON.stringify(j).slice(0, 500)}`);
   return j;
 }
+
+/** Sube una miniatura personalizada a un video (thumbnails.set). Requiere canal verificado. */
+export async function setThumbnail(channel: string, videoId: string, file: string): Promise<void> {
+  const img = await fsp.readFile(file);
+  const ct = /\.jpe?g$/i.test(file) ? 'image/jpeg' : 'image/png';
+  const token = await getYtAccessToken(channel);
+  const r = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${videoId}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': ct },
+    body: img,
+  });
+  if (!r.ok) throw new Error(`thumbnails.set ${r.status}: ${(await r.text()).slice(0, 160)}`);
+}

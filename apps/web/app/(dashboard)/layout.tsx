@@ -11,6 +11,7 @@ const baseNav: NavItem[] = [
 ];
 
 const adminNav: NavItem[] = [
+  { href: '/stats', label: 'Estadísticas', icon: 'stats' },
   { href: '/music-videos', label: 'Music Videos', icon: 'music' },
   { href: '/caroline', label: 'Caroline', icon: 'caroline' },
   { href: '/faceless', label: 'Faceless/Tech', icon: 'faceless' },
