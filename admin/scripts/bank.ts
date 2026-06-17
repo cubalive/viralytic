@@ -7,6 +7,14 @@ import path from 'node:path';
 export const BANK_DIR = process.env.BANK_DIR || 'E:\\0005. Passkal\\Canales de Youtube\\BANCO DE VIDEOS GENERAL';
 export type Estado = 'Publicados' | 'Generados';
 
+/** True si el slug ya está en la carpeta, con o sin prefijo "NNN - " (los videos
+ *  se numeran con number-bank.ts; no recopiar un archivo ya numerado). */
+function alreadyBanked(dir: string, file: string): boolean {
+  if (!fs.existsSync(dir)) return false;
+  const re = new RegExp(`^(\\d{3,} - )?${file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+  return fs.readdirSync(dir).some((f) => re.test(f));
+}
+
 /**
  * Coloca (copia) un video en el banco, en Canal/IDIOMA/Estado/nombre.mp4.
  * Si el mismo nombre estaba en el otro estado (p.ej. pasó de Generado a Publicado), lo mueve.
@@ -18,9 +26,10 @@ export function placeInBank(channel: string, lang: string, status: Estado, name:
   const other: Estado = status === 'Publicados' ? 'Generados' : 'Publicados';
   const otherPath = path.join(BANK_DIR, channel, L, other, file);
   if (fs.existsSync(otherPath)) { try { fs.unlinkSync(otherPath); } catch {} }
-  const dst = path.join(BANK_DIR, channel, L, status, file);
-  fs.mkdirSync(path.dirname(dst), { recursive: true });
-  if (!fs.existsSync(dst)) fs.copyFileSync(srcFile, dst);
+  const dstDir = path.join(BANK_DIR, channel, L, status);
+  fs.mkdirSync(dstDir, { recursive: true });
+  const dst = path.join(dstDir, file);
+  if (!alreadyBanked(dstDir, file)) fs.copyFileSync(srcFile, dst);
   return dst;
 }
 
@@ -31,8 +40,9 @@ export function writeToBank(channel: string, lang: string, status: Estado, name:
   const other: Estado = status === 'Publicados' ? 'Generados' : 'Publicados';
   const otherPath = path.join(BANK_DIR, channel, L, other, file);
   if (fs.existsSync(otherPath)) { try { fs.unlinkSync(otherPath); } catch {} }
-  const dst = path.join(BANK_DIR, channel, L, status, file);
-  fs.mkdirSync(path.dirname(dst), { recursive: true });
-  if (!fs.existsSync(dst)) fs.writeFileSync(dst, data);
+  const dstDir = path.join(BANK_DIR, channel, L, status);
+  fs.mkdirSync(dstDir, { recursive: true });
+  const dst = path.join(dstDir, file);
+  if (!alreadyBanked(dstDir, file)) fs.writeFileSync(dst, data);
   return dst;
 }

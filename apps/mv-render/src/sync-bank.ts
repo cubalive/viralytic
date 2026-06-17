@@ -55,14 +55,22 @@ function slugify(s: string): string {
   );
 }
 
+/** True if the slug is already banked, with OR without a "NNN - " number prefix
+ *  (the bank gets numbered by number-bank.ts; don't re-copy a numbered file). */
+function alreadyBanked(dir: string, file: string): boolean {
+  if (!fs.existsSync(dir)) return false;
+  const re = new RegExp(`^(\\d{3,} - )?${file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+  return fs.readdirSync(dir).some((f) => re.test(f));
+}
+
 /** Place a downloaded buffer into <Canal>/<IDIOMA>/Generados. Returns true if it wrote a new file. */
 function writeToBank(channel: string, lang: string, name: string, data: Buffer): boolean {
   const L = lang.toUpperCase();
   const file = name.endsWith('.mp4') ? name : `${name}.mp4`;
-  const dst = path.join(BANK_DIR, channel, L, STATUS, file);
-  if (fs.existsSync(dst)) return false; // resume: already banked, never copy twice
-  fs.mkdirSync(path.dirname(dst), { recursive: true });
-  fs.writeFileSync(dst, data);
+  const dir = path.join(BANK_DIR, channel, L, STATUS);
+  if (alreadyBanked(dir, file)) return false; // resume: already banked (numbered or not)
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, file), data);
   return true;
 }
 
