@@ -13,11 +13,15 @@ import { pickClips } from '../src/bank/videobank';
 import { uploadPublic } from '../src/lib/storage';
 import { ensureDir } from '../src/lib/files';
 import { freshTopics } from '../src/faceless/topics';
+import { narrate } from '../src/faceless/voice';
 import { config, OUTPUT_DIR } from '../src/config';
 import { log } from '../src/lib/log';
 
 const N_TARGET = Number(process.argv[2] || 30);
 const LANG = (process.argv[3] || 'es').toLowerCase();
+// Voz en off (ElevenLabs). On por defecto. Voz convincente, grave, multilingüe (Adam).
+const VOICE = (process.env.FACELESS_VOICE ?? 'on').toLowerCase() !== 'off';
+const VOICE_ID = process.env.FACELESS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB';
 const baseDir = path.join(OUTPUT_DIR, LANG === 'es' ? 'awakening' : `awakening-${LANG}`);
 const storagePrefix = LANG === 'es' ? 'kids-studio/awakening' : `kids-studio/awakening-${LANG}`;
 const poolDir = path.join(OUTPUT_DIR, 'awakening', '_pool'); // pool compartido entre idiomas
@@ -128,13 +132,25 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const all = await detectBeats(music, { minGap: 0.3 });
   const beats = all.filter((b) => b >= 0.2 && b < Math.min(dur, 28));
   const N = Math.min(beats.length, 22);
-  const use = beats.slice(0, N);
+  let use = beats.slice(0, N);
 
   const userPrompt = LANG === 'en'
     ? `Theme / truth to expose: "${topic}". Create an awakening message in EXACTLY ${N} short fragments (1-4 words), that hooks, exposes that truth and ends with a powerful, positive awakening. {fragmentos:[...], frase:"..."}`
     : `Tema / verdad a desnudar: "${topic}". Crea un mensaje de despertar en EXACTAMENTE ${N} fragmentos cortos (1-4 palabras), que enganche, desnude esa verdad y termine con un despertar poderoso y positivo. {fragmentos:[...], frase:"..."}`;
   const { fragmentos, frase } = await geminiJson<{ fragmentos: string[]; frase: string }>(userPrompt, SCHEMA, sys);
   await fsp.writeFile(path.join(dir, 'frase.json'), JSON.stringify({ topic, mood, frase, fragmentos }, null, 2), 'utf8');
+
+  // Voz en off: narra los fragmentos y sincroniza su aparición a la voz.
+  let voicePath: string | null = null, voiceDur = 0, voiceSeek = 0;
+  if (VOICE) {
+    try {
+      const nr = await narrate(fragmentos, dir, LANG, VOICE_ID);
+      voiceSeek = nr.times[0] ?? 0;
+      use = nr.times.map((t) => Math.max(0, t - voiceSeek));
+      voiceDur = Math.max(0.5, nr.voiceDur - voiceSeek);
+      voicePath = nr.voicePath;
+    } catch (e) { log.warn(`voz ${slug}: ${(e as Error).message.slice(0, 60)} — sigo sin voz`); }
+  }
 
   const offset = (idx * 3) % pool.length;
   const imgs = Array.from({ length: Math.min(8, pool.length) }, (_, k) => pool[(offset + k) % pool.length]);
@@ -147,7 +163,7 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const clips: string[] = [];
   let ci = 0;
   for (let i = 0; i < use.length; i++) {
-    const segDur = Math.max(0.25, (i + 1 < use.length ? use[i + 1] : use[i] + 0.7) - use[i]);
+    const segDur = Math.max(0.25, (i + 1 < use.length ? use[i + 1] : (voiceDur > use[i] ? voiceDur : use[i] + 0.7)) - use[i]);
     const out = path.join(dir, `seg_${String(i).padStart(2, '0')}.mp4`);
     const txtFile = out + '.txt';
     await fsp.writeFile(txtFile, fragmentos[i] || '', 'utf8');
@@ -178,8 +194,16 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const silent = path.join(dir, 'silent.mp4');
   await ff(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', silent]);
   const vlen = await probeDuration(silent);
-  await ff(['-i', silent, '-ss', use[0].toFixed(2), '-i', music, '-map', '0:v', '-map', '1:a', '-t', vlen.toFixed(2),
-    '-c:v', 'copy', '-c:a', 'aac', '-af', 'afade=t=out:st=' + Math.max(0, vlen - 0.8).toFixed(2) + ':d=0.8', final]);
+  const fadeSt = Math.max(0, vlen - 0.8).toFixed(2);
+  if (voicePath) {
+    // Voz al frente + música de fondo ducked (16%), salta el silencio inicial de la voz.
+    await ff(['-i', silent, '-ss', voiceSeek.toFixed(2), '-i', voicePath, '-i', music, '-map', '0:v',
+      '-filter_complex', `[2:a]volume=0.16,apad[bg];[1:a][bg]amix=inputs=2:duration=first:dropout_transition=2[mx];[mx]afade=t=out:st=${fadeSt}:d=0.8[ao]`,
+      '-map', '[ao]', '-t', vlen.toFixed(2), '-c:v', 'copy', '-c:a', 'aac', final]);
+  } else {
+    await ff(['-i', silent, '-ss', use[0].toFixed(2), '-i', music, '-map', '0:v', '-map', '1:a', '-t', vlen.toFixed(2),
+      '-c:v', 'copy', '-c:a', 'aac', '-af', `afade=t=out:st=${fadeSt}:d=0.8`, final]);
+  }
 
   // limpia intermedios
   for (const c of clips) await fsp.unlink(c).catch(() => {});
