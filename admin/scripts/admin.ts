@@ -49,4 +49,7 @@ for (const id of targets) {
   try { await doChannel(id); }
   catch (e) { log.err(`${id}: ${(e as Error).message}`); }
 }
+// Organiza el BANCO GENERAL (por canal → idioma → Publicados/Generados) tras generar/publicar.
+log.step('━━━ Organizando banco de videos ━━━');
+try { await run('organize-bank.ts', []); } catch (e) { log.err(`organize-bank: ${(e as Error).message}`); }
 console.log(`\n✅ ADMIN terminado para: ${targets.join(', ')}`);
