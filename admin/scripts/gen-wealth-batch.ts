@@ -14,6 +14,7 @@ import { ensureDir } from '../src/lib/files';
 import { pickClips, loadBank } from '../src/bank/videobank';
 import { freshTopics } from '../src/faceless/topics';
 import { narrate } from '../src/faceless/voice';
+import { loadStrategy } from '../src/faceless/strategy';
 import { config, OUTPUT_DIR } from '../src/config';
 import { log } from '../src/lib/log';
 
@@ -74,7 +75,7 @@ const SYS: Record<string, string> = {
     '- El ÚLTIMO fragmento debe disparar REWATCH o COMENTARIO (un remate que cierra el loop o una frase de identidad como "Ahora lo sabes.").\n' +
     'Seguro, filoso, aspiracional (NADA de estafa ni riqueza rápida ni consejos financieros específicos). Devuelve SOLO JSON.',
 };
-const sys = SYS[LANG] || SYS.en;
+let sys = SYS[LANG] || SYS.en;
 
 const PHOTO_THEMES = [
   'a glowing modern city skyline at golden hour, financial district',
@@ -201,8 +202,12 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
 
 // Sonidos virales/impactantes (trap) de TikTok — pegan fuerte en los cortes al beat.
 const MOODS = ['retencion-tiktok'];
-log.step(`Temas frescos (${N_TARGET})`);
-const TOPICS = await freshTopics(`wealth-${LANG}`, NICHE, N_TARGET, SEED);
+// Auto-optimización: sesga temas + hook hacia lo que rinde (optimize.ts).
+const strategy = await loadStrategy('wealth');
+if (strategy?.hookNote) sys += `\n\nOPTIMIZACIÓN (lo que está rindiendo): ${strategy.hookNote}`;
+const effSeed = strategy?.topics?.length ? strategy.topics : SEED;
+log.step(`Temas frescos (${N_TARGET})${strategy ? ' [estrategia activa]' : ''}`);
+const TOPICS = await freshTopics(`wealth-${LANG}`, NICHE, N_TARGET, effSeed);
 log.ok(`temas: ${TOPICS.join(' · ').slice(0, 120)}…`);
 let made = 0;
 const total = Math.min(N_TARGET, TOPICS.length);

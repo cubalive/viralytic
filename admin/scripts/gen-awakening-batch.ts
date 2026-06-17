@@ -14,6 +14,7 @@ import { uploadPublic } from '../src/lib/storage';
 import { ensureDir } from '../src/lib/files';
 import { freshTopics } from '../src/faceless/topics';
 import { narrate } from '../src/faceless/voice';
+import { loadStrategy } from '../src/faceless/strategy';
 import { config, OUTPUT_DIR } from '../src/config';
 import { log } from '../src/lib/log';
 
@@ -118,7 +119,7 @@ const SYS: Record<string, string> = {
     '- The LAST fragment triggers a REWATCH or COMMENT (a loop-back or identity line like "Now you wake up.").\n' +
     'Deep, awakened, inspiring (not childish, NOT nihilistic). Return ONLY JSON.',
 };
-const sys = SYS[LANG] || SYS.es;
+let sys = SYS[LANG] || SYS.es;
 
 async function renderOne(topic: string, idx: number, mood: string): Promise<string> {
   const slug = slugify(topic);
@@ -218,8 +219,12 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   return final;
 }
 
-log.step(`Temas frescos (${N_TARGET})`);
-const TOPICS = await freshTopics(`kat-${LANG}`, NICHE, N_TARGET, SEED);
+// Auto-optimización: sesga temas + hook hacia lo que rinde (optimize.ts).
+const strategy = await loadStrategy(`kat-${LANG}`);
+if (strategy?.hookNote) sys += `\n\nOPTIMIZACIÓN (lo que está rindiendo): ${strategy.hookNote}`;
+const effSeed = strategy?.topics?.length ? strategy.topics : SEED;
+log.step(`Temas frescos (${N_TARGET})${strategy ? ' [estrategia activa]' : ''}`);
+const TOPICS = await freshTopics(`kat-${LANG}`, NICHE, N_TARGET, effSeed);
 log.ok(`temas: ${TOPICS.join(' · ').slice(0, 120)}…`);
 let made = 0;
 const total = Math.min(N_TARGET, TOPICS.length);
