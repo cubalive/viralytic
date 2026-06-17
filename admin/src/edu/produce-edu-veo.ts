@@ -19,8 +19,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const LANG_NAME: Record<string, string> = { es: 'Spanish', en: 'English', it: 'Italian', zh: 'Mandarin Chinese' };
 
+// Aspecto del render. EDU_ASPECT=16:9 → video horizontal nativo (SabiKids para TV/tablet).
+// Por defecto 9:16 (no rompe el backlog/Shorts existente). El 16:9 va a carpeta aparte.
+const ASPECT: '9:16' | '16:9' = process.env.EDU_ASPECT === '16:9' ? '16:9' : '9:16';
+const SIXTEEN9 = ASPECT === '16:9';
 const STYLE =
-  'Children cartoon, vertical 9:16, full-frame, featuring the same teal-and-yellow robot Sabi ' +
+  `Children cartoon, ${SIXTEEN9 ? 'horizontal 16:9 widescreen, full-frame composition' : 'vertical 9:16, full-frame'}, featuring the same teal-and-yellow robot Sabi ` +
   'consistent with the reference, clean colorful background. ' +
   'IMPORTANT: absolutely NO text, no letters, no words, no captions, no signs, no numbers in the image.';
 
@@ -29,7 +33,7 @@ function slugify(s: string) {
 }
 
 export function reelDir(topic: string, formatSlug: string) {
-  return path.join(OUTPUT_DIR, 'reels', 'edu-veo', `${slugify(topic)}__${formatSlug}`);
+  return path.join(OUTPUT_DIR, 'reels', SIXTEEN9 ? 'edu-veo-16x9' : 'edu-veo', `${slugify(topic)}__${formatSlug}`);
 }
 
 /** Divide la narración en N partes (una por escena) para que Veo mueva la boca diciéndola. */
@@ -70,12 +74,19 @@ export async function buildMotion(sel: SeleccionEdu, opts: { topic: string; maxS
   const startKey = path.join(dir, 'frame_0.png');
   if (!exists(startKey)) {
     try {
-      await geminiImage(`${beats[0].accion}. ${STYLE}`, startKey, { aspectRatio: '9:16', refImagePaths: refs3.length ? refs3 : undefined });
+      await geminiImage(`${beats[0].accion}. ${STYLE}`, startKey, { aspectRatio: ASPECT, refImagePaths: refs3.length ? refs3 : undefined });
     } catch (e) {
       if (!fallback) throw e;
       await fsp.copyFile(fallback, startKey);
       log.warn(`keyframe respaldo (${(e as Error).message.slice(0, 40)})`);
     }
+  }
+  // gpt-image devuelve 3:2 (1536x1024) → Veo lo mete en 16:9 con barras laterales.
+  // Recorta el keyframe a 16:9 EXACTO (1920x1080) para que Veo llene la pantalla.
+  if (SIXTEEN9 && exists(startKey)) {
+    const fixed = path.join(dir, '_kf16x9.png');
+    await ff(['-y', '-i', startKey, '-vf', 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080', fixed]);
+    await fsp.rename(fixed, startKey);
   }
 
   // 2) Escenas Veo encadenadas, Sabi HABLANDO su parte (boca en movimiento)
@@ -90,12 +101,12 @@ export async function buildMotion(sel: SeleccionEdu, opts: { topic: string; maxS
         `${beats[i].accion}. Sabi looks friendly and speaks, its mouth clearly opening and moving ` +
           `as it cheerfully talks saying: "${linea}". ${STYLE}`,
         clip,
-        { firstFrame: startFrame, aspectRatio: '9:16', generateAudio: true },
+        { firstFrame: startFrame, aspectRatio: ASPECT, generateAudio: true },
       );
       log.ok(`escena ${i + 1}/${N}`);
     }
     const s = path.join(dir, `scaled_${i + 1}.mp4`);
-    await ff(['-i', clip, '-vf', 'scale=1080:1920:flags=lanczos', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', s]);
+    await ff(['-i', clip, '-vf', `scale=${SIXTEEN9 ? '1920:1080' : '1080:1920'}:flags=lanczos`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', s]);
     scaled.push(s);
     if (i < N - 1) {
       const lf = path.join(dir, `frame_${i + 1}.png`);
