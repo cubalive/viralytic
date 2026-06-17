@@ -17,15 +17,15 @@
  * model id + response shape, and the sync.so SDK field names / output shape.
  */
 import 'dotenv/config';
-import crypto from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
 import { SyncClient, SyncError } from '@sync.so/sdk';
+import { VEO_CHARACTER_PREFIX, generateSceneImage, veoImageToVideo } from './veo';
+import { buildVideoMetadata, type Lang } from './metadata';
 
 const exec = promisify(execFile);
 
@@ -64,153 +64,13 @@ function req(name: string): string {
 const db: SupabaseClient = createClient(cfg.supabaseUrl, cfg.supabaseKey, {
   auth: { persistSession: false },
 });
-const openai = new OpenAI({ apiKey: cfg.openaiKey });
 const syncClient = new SyncClient({ apiKey: cfg.syncApiKey });
 
 const log = (msg: string, extra: Record<string, unknown> = {}) =>
   console.log(JSON.stringify({ t: new Date().toISOString(), msg, ...extra }));
 
-// Prepended to every Veo prompt: Veo only receives the short scene line (which
-// names "Zuri" but not her species), so on a weak/empty keyframe it would invent
-// a human performer. This forces the meerkat identity at the motion stage too.
-const VEO_CHARACTER_PREFIX =
-  '3D animated anthropomorphic MEERKAT named Zuri, an animal character NOT a human, caramel fur, do not transform into a human.';
-
-// ===========================================================================
-// 1. Vertex auth (VERIFIED) — JWT -> access token, cached until expiry.
-// ===========================================================================
-let tokenCache: { token: string; exp: number } | null = null;
-async function vertexToken(): Promise<string> {
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (tokenCache && tokenCache.exp - 60 > nowSec) return tokenCache.token;
-
-  const sa = JSON.parse(cfg.vertexSaJson) as { client_email: string; private_key: string; token_uri: string };
-  const b64u = (b: string | Buffer) => Buffer.from(b).toString('base64url');
-  const header = b64u(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const claim = b64u(JSON.stringify({
-    iss: sa.client_email,
-    scope: 'https://www.googleapis.com/auth/cloud-platform',
-    aud: sa.token_uri,
-    iat: nowSec,
-    exp: nowSec + 3600,
-  }));
-  const signer = crypto.createSign('RSA-SHA256');
-  signer.update(`${header}.${claim}`);
-  const jwt = `${header}.${claim}.${signer.sign(sa.private_key).toString('base64url')}`;
-
-  const res = await fetch(sa.token_uri, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
-  });
-  const j = (await res.json()) as { access_token?: string; expires_in?: number };
-  if (!j.access_token) throw new Error(`Vertex token failed: ${JSON.stringify(j).slice(0, 200)}`);
-  tokenCache = { token: j.access_token, exp: nowSec + (j.expires_in ?? 3600) };
-  return j.access_token;
-}
-
-// ===========================================================================
-// 2. Scene keyframe image (VERIFIED) — gpt-image-1 with canon photos as refs.
-// ===========================================================================
-// gpt-image-1's safety classifier is non-deterministic: the SAME prompt can be
-// rejected (HTTP 400 "rejected by the safety system") on one call and pass on a
-// fresh one. We retry ONLY that specific rejection — never other errors.
-function isSafetyRejection(err: unknown): boolean {
-  const e = err as { status?: number; statusCode?: number; message?: unknown };
-  const status = e?.status ?? e?.statusCode;
-  const msg = String(e?.message ?? '');
-  return (status === 400 || /^\s*400\b/.test(msg)) && /safety system/i.test(msg);
-}
-
-async function generateSceneImage(prompt: string, refs: Buffer[]): Promise<Buffer> {
-  // images.edit accepts reference images to keep the character on-canon.
-  const files = await Promise.all(
-    refs.slice(0, 4).map(async (buf, i) => await OpenAI.toFile(buf, `ref_${i}.png`, { type: 'image/png' })),
-  );
-  // Up to 3 attempts: retry only the flaky safety-400 (fresh request usually
-  // passes), ~2s apart. A 4th-and-final failure is treated as a real rejection.
-  const maxAttempts = 3;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const result = await openai.images.edit({
-        model: 'gpt-image-1',
-        image: files as any,
-        prompt,
-        size: '1536x1024', // 16:9 landscape, matches the horizontal assembly
-      });
-      const b64 = result.data?.[0]?.b64_json;
-      if (!b64) throw new Error('gpt-image-1 returned no image');
-      return Buffer.from(b64, 'base64');
-    } catch (err) {
-      if (isSafetyRejection(err) && attempt < maxAttempts) {
-        log('image.safety_retry', { attempt, maxAttempts });
-        await sleep(2000);
-        continue;
-      }
-      throw err;
-    }
-  }
-  // Loop either returns or throws; this only satisfies the type checker.
-  throw new Error('gpt-image-1 failed after safety retries');
-}
-
-// ===========================================================================
-// 3. Veo 3 motion (UNVERIFIED — confirm model id + response on first run).
-//    Vertex predictLongRunning: submit, then poll the operation.
-// ===========================================================================
-async function veoImageToVideo(imageB64: string, prompt: string, lastFrameB64?: string): Promise<Buffer> {
-  const token = await vertexToken();
-  const base = `https://${cfg.vertexLocation}-aiplatform.googleapis.com/v1/projects/${cfg.vertexProject}/locations/${cfg.vertexLocation}/publishers/google/models/${cfg.veoModel}`;
-
-  // First/last-frame interpolation: when a last frame is supplied, Veo interpolates
-  // motion from `image` (A) to `lastFrame` (B). REQUIRES a model that supports it —
-  // veo-3.1-* accept `lastFrame`; veo-3.0-fast/standard reject it (400). Without a
-  // last frame this is plain single-image image-to-video.
-  const instance: Record<string, unknown> = {
-    prompt,
-    image: { bytesBase64Encoded: imageB64, mimeType: 'image/png' },
-  };
-  if (lastFrameB64) instance.lastFrame = { bytesBase64Encoded: lastFrameB64, mimeType: 'image/png' };
-
-  const submit = await fetch(`${base}:predictLongRunning`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      instances: [instance],
-      parameters: { aspectRatio: '16:9', durationSeconds: 8, sampleCount: 1 },
-    }),
-  });
-  if (!submit.ok) throw new Error(`Veo submit ${submit.status}: ${(await submit.text()).slice(0, 200)}`);
-  const op = (await submit.json()) as { name: string };
-
-  // Poll the long-running operation.
-  for (let i = 0; i < 60; i++) {
-    await sleep(5000);
-    const poll = await fetch(`${base}:fetchPredictOperation`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operationName: op.name }),
-    });
-    const data = (await poll.json()) as any;
-    if (data.done) {
-      const vid = data.response?.videos?.[0] ?? data.response?.predictions?.[0];
-      const b64 = vid?.bytesBase64Encoded ?? vid?.video?.bytesBase64Encoded;
-      if (b64) return Buffer.from(b64, 'base64');
-      const uri = vid?.gcsUri ?? vid?.uri;
-      if (uri) return await downloadGcs(uri, token);
-      throw new Error(`Veo op done but no video in response: ${JSON.stringify(data).slice(0, 300)}`);
-    }
-  }
-  throw new Error('Veo operation timed out');
-}
-
-async function downloadGcs(gsUri: string, token: string): Promise<Buffer> {
-  const m = gsUri.match(/^gs:\/\/([^/]+)\/(.+)$/);
-  if (!m) throw new Error(`Bad gcs uri ${gsUri}`);
-  const url = `https://storage.googleapis.com/storage/v1/b/${m[1]}/o/${encodeURIComponent(m[2]!)}?alt=media`;
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  return Buffer.from(await r.arrayBuffer());
-}
+// Vertex auth, scene-keyframe image (gpt-image-1) and Veo 3 motion now live in
+// ./veo.ts (shared with the bank enricher) — imported above. No duplication.
 
 // ===========================================================================
 // 4. Lip-sync via sync.so (better close-up quality than Wav2Lip).
@@ -581,7 +441,19 @@ async function renderVideoLanguage(vl: any, video: any, project: any, characters
       log('short.created', { vlId: vl.id, storagePath: shortStorage });
     }
 
-    await db.from('mv_video_languages').update({ status: 'rendered', final_video_path: storagePath }).eq('id', vl.id);
+    // Algorithm-tuned YouTube metadata (native per language) → stored for the publisher.
+    const metadata = await buildVideoMetadata({
+      kind: 'music',
+      language: (vl.language as Lang) ?? 'es',
+      workingTitle: video.song_title ?? video.title,
+      body: cleanLyrics,
+      brand: project.name ?? 'Zuri',
+      niche: vl.language === 'en' ? 'kids songs / nursery rhymes' : vl.language === 'zh' ? '儿歌 / 幼儿音乐' : 'canciones infantiles',
+      lore: project.scenario_bible ?? undefined,
+      handle: project.youtube_handle ?? undefined,
+    });
+
+    await db.from('mv_video_languages').update({ status: 'rendered', final_video_path: storagePath, metadata }).eq('id', vl.id);
     log('video_language.rendered', { vlId: vl.id, sizeBytes: finalBuf.length });
   } finally {
     await fs.rm(dir, { recursive: true, force: true }).catch(() => {});
@@ -644,12 +516,12 @@ async function tick(): Promise<void> {
   const staleBefore = new Date(Date.now() - cfg.reclaimMinutes * 60_000).toISOString();
   const { data: reclaimed } = await db
     .from('mv_videos').update({ status: 'generating', updated_at: new Date().toISOString() })
-    .eq('status', 'rendering').lt('updated_at', staleBefore).select('id');
+    .eq('status', 'rendering').eq('kind', 'music').lt('updated_at', staleBefore).select('id');
   if (reclaimed?.length) log('video.reclaimed', { count: reclaimed.length, ids: reclaimed.map((r: any) => r.id) });
 
   // Find the oldest queued video.
   const { data: video } = await db
-    .from('mv_videos').select('*').eq('status', 'generating').order('created_at', { ascending: true }).limit(1).maybeSingle();
+    .from('mv_videos').select('*').eq('status', 'generating').eq('kind', 'music').order('created_at', { ascending: true }).limit(1).maybeSingle();
   if (!video) return;
 
   // Atomic claim: flip generating -> rendering only if still generating, stamping

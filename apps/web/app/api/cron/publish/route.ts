@@ -110,7 +110,7 @@ async function publishOneCaroline(db: any, done: string[]) {
 async function publishOneVideoLanguage(db: any, done: string[]) {
   const { data: rows } = await db
     .from('mv_video_languages')
-    .select('id, language, status, final_video_path, short_video_path, channel_id, mv_videos!inner(title, song_title, kind)')
+    .select('id, language, status, final_video_path, short_video_path, channel_id, metadata, mv_videos!inner(title, song_title, kind)')
     .eq('status', 'rendered')
     .not('final_video_path', 'is', null)
     .not('channel_id', 'is', null)
@@ -125,13 +125,15 @@ async function publishOneVideoLanguage(db: any, done: string[]) {
     if (!claimed?.length) continue;
     try {
       const isFaceless = video?.kind === 'faceless';
-      const title = String(video?.song_title ?? video?.title ?? 'Video').slice(0, 95);
+      const meta = (vl.metadata ?? {}) as { title?: string; description?: string; tags?: string[] };
+      const title = String(meta.title ?? video?.song_title ?? video?.title ?? 'Video').slice(0, 95);
       const lang = vl.language === 'zh' ? 'zh-Hans' : vl.language;
-      const description = isFaceless ? `${title}\n\n#SignalFromTheFuture` : title;
+      const description = meta.description ?? (isFaceless ? `${title}\n\n#SignalFromTheFuture` : title);
+      const tags = meta.tags;
       const categoryId = isFaceless ? '28' : '10';
       const videoId = await youtube.uploadVideo({
         db, connection: conn, fileStream: await streamFromStorage(db, vl.final_video_path),
-        title, description, categoryId, privacyStatus: 'public', defaultLanguage: lang, madeForKids: false,
+        title, description, tags, categoryId, privacyStatus: 'public', defaultLanguage: lang, madeForKids: false,
       });
       await db.from('mv_video_languages').update({ status: 'published', youtube_video_id: videoId }).eq('id', vl.id);
       done.push(`vl:${vl.id}`);
@@ -142,6 +144,7 @@ async function publishOneVideoLanguage(db: any, done: string[]) {
           const shortId = await youtube.uploadVideo({
             db, connection: conn, fileStream: await streamFromStorage(db, vl.short_video_path),
             title: `${title} #Shorts`.slice(0, 95), description: `${description} #Shorts`,
+            tags: tags ? [...tags, 'shorts'] : undefined,
             categoryId, privacyStatus: 'public', defaultLanguage: lang, madeForKids: false,
           });
           done.push(`vl-short:${vl.id}:${shortId}`);
