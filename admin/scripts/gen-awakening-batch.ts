@@ -9,6 +9,7 @@ import { getMoodTrack } from '../src/audio/soundbank';
 import { geminiImage } from '../src/ai/gemini-image';
 import { geminiJson } from '../src/ai/gemini';
 import { ff, probeDuration } from '../src/lib/ffmpeg';
+import { pickClips } from '../src/bank/videobank';
 import { uploadPublic } from '../src/lib/storage';
 import { ensureDir } from '../src/lib/files';
 import { freshTopics } from '../src/faceless/topics';
@@ -138,21 +139,35 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const imgs = Array.from({ length: Math.min(8, pool.length) }, (_, k) => pool[(offset + k) % pool.length]);
   const NIMG = imgs.length;
 
+  // B-roll del banco Veo 'awakening' (9:16): se alterna con las fotos.
+  const nClips = Math.max(1, Math.ceil(use.length / 2));
+  const bankClips = pickClips('awakening', { n: nClips, offset: idx * 2 });
+
   const clips: string[] = [];
+  let ci = 0;
   for (let i = 0; i < use.length; i++) {
     const segDur = Math.max(0.25, (i + 1 < use.length ? use[i + 1] : use[i] + 0.7) - use[i]);
-    const img = imgs[i % NIMG];
     const out = path.join(dir, `seg_${String(i).padStart(2, '0')}.mp4`);
     const txtFile = out + '.txt';
     await fsp.writeFile(txtFile, fragmentos[i] || '', 'utf8');
-    const frames = Math.max(1, Math.round(segDur * 30));
-    const zexpr = (i % 2 === 0) ? `min(1.0+0.006*on,1.20)` : `max(1.22-0.006*on,1.02)`; // zoom in/out alternado
-    const vf =
-      `scale=1296:2304:force_original_aspect_ratio=increase,crop=1296:2304,` +
-      `zoompan=z='${zexpr}':d=${frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,` +
+    const draw =
       `drawtext=fontfile='${esc(config.fonts.latin)}':textfile='${esc(txtFile)}':fontcolor=white:fontsize=96:` +
       `borderw=8:bordercolor=black@0.9:shadowcolor=black@0.55:shadowx=0:shadowy=3:x=(w-text_w)/2:y=(h-text_h)/2:line_spacing=12:alpha='if(lt(t,0.16),t/0.16,1)'`;
-    await ff(['-loop', '1', '-i', img, '-t', segDur.toFixed(2), '-vf', vf, '-r', '30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', out]);
+    // Beats impares = b-roll del banco; pares = foto con zoom Ken Burns.
+    const useClip = bankClips.length > 0 && i % 2 === 1;
+    if (useClip) {
+      const clip = bankClips[ci % bankClips.length].file; ci++;
+      const vf = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,${draw}`;
+      await ff(['-i', clip, '-t', segDur.toFixed(2), '-an', '-vf', vf, '-r', '30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', out]);
+    } else {
+      const img = imgs[i % NIMG];
+      const frames = Math.max(1, Math.round(segDur * 30));
+      const zexpr = (i % 2 === 0) ? `min(1.0+0.006*on,1.20)` : `max(1.22-0.006*on,1.02)`; // zoom in/out alternado
+      const vf =
+        `scale=1296:2304:force_original_aspect_ratio=increase,crop=1296:2304,` +
+        `zoompan=z='${zexpr}':d=${frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,${draw}`;
+      await ff(['-loop', '1', '-i', img, '-t', segDur.toFixed(2), '-vf', vf, '-r', '30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', out]);
+    }
     await fsp.unlink(txtFile).catch(() => {});
     clips.push(out);
   }
