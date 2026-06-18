@@ -9,42 +9,63 @@
   "categoryId": "10",
   "madeForKids": false,
   "tiktok": "@vallenatoinc",
-  "description": "Vallenatos para Curar el Alma 🪗❤️\n\nBienvenido al rincón del vallenato que se siente. Aquí reunimos los vallenatos más hermosos para sentir, sanar y recordar: vallenato romántico, vallenatos clásicos de toda la vida y los nuevos éxitos, con el acordeón, la caja y la guacharaca que nos llegan directo al corazón. ❤️‍🩹\n\nEncontrarás música para el desamor, para el amor, para extrañar a quien ya no está, para dedicar y para celebrar la vida. Letras que dicen lo que todos sentimos: vallenatos viejos que nunca pasan de moda, baladas vallenatas para llorar y mixes para acompañarte de día y de noche.\n\n🎬 Cada semana subimos videos nuevos con letra (karaoke) para que cantes con nosotros.\n🔔 Suscríbete y activa la campana para no perderte ningún vallenato.\n💬 Cuéntanos en los comentarios qué canción te llegó al alma y a quién se la dedicas.\n\n🎵 TikTok: @vallenatoinc\n\n#Vallenato #VallenatoRomantico #MusicaVallenata #Acordeon #VallenatosViejos",
+  "description": "Bienvenidos a 'Vallenatos para Curar el Alma', un rincón donde la música vallenata se convierte en el remedio perfecto para el amor y el desamor. Aquí encontrarás una colección de vallenatos románticos que tocan el corazón, desde canciones de amor eterno hasta melodías que capturan la tristeza y el anhelo. Cada semana, publicamos nuevos visualizadores musicales con letras en pantalla para que puedas cantar y dejarte llevar por la emoción. Este canal existe para unir a los amantes del vallenato en un viaje emocional a través de sus letras y acordes. Suscríbete y activa la campanita para no perderte ninguna de nuestras publicaciones y sumérgete en el mundo del vallenato que cura el alma.\n\n#vallenato #musicaromantica #desamor #karaokevallenato #acordeón",
   "playlists": [
-    { "title": "🎵 Vallenatos Románticos", "desc": "Los vallenatos románticos más hermosos para enamorar, dedicar y sentir. Acordeón, caja y guacharaca con letras que llegan al corazón. ❤️" },
-    { "title": "💔 Vallenatos para el Desamor", "desc": "Vallenatos para el desamor, para llorar y para sanar esa herida. La banda sonora de extrañar a quien ya no está." },
-    { "title": "🪗 Vallenatos Clásicos del Recuerdo", "desc": "Vallenatos viejos y clásicos que nunca pasan de moda. Los grandes éxitos del vallenato de toda la vida." },
-    { "title": "✨ Nuevos Éxitos del Vallenato", "desc": "Los nuevos éxitos y estrenos del vallenato 2026. Lo más fresco del vallenato romántico y moderno." },
-    { "title": "🎤 Vallenatos con Letra (Karaoke)", "desc": "Canta con nosotros: vallenatos con letra en pantalla, karaoke para disfrutar cada palabra." },
-    { "title": "⚡ Shorts de Vallenato", "desc": "Los mejores momentos en formato corto. Shorts de vallenato para sentir en segundos." }
+    {
+      "title": "🎵 Vallenatos Románticos",
+      "desc": "Los vallenatos románticos más hermosos para enamorar, dedicar y sentir. Acordeón, caja y guacharaca con letras que llegan al corazón. ❤️"
+    },
+    {
+      "title": "💔 Vallenatos para el Desamor",
+      "desc": "Vallenatos para el desamor, para llorar y para sanar esa herida. La banda sonora de extrañar a quien ya no está."
+    },
+    {
+      "title": "🪗 Vallenatos Clásicos del Recuerdo",
+      "desc": "Vallenatos viejos y clásicos que nunca pasan de moda. Los grandes éxitos del vallenato de toda la vida."
+    },
+    {
+      "title": "✨ Nuevos Éxitos del Vallenato",
+      "desc": "Los nuevos éxitos y estrenos del vallenato 2026. Lo más fresco del vallenato romántico y moderno."
+    },
+    {
+      "title": "🎤 Vallenatos con Letra (Karaoke)",
+      "desc": "Canta con nosotros: vallenatos con letra en pantalla, karaoke para disfrutar cada palabra."
+    },
+    {
+      "title": "⚡ Shorts de Vallenato",
+      "desc": "Los mejores momentos en formato corto. Shorts de vallenato para sentir en segundos."
+    }
   ],
   "keywords": [
-    "vallenato",
-    "vallenatos",
-    "vallenato romantico",
-    "vallenatos romanticos",
-    "musica vallenata",
-    "musica vallenata romantica",
-    "vallenatos viejos",
-    "vallenatos clasicos",
-    "vallenato clasico",
-    "vallenatos del recuerdo",
-    "acordeon",
-    "acordeon vallenato",
-    "vallenatos para el desamor",
-    "vallenatos para dedicar",
-    "vallenatos para enamorar",
-    "vallenato para llorar",
-    "vallenatos tristes",
-    "musica colombiana",
-    "vallenatos mix",
-    "mix vallenatos romanticos",
-    "los mejores vallenatos",
-    "mejores vallenatos romanticos",
-    "exitos vallenatos",
-    "vallenato moderno",
-    "musica para el alma",
-    "vallenato sentimental",
-    "vallenatos 2026"
+    "vallenato romántico",
+    "música vallenato",
+    "canciones de amor",
+    "desamor vallenato",
+    "vallenato para cantar",
+    "letras vallenato",
+    "karaoke vallenato",
+    "visualizador musical",
+    "música acordeón",
+    "vallenato clásico",
+    "amor eterno",
+    "desamor canciones",
+    "vallenato romántico para dedicar",
+    "vallenatos de amor",
+    "canciones de despecho",
+    "música para el alma",
+    "música latina",
+    "canciones de nostalgia",
+    "vallenato para el corazón",
+    "melodías de amor",
+    "vallenato para adultos",
+    "vallenato USA",
+    "vallenato Latinoamérica",
+    "música de acordeón",
+    "caja y guacharaca",
+    "letras de canciones",
+    "canciones populares vallenato",
+    "dedicar vallenato",
+    "vallenato emocional",
+    "música para dedicar"
   ]
 }
