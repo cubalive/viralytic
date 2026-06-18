@@ -1,0 +1,14 @@
+GUÍA MAESTRA SEO 2026 — YouTube (todos los canales). Objetivo: NO keyword stuffing, sino maximizar
+descubrimiento en búsqueda, sugeridos, browse/home, watch time, retención, autoridad de canal y tema,
+y comprensión semántica del algoritmo. Regenerar TODA la metadata desde cero (nunca dejar la vieja).
+
+TÍTULO (<=100): "Keyword principal | Gancho emocional | Marca". Keyword al inicio, natural, clicable, NO clickbait.
+DESCRIPCIÓN (hasta ~5000): ocupar el máximo. INTRO (qué obtiene/siente) + CUERPO (detalle, conceptos
+relacionados, responder preguntas de la audiencia, autoridad de tema, entidades semánticas, por qué existe
+el canal, qué esperar, confianza) + CIERRE (CTA fuerte: suscribir+campana, ver otro video, playlist, comunidad).
+Natural, humano, sin repetición ni relleno. Música: + LETRA completa + CAPÍTULOS con timestamps.
+HASHTAGS: 3-5, minúscula, específicos (tema/nicho/marca). TAGS: llenar ~500 chars (alto volumen + media +
+long-tail + marca + entidades + preguntas + intent), sin duplicados.
+ADEMÁS: keywords primarias/secundarias, topic cluster, search intent, categoría, SEO score, idioma del canal.
+Cada canal tiene audiencia y voz propias (ver data/seo_profiles.json). Cada descripción debe ser ÚNICA.
+Aplicar con: py/seo_meta.py <channel_id> <content_dir> [--song|--topic]

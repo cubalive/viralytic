@@ -1,0 +1,35 @@
+[
+  {
+    "project": "vallenato",
+    "channel": "Vallenatos para Curar el Alma",
+    "file": "data/vallenato/la-silla-vacia/video.mp4",
+    "videoId": "RZZytyBjf-Q",
+    "url": "https://youtu.be/RZZytyBjf-Q",
+    "privacy": "private",
+    "title": "La Silla Vacía - J Jr | Vallenato Romántico con Letra 🎶",
+    "when": "2026-06-18T09:08:14.779240+00:00",
+    "ts": "2026-06-18T09:08:14.779240+00:00"
+  },
+  {
+    "project": "vallenato",
+    "channel": "Vallenatos para Curar el Alma",
+    "file": "data/vallenato/la-silla-vacia/short_1.mp4",
+    "videoId": "BvfZUq75MqA",
+    "url": "https://youtu.be/BvfZUq75MqA",
+    "privacy": "public",
+    "title": "La Silla Vacía - J Jr 🪗 Vallenato Romántico #Shorts",
+    "when": "2026-06-18T09:15:57.890631+00:00",
+    "ts": "2026-06-18T09:15:57.890631+00:00"
+  },
+  {
+    "project": "vallenato",
+    "channel": "Vallenatos para Curar el Alma",
+    "file": "data/vallenato/la-silla-vacia/short_2.mp4",
+    "videoId": "48T9yKrkWQQ",
+    "url": "https://youtu.be/48T9yKrkWQQ",
+    "privacy": "public",
+    "title": "La Silla Vacía - J Jr 🪗 Vallenato Romántico #Shorts",
+    "when": "2026-06-18T09:15:57.890631+00:00",
+    "ts": "2026-06-18T09:15:57.890631+00:00"
+  }
+]

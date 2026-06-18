@@ -1,0 +1,62 @@
+{
+  "lang": "en",
+  "country": "US",
+  "defaultLanguage": "en",
+  "title": "Signal From The Future",
+  "handle": "@SignalFromTheFuture",
+  "tagline": "Tomorrow, decoded today.",
+  "brandLine": "Signal From The Future.",
+  "categoryId": "28",
+  "madeForKids": false,
+  "tiktok": "@SignalFromTheFuture",
+  "description": "Signal From The Future is your edge on what's next — AI, breakthrough technology, the markets, and the money skills the future demands.\n\nWe decode the headlines: what new technology actually means, how artificial intelligence is reshaping work and society, where the stock market and the economy are heading, and the financial education nobody taught you.\n\nFast, cinematic, no-fluff breakdowns of innovation, AI, investing, crypto, the future of work, and the trends shaping tomorrow — so you see the signal before everyone else hears the noise.\n\nNew tech, real impact, smarter money. Subscribe and stay ahead.\n\nTomorrow, decoded today.\n🎵 TikTok: @SignalFromTheFuture",
+  "keywords": [
+    "technology",
+    "tech news",
+    "artificial intelligence",
+    "AI news",
+    "future technology",
+    "innovation",
+    "stock market",
+    "investing",
+    "financial education",
+    "personal finance",
+    "money",
+    "economy",
+    "crypto",
+    "future of work",
+    "tech explained",
+    "AI impact on society",
+    "emerging technology",
+    "market news",
+    "finance for beginners",
+    "the future"
+  ],
+  "pillars": [
+    {
+      "key": "ai-automation",
+      "title": "AI & Automation",
+      "desc": "How artificial intelligence and automation are reshaping work, business and daily life."
+    },
+    {
+      "key": "future-tech",
+      "title": "Future Tech & Innovation",
+      "desc": "Breakthroughs, gadgets and the cutting edge of what comes next."
+    },
+    {
+      "key": "markets-investing",
+      "title": "Markets & Investing",
+      "desc": "Stock market, crypto and how money really moves, explained simply."
+    },
+    {
+      "key": "money-education",
+      "title": "Financial Education",
+      "desc": "Practical money literacy and the new rules of wealth in a fast-changing world."
+    },
+    {
+      "key": "tech-society",
+      "title": "Tech & Society",
+      "desc": "The real impact of technology on people, jobs, news and the world."
+    }
+  ]
+}

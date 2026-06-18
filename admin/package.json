@@ -13,6 +13,7 @@
     "yt-setup": "tsx scripts/yt-setup.ts",
     "yt-setup-all": "tsx scripts/yt-setup-all.ts",
     "yt-publish-all": "tsx scripts/yt-publish-all.ts",
+    "dashboard": "node dashboard/server.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

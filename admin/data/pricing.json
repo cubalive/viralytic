@@ -1,0 +1,23 @@
+{
+  "_note": "Precios EDITABLES (USD por 'per'). Ajústalos a tu plan real desde la página 💰 Gastos. usd_in = precio de tokens de entrada (solo LLM).",
+  "currency": "USD",
+  "veo": {
+    "veo-3.1-fast-generate-001": { "per": "second", "usd": 0.15 },
+    "veo-3.1-generate-001": { "per": "second", "usd": 0.40 },
+    "default": { "per": "second", "usd": 0.15 }
+  },
+  "openai": {
+    "gpt-image-1": { "per": "image", "usd": 0.04 },
+    "gpt-image-1-edit": { "per": "image", "usd": 0.07 },
+    "gpt-4o": { "per": "1k_out", "usd": 0.01, "usd_in": 0.0025 },
+    "gpt-4o-mini": { "per": "1k_out", "usd": 0.0006, "usd_in": 0.00015 },
+    "whisper-1": { "per": "minute", "usd": 0.006 },
+    "default": { "per": "call", "usd": 0 }
+  },
+  "elevenlabs": {
+    "default": { "per": "1k_char", "usd": 0.15 }
+  },
+  "gemini": {
+    "default": { "per": "image", "usd": 0.04 }
+  }
+}

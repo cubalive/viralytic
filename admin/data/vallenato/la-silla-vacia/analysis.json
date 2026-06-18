@@ -1,0 +1,18 @@
+{
+  "slug": "la-silla-vacia",
+  "dur": 207.4,
+  "chorusAnchors": [
+    31.1,
+    120.6
+  ],
+  "highlights": [
+    {
+      "start": 31.1,
+      "end": 61.1
+    },
+    {
+      "start": 120.6,
+      "end": 150.6
+    }
+  ]
+}

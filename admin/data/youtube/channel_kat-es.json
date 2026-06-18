@@ -7,20 +7,65 @@
   "tagline": "Rompe. Suelta. Renace.",
   "categoryId": "22",
   "madeForKids": false,
-  "description": "Katharsis es para quienes están listos para romper viejos patrones, soltar el peso emocional y renacer en una versión más fuerte de sí mismos.\n\nEsto no es motivación vacía. Es transformación a través de la verdad, la disciplina, la conciencia, la sanación, la energía y el despertar personal.\n\nLe hablamos a los momentos que nadie ve: las batallas silenciosas, los reinicios emocionales, las noches de duda y la decisión de convertirte en alguien nuevo. Katharsis convierte el dolor en poder, el caos en claridad y los finales en nuevos comienzos.\n\nA través de videos motivacionales cinematográficos, reflexiones profundas, mensajes de despertar y cambios de mentalidad, este canal te ayuda a reconectar con tu fuego interior y avanzar con propósito.\n\nSi estás reconstruyéndote, sanando del pasado o buscando una versión más alta de tu vida, estás en el lugar correcto.\n\nRompe. Suelta. Renace.\nBienvenido a Katharsis.",
+  "description": "Katharsis es para quienes están listos para romper viejos patrones, soltar el peso emocional y renacer en una versión más fuerte de sí mismos.\n\nEsto no es motivación vacía. Es transformación a través de la verdad, la disciplina, la conciencia, la sanación, la energía y el despertar personal.\n\nLe hablamos a los momentos que nadie ve: las batallas silenciosas, los reinicios emocionales, las noches de duda y la decisión de convertirte en alguien nuevo. Katharsis convierte el dolor en poder, el caos en claridad y los finales en nuevos comienzos.\n\nA través de videos motivacionales cinematográficos, reflexiones profundas, mensajes de despertar y cambios de mentalidad, este canal te ayuda a reconectar con tu fuego interior y avanzar con propósito.\n\nSi estás reconstruyéndote, sanando del pasado o buscando una versión más alta de tu vida, estás en el lugar correcto.\n\nRompe. Suelta. Renace.\nBienvenido a Katharsis.\n🎵 TikTok: @katharsisoficial",
   "keywords": [
-    "motivación", "despertar", "superación personal", "crecimiento personal", "sanación emocional",
-    "disciplina", "mentalidad", "fuerza interior", "transformación", "renacer",
-    "energía interior", "fortaleza mental", "reflexión", "desarrollo personal", "despertar espiritual",
-    "estoicismo", "inteligencia emocional", "motivación diaria", "supérate", "katharsis",
-    "autoconocimiento", "soltar el pasado", "amor propio", "resiliencia", "propósito de vida",
-    "paz interior", "frases motivadoras", "videos motivacionales", "mentalidad de éxito", "sanar"
+    "motivación",
+    "despertar",
+    "superación personal",
+    "crecimiento personal",
+    "sanación emocional",
+    "disciplina",
+    "mentalidad",
+    "fuerza interior",
+    "transformación",
+    "renacer",
+    "energía interior",
+    "fortaleza mental",
+    "reflexión",
+    "desarrollo personal",
+    "despertar espiritual",
+    "estoicismo",
+    "inteligencia emocional",
+    "motivación diaria",
+    "supérate",
+    "katharsis",
+    "autoconocimiento",
+    "soltar el pasado",
+    "amor propio",
+    "resiliencia",
+    "propósito de vida",
+    "paz interior",
+    "frases motivadoras",
+    "videos motivacionales",
+    "mentalidad de éxito",
+    "sanar"
   ],
   "pillars": [
-    { "key": "despertar", "title": "🔥 Despertar", "desc": "Despierta tu mente, sal del piloto automático y mira la vida diferente. Conciencia y claridad." },
-    { "key": "soltar", "title": "💧 Soltar", "desc": "Suelta la carga emocional, la culpa, el miedo y el pasado. No puedes renacer cargando peso muerto." },
-    { "key": "disciplina-renacer", "title": "⚡ Disciplina y Renacer", "desc": "Levántate, enfócate y construye una nueva identidad. La disciplina es el puente entre el dolor y el poder." },
-    { "key": "energia-interior", "title": "🌀 Energía Interior", "desc": "Frecuencia, energía, intuición y propósito. Protege tu energía y tu vibración." },
-    { "key": "despues-del-caos", "title": "🌅 Después del Caos", "desc": "Para quienes tocaron fondo y están reconstruyendo su vida. Sobreviviste. Ahora renace." }
-  ]
+    {
+      "key": "despertar",
+      "title": "🔥 Despertar",
+      "desc": "Despierta tu mente, sal del piloto automático y mira la vida diferente. Conciencia y claridad."
+    },
+    {
+      "key": "soltar",
+      "title": "💧 Soltar",
+      "desc": "Suelta la carga emocional, la culpa, el miedo y el pasado. No puedes renacer cargando peso muerto."
+    },
+    {
+      "key": "disciplina-renacer",
+      "title": "⚡ Disciplina y Renacer",
+      "desc": "Levántate, enfócate y construye una nueva identidad. La disciplina es el puente entre el dolor y el poder."
+    },
+    {
+      "key": "energia-interior",
+      "title": "🌀 Energía Interior",
+      "desc": "Frecuencia, energía, intuición y propósito. Protege tu energía y tu vibración."
+    },
+    {
+      "key": "despues-del-caos",
+      "title": "🌅 Después del Caos",
+      "desc": "Para quienes tocaron fondo y están reconstruyendo su vida. Sobreviviste. Ahora renace."
+    }
+  ],
+  "tiktok": "@katharsisoficial"
 }

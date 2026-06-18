@@ -26,3 +26,12 @@ supabase/.temp/
 *-key.txt
 *-key.json
 *-oauth-*.json
+
+# admin: media generada / insumos pesados (regenerables) — fuera de git
+admin/data/**/*.mp4
+admin/data/**/*.mov
+admin/data/**/*.wav
+admin/data/**/*.mp3
+admin/data/**/*.m4a
+admin/data/caption_previews/
+admin/data/vallenato/**/_*.png

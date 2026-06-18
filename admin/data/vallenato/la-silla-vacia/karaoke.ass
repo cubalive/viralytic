@@ -1,0 +1,44 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: K,Palatino Linotype,70,&H00DCF5FF,&H0033B0E0,&H00202020,&H64000000,1,1,0,0,100,100,0.5,0,1,3,2,2,110,110,80,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:11.28,0:00:15.20,K,,0,0,0,,{\blur3}{\kf26}La {\kf48}casa {\kf50}tiene {\kf128}luces, {\kf42}pero {\kf26}no {\kf42}tiene {\kf30}vida,
+Dialogue: 0,0:00:16.30,0:00:20.42,K,,0,0,0,,{\blur3}{\kf20}la {\kf34}mesa {\kf40}está {\kf138}servida {\kf38}con {\kf26}tu {\kf48}silla {\kf68}vacía,
+Dialogue: 0,0:00:21.28,0:00:24.40,K,,0,0,0,,{\blur3}{\kf22}yo {\kf44}digo {\kf24}que {\kf18}no {\kf72}duele, {\kf34}pero {\kf12}es {\kf86}mentira,
+Dialogue: 0,0:00:25.94,0:00:30.32,K,,0,0,0,,{\blur3}{\kf38}porque {\kf42}hasta {\kf22}mi {\kf106}silencio {\kf22}te {\kf116}nombra {\kf92}todavía.
+Dialogue: 0,0:00:31.12,0:00:35.34,K,,0,0,0,,{\blur3}{\kf22}La {\kf48}silla {\kf34}sigue {\kf76}ahí, {\kf70}sabiendo {\kf38}que {\kf20}no {\kf20}vas {\kf18}a {\kf76}estar,
+Dialogue: 0,0:00:36.18,0:00:40.40,K,,0,0,0,,{\blur3}{\kf50}borré {\kf26}tus {\kf110}mensajes, {\kf28}no {\kf32}te {\kf70}pude {\kf106}borrar,
+Dialogue: 0,0:00:41.00,0:00:44.86,K,,0,0,0,,{\blur3}{\kf66}salgo {\kf34}pa’ {\kf26}la {\kf62}calle {\kf32}pa’ {\kf166}disimular,
+Dialogue: 0,0:00:45.60,0:00:49.86,K,,0,0,0,,{\blur3}{\kf36}pero {\kf40}entro {\kf28}por {\kf22}la {\kf76}puerta {\kf12}y {\kf30}te {\kf54}vuelvo {\kf6}a {\kf122}extrañar.
+Dialogue: 0,0:00:50.48,0:00:54.55,K,,0,0,0,,{\blur3}{\kf28}La {\kf62}silla {\kf46}sigue {\kf46}ahí, {\kf58}como {\kf26}si {\kf66}fueras {\kf8}a {\kf66}entrar,
+Dialogue: 0,0:00:55.29,0:00:59.67,K,,0,0,0,,{\blur3}{\kf24}yo {\kf70}cambio {\kf20}de {\kf116}rutina, {\kf46}pero {\kf28}no {\kf32}sé {\kf102}cambiar,
+Dialogue: 0,0:01:00.15,0:01:03.87,K,,0,0,0,,{\blur3}{\kf26}me {\kf50}río {\kf28}con {\kf20}la {\kf88}gente {\kf50}para {\kf16}no {\kf54}hablar {\kf26}de {\kf14}mí,
+Dialogue: 0,0:01:05.05,0:01:08.95,K,,0,0,0,,{\blur3}{\kf14}y {\kf42}vivo {\kf28}con {\kf14}tu {\kf104}ausencia {\kf84}sentada {\kf74}frente {\kf16}a {\kf14}mí.
+Dialogue: 0,0:01:22.09,0:01:24.63,K,,0,0,0,,{\blur3}{\kf60}Anoche {\kf28}vi {\kf24}tu {\kf46}foto {\kf8}y {\kf14}la {\kf24}volví {\kf8}a {\kf42}mirar,
+Dialogue: 0,0:01:26.15,0:01:29.67,K,,0,0,0,,{\blur3}{\kf16}la {\kf30}borré {\kf14}de {\kf14}mi {\kf48}pantalla, {\kf14}no {\kf14}la {\kf24}pude {\kf178}arrancar,
+Dialogue: 0,0:01:30.97,0:01:33.65,K,,0,0,0,,{\blur3}{\kf46}salí {\kf48}buscando {\kf30}ruido {\kf34}para {\kf24}no {\kf86}sufrir,
+Dialogue: 0,0:01:35.69,0:01:38.51,K,,0,0,0,,{\blur3}{\kf20}pero {\kf18}hasta {\kf14}en {\kf36}otra {\kf46}risa {\kf10}te {\kf80}escuchaba {\kf58}reír.
+Dialogue: 0,0:01:40.67,0:01:43.13,K,,0,0,0,,{\blur3}{\kf14}Me {\kf48}preguntan {\kf16}por {\kf42}nosotros, {\kf16}yo {\kf48}respondo {\kf62}“normal”,
+Dialogue: 0,0:01:44.89,0:01:47.97,K,,0,0,0,,{\blur3}{\kf28}pero {\kf16}se {\kf16}me {\kf24}parte {\kf10}el {\kf26}pecho {\kf16}si {\kf76}pronuncian {\kf16}tu {\kf80}inicial,
+Dialogue: 0,0:01:49.73,0:01:53.91,K,,0,0,0,,{\blur3}{\kf20}mi {\kf56}cama {\kf32}tiene {\kf132}espacio, {\kf52}pero {\kf26}no {\kf46}tiene {\kf54}calma,
+Dialogue: 0,0:01:54.25,0:01:58.87,K,,0,0,0,,{\blur3}{\kf48}porque {\kf60}duerme {\kf24}tu {\kf82}recuerdo {\kf152}atravesando {\kf40}mi {\kf56}alma.
+Dialogue: 0,0:02:00.61,0:02:04.83,K,,0,0,0,,{\blur3}{\kf28}La {\kf60}silla {\kf48}sigue {\kf42}ahí, {\kf82}sabiendo {\kf38}que {\kf20}no {\kf30}vas {\kf6}a {\kf68}estar,
+Dialogue: 0,0:02:05.73,0:02:09.85,K,,0,0,0,,{\blur3}{\kf46}borré {\kf28}tus {\kf110}mensajes, {\kf28}no {\kf28}te {\kf70}pude {\kf102}borrar,
+Dialogue: 0,0:02:10.49,0:02:14.29,K,,0,0,0,,{\blur3}{\kf66}salgo {\kf32}pa’ {\kf26}la {\kf62}calle {\kf32}pa’ {\kf162}disimular,
+Dialogue: 0,0:02:15.03,0:02:19.23,K,,0,0,0,,{\blur3}{\kf34}pero {\kf40}entro {\kf30}por {\kf20}la {\kf76}puerta {\kf12}y {\kf32}te {\kf50}vuelvo {\kf8}a {\kf118}extrañar.
+Dialogue: 0,0:02:19.83,0:02:23.87,K,,0,0,0,,{\blur3}{\kf30}La {\kf60}silla {\kf44}sigue {\kf48}ahí, {\kf56}como {\kf30}si {\kf70}fueras {\kf2}a {\kf64}entrar,
+Dialogue: 0,0:02:24.61,0:02:28.95,K,,0,0,0,,{\blur3}{\kf22}yo {\kf72}cambio {\kf20}de {\kf114}rutina, {\kf46}pero {\kf26}no {\kf34}sé {\kf100}cambiar,
+Dialogue: 0,0:02:29.41,0:02:33.11,K,,0,0,0,,{\blur3}{\kf26}me {\kf52}río {\kf28}con {\kf20}la {\kf86}gente {\kf52}para {\kf16}no {\kf52}hablar {\kf26}de {\kf12}mí,
+Dialogue: 0,0:02:34.31,0:02:38.18,K,,0,0,0,,{\blur3}{\kf12}y {\kf42}vivo {\kf28}con {\kf14}tu {\kf104}ausencia {\kf86}sentada {\kf74}frente {\kf12}a {\kf14}mí.
+Dialogue: 0,0:02:48.64,0:02:52.76,K,,0,0,0,,{\blur3}{\kf26}No {\kf30}sé {\kf18}si {\kf48}algún {\kf118}día {\kf28}la {\kf62}pueda {\kf82}mover,
+Dialogue: 0,0:02:53.46,0:02:57.58,K,,0,0,0,,{\blur3}{\kf16}si {\kf20}al {\kf54}verla {\kf36}tan {\kf120}sola {\kf30}te {\kf66}dejo {\kf24}de {\kf46}ver,
+Dialogue: 0,0:02:58.34,0:03:02.34,K,,0,0,0,,{\blur3}{\kf30}la {\kf56}casa {\kf28}se {\kf64}volvió {\kf30}mi {\kf34}peor {\kf158}melancolía,
+Dialogue: 0,0:03:03.26,0:03:10.08,K,,0,0,0,,{\blur3}{\kf20}y {\kf28}yo {\kf48}sigo {\kf304}pequeño {\kf58}frente {\kf18}a {\kf32}tu {\kf74}silla {\kf100}vacía.

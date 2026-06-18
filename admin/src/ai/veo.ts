@@ -2,6 +2,7 @@ import { config } from '../config';
 import { publisherModelUrl, fetchOperationUrl, vertexPost } from '../lib/vertex';
 import { saveBase64, toBase64 } from '../lib/files';
 import { log } from '../lib/log';
+import { recordUsage } from '../lib/usage';
 
 export interface VeoOptions {
   firstFrame?: string;  // ruta de imagen (frame inicial)
@@ -57,6 +58,7 @@ export async function generateVideo(prompt: string, outPath: string, opts: VeoOp
       const uri = v?.gcsUri ?? v?.video?.gcsUri;
       if (b64) {
         await saveBase64(outPath, b64);
+        try { recordUsage(process.env.USAGE_PROJECT || 'faceless', 'video', 'veo', config.models.veo, opts.durationSeconds ?? config.video.clipSeconds, undefined, outPath.split(/[\\/]/).pop()); } catch { /* noop */ }
         return outPath;
       }
       if (uri) throw new Error('Veo devolvió GCS URI (falta descargar de GCS): ' + uri);

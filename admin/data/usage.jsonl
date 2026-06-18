@@ -1,0 +1,9 @@
+{"ts": "2026-06-18T08:26:31.640924+00:00", "project": "la-silla-vacia", "kind": "loop-clip", "provider": "veo", "model": "veo-3.1-fast-generate-001", "units": 6.0, "unit": "second", "usd": 0.9, "note": "_introclip.mp4"}
+{"ts": "2026-06-18T08:29:02.224763+00:00", "project": "la-silla-vacia", "kind": "loop-clip", "provider": "veo", "model": "veo-3.1-fast-generate-001", "units": 8.0, "unit": "second", "usd": 1.2, "note": "_loop8.mp4"}
+{"ts": "2026-06-18T08:38:58.346956+00:00", "project": "la-silla-vacia", "kind": "loop-clip", "provider": "veo", "model": "veo-3.1-fast-generate-001", "units": 8.0, "unit": "second", "usd": 1.2, "note": "_loop8.mp4"}
+{"ts": "2026-06-18T09:06:27.913950+00:00", "project": "vallenato", "kind": "metadata", "provider": "openai", "model": "gpt-4o", "units": 1883.0, "unit": "1k_out", "usd": 0.011615, "note": "la-silla-vacia"}
+{"ts": "2026-06-18T09:12:09.419261+00:00", "project": "vallenato", "kind": "metadata", "provider": "openai", "model": "gpt-4o", "units": 2338.0, "unit": "1k_out", "usd": 0.0148, "note": "la-silla-vacia"}
+{"ts": "2026-06-18T09:14:02.514154+00:00", "project": "vallenato", "kind": "loop-clip", "provider": "veo", "model": "veo-3.1-fast-generate-001", "units": 8.0, "unit": "second", "usd": 1.2, "note": "_loop8.mp4"}
+{"ts": "2026-06-18T09:29:28.315703+00:00", "project": "vallenato", "kind": "metadata", "provider": "openai", "model": "gpt-4o", "units": 2094.0, "unit": "1k_out", "usd": 0.01293, "note": "la-silla-vacia"}
+{"ts": "2026-06-18T09:33:11.669700+00:00", "project": "vallenato", "kind": "metadata", "provider": "openai", "model": "gpt-4o", "units": 1680.0, "unit": "1k_out", "usd": 0.010118, "note": "la-silla-vacia"}
+{"ts": "2026-06-18T09:33:50.830243+00:00", "project": "vallenato", "kind": "metadata", "provider": "openai", "model": "gpt-4o", "units": 1807.0, "unit": "1k_out", "usd": 0.011388, "note": "la-silla-vacia"}

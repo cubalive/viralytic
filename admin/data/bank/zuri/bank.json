@@ -1,0 +1,29 @@
+{
+  "character": "zuri",
+  "note": "Banco de escenas REUTILIZABLE de Zuri (Veo 3.1 fast, 1080p, ~8s, sin audio). El editor de música arma cada canción desde aquí (audio+karaoke+orden) = ~$0 Veo por canción. Clips en ./clips, bumpers/aereas en ./bumpers.",
+  "bumpers": {
+    "intro": "bumpers/intro_bumper.mp4",
+    "outro": "bumpers/outro_bumper.mp4",
+    "aerial_in": "bumpers/video_inicio_aerea.mp4",
+    "aerial_out": "bumpers/video_final_aerea.mp4"
+  },
+  "scenes": [
+    { "id": "cam_a", "file": "clips/cam_a.mp4", "function": "verso", "energy": "juguetona", "shot": "caminata", "tags": ["camino","amigo-aparece","sendero","frente"], "durationS": 8, "desc": "Un amigo camina, aparece el segundo amigo a su lado" },
+    { "id": "cam_b", "file": "clips/cam_b.mp4", "function": "verso", "energy": "juguetona", "shot": "caminata", "tags": ["camino","zuri-aparece","trio","frente"], "durationS": 8, "desc": "Zuri aparece en el centro con destello, forman el trio" },
+    { "id": "cam_c", "file": "clips/cam_c.mp4", "function": "verso", "energy": "juguetona", "shot": "caminata", "tags": ["camino","trio","espaldas"], "durationS": 8, "desc": "El trio camina y se aleja de espaldas" },
+    { "id": "vista_1", "file": "clips/vista_1.mp4", "function": "coro", "energy": "soñadora", "shot": "mirador", "tags": ["mirador","atardecer","valle","aerea"], "durationS": 8, "desc": "Aerea frontal del trio en el mirador, gira a espaldas" },
+    { "id": "vista_2", "file": "clips/vista_2.mp4", "function": "coro", "energy": "triunfal", "shot": "mirador", "tags": ["mirador","atardecer","brazos-arriba","espaldas"], "durationS": 8, "desc": "De espaldas miran el valle y alzan los brazos" },
+    { "id": "vista_3", "file": "clips/vista_3.mp4", "function": "coro", "energy": "soñadora", "shot": "mirador", "tags": ["mirador","atardecer","contemplan"], "durationS": 8, "desc": "Bajan los brazos y contemplan el atardecer" },
+    { "id": "zuri_360", "file": "clips/zuri_360.mp4", "function": "coro", "energy": "energetica", "shot": "showcase", "tags": ["zuri-sola","giro","escenario"], "durationS": 16, "desc": "Zuri sola gira 360 mostrando su pose (derecho+reverso)" },
+    { "id": "lift_a", "file": "clips/lift_a.mp4", "function": "coro", "energy": "energetica", "shot": "grupo", "tags": ["lift","lanzan","aire","frente"], "durationS": 8, "desc": "Los amigos lanzan a Zuri al aire" },
+    { "id": "lift_b", "file": "clips/lift_b.mp4", "function": "coro", "energy": "triunfal", "shot": "grupo", "tags": ["lift","cae","aterriza"], "durationS": 8, "desc": "Zuri desciende y la reciben los amigos" },
+    { "id": "cine_in", "file": "clips/cine_in.mp4", "function": "coro", "energy": "energetica", "shot": "escenario", "tags": ["cine","push-in","pantalla","publico"], "durationS": 8, "desc": "Camara entra desde el publico hacia Zuri en el escenario" },
+    { "id": "esc_a", "file": "clips/esc_a.mp4", "function": "coro", "energy": "energetica", "shot": "escenario", "tags": ["escenario","canta","publico"], "durationS": 8, "desc": "Zuri canta y baila en el escenario" },
+    { "id": "esc_b", "file": "clips/esc_b.mp4", "function": "coro", "energy": "energetica", "shot": "escenario", "tags": ["escenario","energico","aplausos"], "durationS": 8, "desc": "Zuri performance energico frente a la pantalla" },
+    { "id": "ronda_a", "file": "clips/ronda_a.mp4", "function": "coro", "energy": "triunfal", "shot": "cenital", "tags": ["ronda","salto","circulo","aerea"], "durationS": 8, "desc": "Cenital: Zuri salta en el centro del circulo" },
+    { "id": "ronda_b", "file": "clips/ronda_b.mp4", "function": "coro", "energy": "triunfal", "shot": "cenital", "tags": ["ronda","toman-manos","circulo"], "durationS": 8, "desc": "Cenital: forman el anillo tomados de las manos" },
+    { "id": "ronda_c", "file": "clips/ronda_c.mp4", "function": "coro", "energy": "triunfal", "shot": "cenital", "tags": ["ronda","giran","circulo"], "durationS": 8, "desc": "Cenital: la ronda gira tomada de las manos" },
+    { "id": "abrazo", "file": "clips/abrazo.mp4", "function": "outro", "energy": "tierna", "shot": "cenital", "tags": ["abrazo","grupo","cierre"], "durationS": 8, "desc": "Cenital: abrazo grupal calido" },
+    { "id": "selfie", "file": "clips/selfie.mp4", "function": "outro", "energy": "juguetona", "shot": "grupo", "tags": ["selfie","foto","cierre"], "durationS": 8, "desc": "El trio se toma una selfie que se vuelve foto enmarcada" }
+  ]
+}

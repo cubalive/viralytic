@@ -1,0 +1,8 @@
+{
+  "id": "zuri",
+  "name": "Zuri",
+  "role": "main",
+  "description": "Zuri is a caramel-furred meerkat girl pop star, Pixar-style 3D render. EXACT canon, never change: TWO pink roses on top of her head; a YELLOW long-sleeve crop sweater with a BLUE HEART containing a GOLD STAR on the chest; black shorts with a small gold chain; red sandals with little roses; pink beaded bracelets and anklets; a small star earring; big round expressive brown eyes; fluffy caramel fur with darker spots; warm friendly smile. Energetic, sweet and confident kids singer (ages 8-14). Do NOT alter her outfit, colors, roses or proportions; do NOT put roses or flowers on any other character.",
+  "refDir": "data/characters/zuri/refs",
+  "canonDir": "data/characters/zuri/canon"
+}

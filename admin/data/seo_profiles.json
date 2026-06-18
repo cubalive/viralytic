@@ -1,0 +1,72 @@
+{
+  "_note": "Perfiles de nicho por canal para el motor maestro de SEO (seo_meta.py). by_kind = plantilla por tipo; channels = override por canal. type: song (música, agrega letra+capítulos) o topic.",
+  "by_kind": {
+    "music-zuri": {
+      "type": "song",
+      "brand": "Zuri",
+      "niche": "animated kids & preteen (ages 8-14) MUSIC channel. Zuri is a caramel meerkat girl pop star who turns emotions into original pop/rock/R&B songs, in a magical glowing forest with her animal friends. Every video is a 3D animated music video with on-screen SING-ALONG / KARAOKE lyrics. Themes: friendship, emotions, courage, self-confidence, feeling safe and understood.",
+      "audience": "kids, preteens and families",
+      "intent": "watch + entertain children + music + sing along + learn emotions",
+      "voice": "warm, magical, wholesome, kid-friendly, YouTube-Kids friendly",
+      "madeForKids": true
+    },
+    "music-vallenato": {
+      "type": "song",
+      "brand": "Vallenatos para Curar el Alma",
+      "niche": "adult romantic VALLENATO music (accordion, caja, guacharaca) about love, heartbreak, longing and life. Music visualizer with on-screen SING-ALONG / KARAOKE lyrics.",
+      "audience": "Spanish-speaking adults in the USA and Latin America who love vallenato",
+      "intent": "listen + feel + dedicate + sing along + heartbreak/desamor",
+      "voice": "emotional, romantic, nostalgic, warm, adult",
+      "madeForKids": false
+    },
+    "faceless": {
+      "type": "topic",
+      "brand": "",
+      "niche": "faceless short-form motivational and educational content",
+      "audience": "adults",
+      "intent": "learn + be inspired",
+      "voice": "confident, cinematic, motivational",
+      "madeForKids": false
+    },
+    "edu": {
+      "type": "topic",
+      "brand": "SabiKids",
+      "niche": "fun educational videos for young children (animals, colors, numbers, shapes, early learning)",
+      "audience": "young kids (2-7) and their parents",
+      "intent": "entertain children + learn + early education",
+      "voice": "playful, simple, friendly, YouTube-Kids friendly",
+      "madeForKids": true
+    }
+  },
+  "channels": {
+    "vallenato": { "brand": "Vallenatos para Curar el Alma", "handle": "@vallenatoinc" },
+    "wealth": {
+      "type": "topic", "brand": "World Wealth Mindset", "language": "en", "madeForKids": false,
+      "niche": "wealth psychology, money mindset and the habits and mentality of millionaires and high achievers; practical financial education and the inner game of building wealth",
+      "audience": "ambitious adults who want financial freedom and a millionaire mindset",
+      "intent": "learn + be inspired + invest + improve money mindset",
+      "voice": "confident, authoritative, motivational, data-informed"
+    },
+    "kat-es": {
+      "type": "topic", "brand": "Katharsis Oficial", "language": "es", "madeForKids": false,
+      "niche": "consciencia, despertar espiritual, autoconocimiento y transformación interior; reflexiones profundas sobre la mente, el ego y el sentido de la vida",
+      "audience": "adultos hispanohablantes en un camino de despertar y crecimiento interior",
+      "intent": "inspirar + reflexionar + aprender",
+      "voice": "profunda, reflexiva, poética, serena"
+    },
+    "kat-en": {
+      "type": "topic", "brand": "Katharsis Code", "language": "en", "madeForKids": false,
+      "niche": "consciousness, awakening, self-knowledge and inner transformation; deep reflections on the mind, the ego and the meaning of life",
+      "audience": "English-speaking adults seeking awakening and inner growth",
+      "intent": "inspire + reflect + learn",
+      "voice": "deep, reflective, poetic, calm"
+    },
+    "signal": {
+      "type": "topic", "brand": "Signal From The Future", "language": "en", "madeForKids": false,
+      "niche": "technology, the future, artificial intelligence and finance — decoding what is coming next and how it changes money, work and life",
+      "audience": "curious adults into tech, the future, AI and money",
+      "intent": "learn + be inspired + stay ahead",
+      "voice": "futuristic, sharp, cinematic, insightful"
+    }
+  }
+}

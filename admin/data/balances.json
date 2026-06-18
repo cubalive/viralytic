@@ -1,0 +1,23 @@
+{
+  "_note": "Saldo/crédito disponible por proveedor (USD). Edítalo desde 💰 Gastos. El sistema resta lo gastado.",
+  "providers": [
+    {
+      "key": "veo",
+      "label": "Veo / Vertex (Google Cloud)",
+      "credit": 250,
+      "note": "crédito proyecto zuri-499408"
+    },
+    {
+      "key": "openai",
+      "label": "OpenAI (gpt-image · gpt-4o · whisper)",
+      "credit": 12,
+      "note": ""
+    },
+    {
+      "key": "elevenlabs",
+      "label": "ElevenLabs (voz)",
+      "credit": 33,
+      "note": ""
+    }
+  ]
+}

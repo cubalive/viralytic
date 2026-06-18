@@ -234,5 +234,337 @@
     ],
     "durationS": 8,
     "prompt": "a confident business handshake in a modern glass office with city view, faceless, cinematic"
+  },
+  {
+    "id": "rooftop-sunrise_1",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\rooftop-sunrise_1.mp4",
+    "category": "rooftop-sunrise",
+    "tags": [
+      "ambition",
+      "success",
+      "mindset"
+    ],
+    "durationS": 8,
+    "prompt": "a lone silhouette standing on a rooftop overlooking a vast city at sunrise, aspirational, cinematic"
+  },
+  {
+    "id": "skyline-night_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\skyline-night_2.mp4",
+    "category": "skyline-night",
+    "tags": [
+      "city",
+      "success",
+      "ambition"
+    ],
+    "durationS": 8,
+    "prompt": "a glowing modern city skyline at night, financial district skyscrapers, cinematic aerial"
+  },
+  {
+    "id": "skyline-night_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\skyline-night_3.mp4",
+    "category": "skyline-night",
+    "tags": [
+      "city",
+      "success",
+      "ambition"
+    ],
+    "durationS": 8,
+    "prompt": "a glowing modern city skyline at night, financial district skyscrapers, cinematic aerial"
+  },
+  {
+    "id": "luxury-car_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\luxury-car_2.mp4",
+    "category": "luxury-car",
+    "tags": [
+      "luxury",
+      "success",
+      "car"
+    ],
+    "durationS": 8,
+    "prompt": "a sleek luxury sports car on a wet city street at dusk, reflections, cinematic, no people"
+  },
+  {
+    "id": "luxury-car_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\luxury-car_3.mp4",
+    "category": "luxury-car",
+    "tags": [
+      "luxury",
+      "success",
+      "car"
+    ],
+    "durationS": 8,
+    "prompt": "a sleek luxury sports car on a wet city street at dusk, reflections, cinematic, no people"
+  },
+  {
+    "id": "luxury-watch_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\luxury-watch_2.mp4",
+    "category": "luxury-watch",
+    "tags": [
+      "luxury",
+      "time",
+      "detail"
+    ],
+    "durationS": 8,
+    "prompt": "extreme close-up of an elegant luxury watch on a wrist with a suit cuff, cinematic, shallow focus"
+  },
+  {
+    "id": "luxury-watch_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\luxury-watch_3.mp4",
+    "category": "luxury-watch",
+    "tags": [
+      "luxury",
+      "time",
+      "detail"
+    ],
+    "durationS": 8,
+    "prompt": "extreme close-up of an elegant luxury watch on a wrist with a suit cuff, cinematic, shallow focus"
+  },
+  {
+    "id": "cash-gold_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\cash-gold_2.mp4",
+    "category": "cash-gold",
+    "tags": [
+      "money",
+      "wealth"
+    ],
+    "durationS": 8,
+    "prompt": "neat stacks of cash and gold coins on a dark marble table, dramatic rim light, cinematic"
+  },
+  {
+    "id": "cash-gold_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\cash-gold_3.mp4",
+    "category": "cash-gold",
+    "tags": [
+      "money",
+      "wealth"
+    ],
+    "durationS": 8,
+    "prompt": "neat stacks of cash and gold coins on a dark marble table, dramatic rim light, cinematic"
+  },
+  {
+    "id": "laptop-night_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\laptop-night_2.mp4",
+    "category": "laptop-night",
+    "tags": [
+      "work",
+      "hustle",
+      "focus"
+    ],
+    "durationS": 8,
+    "prompt": "hands typing on a laptop at night with city light bokeh through a window, faceless, focused mood"
+  },
+  {
+    "id": "laptop-night_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\laptop-night_3.mp4",
+    "category": "laptop-night",
+    "tags": [
+      "work",
+      "hustle",
+      "focus"
+    ],
+    "durationS": 8,
+    "prompt": "hands typing on a laptop at night with city light bokeh through a window, faceless, focused mood"
+  },
+  {
+    "id": "private-jet_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\private-jet_2.mp4",
+    "category": "private-jet",
+    "tags": [
+      "luxury",
+      "freedom",
+      "travel"
+    ],
+    "durationS": 8,
+    "prompt": "a private jet on a runway at golden hour, stairs down, cinematic, no people"
+  },
+  {
+    "id": "private-jet_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\private-jet_3.mp4",
+    "category": "private-jet",
+    "tags": [
+      "luxury",
+      "freedom",
+      "travel"
+    ],
+    "durationS": 8,
+    "prompt": "a private jet on a runway at golden hour, stairs down, cinematic, no people"
+  },
+  {
+    "id": "stock-charts_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\stock-charts_2.mp4",
+    "category": "stock-charts",
+    "tags": [
+      "investing",
+      "markets",
+      "data"
+    ],
+    "durationS": 8,
+    "prompt": "glowing green stock market charts and financial data on dark screens, cinematic, depth"
+  },
+  {
+    "id": "stock-charts_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\stock-charts_3.mp4",
+    "category": "stock-charts",
+    "tags": [
+      "investing",
+      "markets",
+      "data"
+    ],
+    "durationS": 8,
+    "prompt": "glowing green stock market charts and financial data on dark screens, cinematic, depth"
+  },
+  {
+    "id": "business-handshake_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\business-handshake_2.mp4",
+    "category": "business-handshake",
+    "tags": [
+      "business",
+      "deal"
+    ],
+    "durationS": 8,
+    "prompt": "a confident business handshake in a modern glass office with city view, faceless, cinematic"
+  },
+  {
+    "id": "business-handshake_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\business-handshake_3.mp4",
+    "category": "business-handshake",
+    "tags": [
+      "business",
+      "deal"
+    ],
+    "durationS": 8,
+    "prompt": "a confident business handshake in a modern glass office with city view, faceless, cinematic"
+  },
+  {
+    "id": "rooftop-sunrise_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\rooftop-sunrise_2.mp4",
+    "category": "rooftop-sunrise",
+    "tags": [
+      "ambition",
+      "success",
+      "mindset"
+    ],
+    "durationS": 8,
+    "prompt": "a lone silhouette standing on a rooftop overlooking a vast city at sunrise, aspirational, cinematic"
+  },
+  {
+    "id": "rooftop-sunrise_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\rooftop-sunrise_3.mp4",
+    "category": "rooftop-sunrise",
+    "tags": [
+      "ambition",
+      "success",
+      "mindset"
+    ],
+    "durationS": 8,
+    "prompt": "a lone silhouette standing on a rooftop overlooking a vast city at sunrise, aspirational, cinematic"
+  },
+  {
+    "id": "modern-office_1",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\modern-office_1.mp4",
+    "category": "modern-office",
+    "tags": [
+      "business",
+      "luxury",
+      "work"
+    ],
+    "durationS": 8,
+    "prompt": "a sleek modern luxury office interior with floor-to-ceiling city view, cinematic, no people"
+  },
+  {
+    "id": "modern-office_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\modern-office_2.mp4",
+    "category": "modern-office",
+    "tags": [
+      "business",
+      "luxury",
+      "work"
+    ],
+    "durationS": 8,
+    "prompt": "a sleek modern luxury office interior with floor-to-ceiling city view, cinematic, no people"
+  },
+  {
+    "id": "modern-office_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\modern-office_3.mp4",
+    "category": "modern-office",
+    "tags": [
+      "business",
+      "luxury",
+      "work"
+    ],
+    "durationS": 8,
+    "prompt": "a sleek modern luxury office interior with floor-to-ceiling city view, cinematic, no people"
+  },
+  {
+    "id": "goals-notebook_1",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\goals-notebook_1.mp4",
+    "category": "goals-notebook",
+    "tags": [
+      "planning",
+      "discipline",
+      "focus"
+    ],
+    "durationS": 8,
+    "prompt": "hands writing goals in a notebook beside black coffee and a laptop, morning light, faceless"
+  },
+  {
+    "id": "goals-notebook_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\goals-notebook_2.mp4",
+    "category": "goals-notebook",
+    "tags": [
+      "planning",
+      "discipline",
+      "focus"
+    ],
+    "durationS": 8,
+    "prompt": "hands writing goals in a notebook beside black coffee and a laptop, morning light, faceless"
+  },
+  {
+    "id": "goals-notebook_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\goals-notebook_3.mp4",
+    "category": "goals-notebook",
+    "tags": [
+      "planning",
+      "discipline",
+      "focus"
+    ],
+    "durationS": 8,
+    "prompt": "hands writing goals in a notebook beside black coffee and a laptop, morning light, faceless"
+  },
+  {
+    "id": "mansion-pool_1",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\mansion-pool_1.mp4",
+    "category": "mansion-pool",
+    "tags": [
+      "luxury",
+      "freedom",
+      "lifestyle"
+    ],
+    "durationS": 8,
+    "prompt": "a luxury modern mansion with a glowing infinity pool at dusk, cinematic, no people"
+  },
+  {
+    "id": "mansion-pool_2",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\mansion-pool_2.mp4",
+    "category": "mansion-pool",
+    "tags": [
+      "luxury",
+      "freedom",
+      "lifestyle"
+    ],
+    "durationS": 8,
+    "prompt": "a luxury modern mansion with a glowing infinity pool at dusk, cinematic, no people"
+  },
+  {
+    "id": "mansion-pool_3",
+    "file": "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\bank\\wealth\\clips\\mansion-pool_3.mp4",
+    "category": "mansion-pool",
+    "tags": [
+      "luxury",
+      "freedom",
+      "lifestyle"
+    ],
+    "durationS": 8,
+    "prompt": "a luxury modern mansion with a glowing infinity pool at dusk, cinematic, no people"
   }
 ]

@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import OpenAI from 'openai';
 import { saveBase64 } from '../lib/files';
+import { recordUsage } from '../lib/usage';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-1';
@@ -49,5 +50,6 @@ export async function geminiImage(
 
   if (!b64) throw new Error('gpt-image-1 no devolvió imagen');
   await saveBase64(outPath, b64);
+  try { recordUsage(process.env.USAGE_PROJECT || '?', 'image', 'openai', refs.length ? 'gpt-image-1-edit' : 'gpt-image-1', 1, undefined, outPath.split(/[\\/]/).pop()); } catch { /* noop */ }
   return outPath;
 }

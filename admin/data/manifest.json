@@ -2,17 +2,44 @@
   "characters": {
     "sabi": {
       "canonImages": [
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_01_wave.png",
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_02_present.png",
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_03_celebrate.png",
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_04_think.png",
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_05_clap.png",
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_06_neutral.png",
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_07_face.png",
-        "C:\\Users\\alain\\kids-music-studio\\data\\characters\\sabi\\canon\\sabi_08_point.png"
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_01_wave.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_02_present.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_03_celebrate.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_04_think.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_05_clap.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_06_neutral.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_07_face.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\sabi\\canon\\sabi_08_point.png"
       ],
       "updatedAt": "2026-06-14T09:53:24.889Z"
+    },
+    "zuri": {
+      "canonImages": [
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\coro_canta_1.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\coro_canta_2.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\verso_pasos_1.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\verso_pasos_2.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\puente_suena_1.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\puente_suena_2.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\test_coro_canta.png",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\canon\\test_verso_tierna.png"
+      ],
+      "refs": [
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\refs\\IMG_8730.PNG",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\refs\\IMG_8731.PNG",
+        "C:\\Users\\alain\\Desktop\\viralytic\\admin\\data\\characters\\zuri\\refs\\zuri_closeup_manos_abierta.png"
+      ],
+      "bank": "data/bank/zuri/bank.json",
+      "updatedAt": "2026-06-17T00:00:00.000Z"
     }
   },
-  "songs": {}
+  "songs": {
+    "mi-lugar-seguro": {
+      "status": "published",
+      "lang": "es",
+      "youtube": "qm8i78gvU5c",
+      "title": "Mi Lugar Seguro",
+      "updatedAt": "2026-06-17T00:00:00.000Z"
+    }
+  }
 }
