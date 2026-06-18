@@ -44,7 +44,8 @@ const SYS =
   `- titulo: ≤100 characters. Structure "primary keyword | emotional hook | ${brandName}". Primary keyword near the start, natural (no clickbait), 1-2 emojis ok.\n` +
   `- descripcion: a RICH SEO description (aim 1500-3000+ characters, use the space). Structure: (1) INTRO — hook + what the viewer will learn, with primary and secondary keywords; (2) BODY — depth on the topic, related concepts and entities, answer common audience questions, weave long-tail phrases, synonyms and LSI keywords naturally, and one line on what "${brandName}" is about and why to follow it (channel authority); (3) END — clear CTA (subscribe, watch another video, a playlist), a community invitation, then a final line with 8-12 specific hashtags. Close the brand voice with "${brandLine}".\n` +
   `- tags: 18-26 specific tags (mix of high-volume, medium, long-tail, brand, related entities and question searches) for THIS niche, ~500 characters total, no duplicates, never another brand's name.\n` +
-  `- pillar: best key from:\n${pillarLines}`;
+  `- pillar: best key from:\n${pillarLines}\n` +
+  `CHANNEL ECOSYSTEM — every video is ONE node in "${brandName}"'s semantic ecosystem; reinforce its topical authority and build semantic relationships to its other videos (shared concepts, recurring topic clusters, related keywords). The channel is about: ${String(meta.description || '').split('\n')[0].slice(0, 220)}. Weave these CORE channel keywords consistently (long-term recommendation growth, not one-off ranking): ${(meta.keywords || []).slice(0, 15).join(', ')}.`;
 
 function capTags(tags: string[]): string[] {
   const out: string[] = []; let total = 0;

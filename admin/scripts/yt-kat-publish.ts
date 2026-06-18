@@ -68,7 +68,8 @@ const SYS =
   `- titulo: ≤100 characters. Structure "primary keyword | emotional hook | ${brandName}". Primary keyword near the start, natural (no clickbait), 1-2 emojis ok.\n` +
   `- descripcion: a RICH SEO description (aim 1200-3000+ characters). (1) INTRO: hook + what the viewer gets, with primary/secondary keywords; (2) BODY: depth, related concepts/entities, answer common audience questions, long-tail phrases, synonyms and LSI keywords woven naturally, plus one line on what "${brandName}" is about and why to follow (channel authority); (3) END: clear CTA (subscribe / comment / save / watch another), community invite, brand line "${brandLine}", and a final line of 8-12 specific hashtags.\n` +
   `- tags: 18-26 specific tags (high-volume + medium + long-tail + brand + related entities + question searches) for THIS niche, ~500 chars total, no duplicates, never another brand.\n` +
-  `- pillar: best key from:\n${pillarLines}`;
+  `- pillar: best key from:\n${pillarLines}\n` +
+  `CHANNEL ECOSYSTEM — every video is ONE node in "${brandName}"'s semantic ecosystem; reinforce its topical authority. The channel is about: ${String(meta.description || '').split('\n')[0].slice(0, 220)}. Weave these CORE channel keywords consistently (so YouTube learns the niche over time): ${(meta.keywords || []).slice(0, 15).join(', ')}.`;
 
 // Sanea + llena tags hasta ~480 chars (YouTube rechaza < > comillas y suma > 500)
 function capTags(tags: string[]): string[] {
