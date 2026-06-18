@@ -15,10 +15,11 @@ const YT = path.join(ROOT, 'data', 'youtube');
 
 const meta = await readJson<any>(path.join(YT, `channel_${slot}.json`), null);
 if (!meta) throw new Error(`falta channel_${slot}.json`);
-const published = await readJson<Record<string, any>>(path.join(YT, `kat_published_${slot}.json`), {});
+const SABI = ['es', 'en', 'it', 'zh'].includes(slot);
+const published = await readJson<Record<string, any>>(path.join(YT, SABI ? `published_${slot}.json` : `kat_published_${slot}.json`), {});
 const DIRS: Record<string, string> = { 'kat-es': 'awakening', 'kat-en': 'awakening-en', 'wealth': 'wealth', 'signal': 'signal' };
-const localDir = path.join(OUTPUT_DIR, DIRS[slot] || slot);
-const lang = meta.lang || 'en';
+const localDir = path.join(OUTPUT_DIR, SABI ? path.join('reels', 'edu-veo') : (DIRS[slot] || slot));
+const lang = meta.defaultLanguage || meta.lang || 'en';
 
 const pillarKeys: string[] = (meta.pillars || []).map((p: any) => p.key);
 const pillarLines = (meta.pillars || []).map((p: any) => `${p.key}: ${p.title} — ${p.desc}`).join('\n');
@@ -26,14 +27,15 @@ const brandName: string = meta.title || slot;
 const brandLine: string = meta.brandLine || meta.tagline || brandName;
 const nicheHint: string = meta.tagline ? ` (brand line: "${meta.tagline}")` : '';
 
-const SCHEMA = {
+const hasPillars = pillarKeys.length > 0;
+const SCHEMA: any = {
   type: 'object',
   properties: {
     titulo: { type: 'string' }, descripcion: { type: 'string' },
     tags: { type: 'array', items: { type: 'string' } },
-    pillar: { type: 'string', enum: pillarKeys },
+    ...(hasPillars ? { pillar: { type: 'string', enum: pillarKeys } } : {}),
   },
-  required: ['titulo', 'descripcion', 'tags', 'pillar'],
+  required: ['titulo', 'descripcion', 'tags', ...(hasPillars ? ['pillar'] : [])],
 };
 const LANG_FULL: Record<string, string> = { es: 'Spanish', en: 'English', it: 'Italian', zh: 'Simplified Chinese' };
 const langName = LANG_FULL[lang] ?? 'English';
@@ -62,16 +64,22 @@ function capTags(tags: string[]): string[] {
 const token = await getYtAccessToken(slot);
 let done = 0, fail = 0;
 for (const [slug, pub] of Object.entries(published)) {
-  const videoId = (pub as any).videoId;
-  if (!videoId) continue;
-  const fr = await readJson<any>(path.join(localDir, slug, 'frase.json'), null);
-  if (!fr?.frase) { log.warn(`${slug}: sin frase.json, salto`); continue; }
+  const videoId = typeof pub === 'string' ? pub : (pub as any)?.videoId;
+  if (!videoId || videoId === 'SKIP') continue;
+  let inputPrompt: string;
+  let fallbackTitle = slug.replace(/-/g, ' ');
+  if (SABI) {
+    inputPrompt = `Topic of this kids educational video: "${slug.replace(/-/g, ' ')}"`;
+  } else {
+    const fr = await readJson<any>(path.join(localDir, slug, 'frase.json'), null);
+    if (!fr?.frase) { log.warn(`${slug}: sin frase.json, salto`); continue; }
+    fallbackTitle = fr.topic;
+    inputPrompt = lang === 'en' ? `Theme: "${fr.topic}"\nPhrase: "${fr.frase}"` : `Tema: "${fr.topic}"\nFrase: "${fr.frase}"`;
+  }
   try {
-    const md: any = await geminiJson(
-      lang === 'en' ? `Theme: "${fr.topic}"\nPhrase: "${fr.frase}"` : `Tema: "${fr.topic}"\nFrase: "${fr.frase}"`,
-      SCHEMA, SYS);
+    const md: any = await geminiJson(inputPrompt, SCHEMA, SYS);
     const snippet = {
-      title: (md.titulo || fr.topic).slice(0, 100),
+      title: (md.titulo || fallbackTitle).slice(0, 100),
       description: md.descripcion || '',
       tags: capTags(md.tags || []),
       categoryId: meta.categoryId || '27',

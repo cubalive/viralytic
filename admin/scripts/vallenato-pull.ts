@@ -8,9 +8,29 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
-import { ensureDir } from '../src/lib/files';
+import { ensureDir, readJson } from '../src/lib/files';
+import { geminiJson } from '../src/ai/gemini';
 import { ROOT } from '../src/config';
 import { log } from '../src/lib/log';
+
+const vcfg: any = await readJson(`${ROOT}/data/youtube/channel_vallenato.json`, {});
+async function richMeta(title: string, lyrics: string): Promise<{ title: string; description: string; tags: string[] }> {
+  const fallback = { title, description: '', tags: ['vallenato', 'vallenatos', 'vallenato romantico', 'musica vallenata', 'acordeon', 'musica colombiana'] };
+  try {
+    const sys =
+      `Eres el estratega #1 de YouTube SEO (2026) para el canal "${vcfg.title || 'Vallenatos para Curar el Alma'}". Escribe TODO en español. ` +
+      `Cada video es UN nodo del ecosistema semántico del canal (refuerza su autoridad temática). Devuelve SOLO JSON:\n` +
+      `- titulo: ≤100 chars "keyword | gancho emocional | ${vcfg.title || 'Vallenatos para Curar el Alma'}".\n` +
+      `- descripcion: SEO RICA (1200+ chars): intro con gancho + keywords; cuerpo con conceptos relacionados, preguntas comunes, long-tail y sinónimos naturales, + una línea de qué es el canal y por qué seguirlo; cierre con CTA (suscríbete / escucha otro / playlist) + 8-12 hashtags.\n` +
+      `- tags: 18-26 etiquetas del nicho vallenato (~500 chars). Keywords núcleo del canal: ${(vcfg.keywords || []).slice(0, 12).join(', ')}.`;
+    const out: any = await geminiJson(
+      `Canción de vallenato: "${title}"\nLetra (extracto):\n${String(lyrics || '').slice(0, 1500)}`,
+      { type: 'object', properties: { titulo: { type: 'string' }, descripcion: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } } }, required: ['titulo', 'descripcion', 'tags'] },
+      sys,
+    );
+    return { title: (out.titulo || title).slice(0, 100), description: out.descripcion || '', tags: (out.tags || fallback.tags).slice(0, 30) };
+  } catch { return fallback; }
+}
 
 const exec = promisify(execFile);
 const SUPA = process.env.SUPABASE_URL;
@@ -60,10 +80,8 @@ for (const s of pending) {
     if (!fs.existsSync(video)) throw new Error('el motor no produjo video.mp4');
     const finalPath = `mv/vallenato/${id}/final.mp4`;
     await upload(finalPath, video);
-    await rest('PATCH', `mv_songs?id=eq.${id}`, {
-      status: 'ready', final_path: finalPath,
-      metadata: { title: s.title, tags: ['vallenato', 'música vallenata', 'vallenatos', 'romántico'] },
-    });
+    const md = await richMeta(s.title, s.lyrics);
+    await rest('PATCH', `mv_songs?id=eq.${id}`, { status: 'ready', final_path: finalPath, metadata: md });
     log.ok(`✅ ${s.title} → listo (${finalPath})`);
   } catch (e) {
     await rest('PATCH', `mv_songs?id=eq.${id}`, { status: 'failed', metadata: { error: (e as Error).message.slice(0, 300) } }).catch(() => {});
