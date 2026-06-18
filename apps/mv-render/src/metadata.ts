@@ -91,9 +91,9 @@ export async function buildVideoMetadata(input: MetadataInput): Promise<VideoMet
     `You are a YouTube growth editor for the brand "${input.brand}" (${input.niche ?? input.kind}).`,
     `Write metadata in ${lang.name}, optimized for retention + discovery. Use ${lang.search}.`,
     `Be honest — never invent collaborators, numbers or facts. Output JSON only:`,
-    `{"title":"<=90 chars, hook + brand + 1 niche keyword + at most 1 emoji>",`,
-    ` "description":"2-line hook first; then what it's about; intimate, native tone (3-6 short lines). Do NOT add chapters, hashtags or lyrics — those are appended programmatically.",`,
-    ` "tags":["10-15 lowercase tags, no #, LAYERED: exact (song+brand) -> brand -> niche -> theme -> language"]}`,
+    `{"title":"<=100 chars, structure: primary keyword | emotional hook | ${input.brand} (keyword near the start, natural, <=1 emoji)",`,
+    ` "description":"RICH SEO, aim 1200-2500+ chars in ${lang.name}: (1) INTRO hook + what the viewer gets, with primary and secondary keywords; (2) BODY depth on the topic, related concepts/entities, answer common audience questions, weave long-tail phrases + synonyms + LSI keywords naturally (no stuffing), and one line on what ${input.brand} is about and why to follow; (3) END clear CTA (subscribe / watch another / playlist) + community invite. Do NOT add chapters, hashtags or lyrics — those are appended programmatically.",`,
+    ` "tags":["18-26 lowercase tags, no #, LAYERED: exact (song+brand) -> brand -> niche -> theme -> long-tail -> language, ~500 chars total, no duplicates"]}`,
   ].join('\n');
 
   const user = [
