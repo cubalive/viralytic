@@ -35,3 +35,7 @@ admin/data/**/*.mp3
 admin/data/**/*.m4a
 admin/data/caption_previews/
 admin/data/vallenato/**/_*.png
+
+# python cache
+__pycache__/
+*.pyc
