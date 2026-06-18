@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { getAccessToken } from './auth';
+import { getAccessToken, invalidateToken } from './auth';
 import { log } from './log';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -53,6 +53,13 @@ export async function vertexPost<T = any>(
     }
     if (res.ok) return (text ? JSON.parse(text) : {}) as T;
 
+    // 401/403 = token ADC expiró/rechazado a mitad de batch → fuerza refresh y reintenta.
+    if ((res.status === 401 || res.status === 403) && attempt < max) {
+      invalidateToken();
+      log.warn(`Vertex ${res.status} (auth) — refresco token y reintento ${attempt + 1}/${max}`);
+      await sleep(2_000);
+      continue;
+    }
     // Reintenta ante límite de cuota / errores transitorios con backoff exponencial.
     const transient = res.status === 429 || res.status === 500 || res.status === 503;
     if (transient && attempt < max) {

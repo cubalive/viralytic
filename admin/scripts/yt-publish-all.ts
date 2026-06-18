@@ -2,6 +2,7 @@
 // cada video en horario estratégico según el país, 1/día por canal. Reanudable.
 // Uso: tsx scripts/yt-publish-all.ts [N] [schedule]
 import path from 'node:path';
+import fs from 'node:fs';
 import { uploadVideo } from '../src/youtube/upload';
 import { addToPlaylist, playlistForTopic } from '../src/youtube/playlists';
 import { readJson, writeJson, exists } from '../src/lib/files';
@@ -43,12 +44,18 @@ for (const l of LANGS) {
   state[l] = { pls: await readJson(path.join(YT, `playlists_${l}.json`), {}), pub: await readJson(path.join(YT, `published_${l}.json`), {}) };
 }
 
-// Cola de publicación por idioma: base primero, luego variantes (_v1, _v2…), solo las que tienen metadata.
+// Cola de publicación por idioma: enumera TODOS los .json con metadata (base,
+// variantes _vN, remixes, compilaciones…). Orden: VIRAL/variantes primero (orden
+// curado), luego el resto (remix-*, compilacion-*) alfabético. Reanudable por slug.
 const items: Record<string, string[]> = {};
 for (const l of LANGS) {
-  const list = [...VIRAL];
-  for (let v = 1; v <= 8; v++) list.push(...VIRAL.map((s) => `${s}_v${v}`));
-  items[l] = list.filter((slug) => exists(path.join(YT, l, `${slug}.json`)));
+  const priority = [...VIRAL];
+  for (let v = 1; v <= 8; v++) priority.push(...VIRAL.map((s) => `${s}_v${v}`));
+  const dir = path.join(YT, l);
+  const all = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)) : [];
+  const allSet = new Set(all);
+  const rest = all.filter((s) => !priority.includes(s)).sort();
+  items[l] = [...priority.filter((s) => allSet.has(s)), ...rest];
 }
 
 let total = 0;
@@ -62,7 +69,8 @@ for (let round = 0; round < TARGET && !quota; round++) {
     const slug = items[lang].find((s) => !state[lang].pub[s]);
     if (!slug) continue;
     const meta = await readJson<any>(path.join(YT, lang, `${slug}.json`), null);
-    const file = path.join(ROOT, meta?.file || '');
+    const rawFile = meta?.file || '';
+    const file = path.isAbsolute(rawFile) ? rawFile : path.join(ROOT, rawFile);
     if (!meta || !exists(file)) { log.warn(`${lang}/${slug}: sin archivo`); state[lang].pub[slug] = 'SKIP'; continue; }
     meta.file = file;
     const when = SCHEDULE ? publishAtFor(lang, round + 1) : undefined;

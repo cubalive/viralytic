@@ -4,7 +4,8 @@
 import OpenAI from 'openai';
 import { toBase64 } from '../lib/files';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// timeout 2min + 2 reintentos automáticos → una llamada colgada no congela el cron diario.
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 120_000, maxRetries: 2 });
 const TEXT_MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o';
 const VISION_MODEL = process.env.OPENAI_VISION_MODEL ?? TEXT_MODEL;
 

@@ -10,6 +10,9 @@ const auth = saJson
 
 let cached: { token: string; exp: number } | null = null;
 
+/** Invalida el token cacheado (úsalo tras un 401 para forzar refresh). */
+export function invalidateToken(): void { cached = null; }
+
 export async function getAccessToken(): Promise<string> {
   if (cached && cached.exp > Date.now() + 60_000) return cached.token;
   const client = await auth.getClient();

@@ -67,6 +67,10 @@ try {
 } catch (e) { log.warn(`metadata: ${(e as Error).message.slice(0, 50)}`); meta.description = `⏱️ Capítulos:\n${chaptersBlock}`; }
 
 fs.writeFileSync(path.join(outDir, `${slug}.json`), JSON.stringify({ ...meta, file: final, lang, topics: picks.map(topicOf) }, null, 2), 'utf8');
+// Metadata publish-ready donde el publicador la enumera (data/youtube/<lang>/).
+const ytDir = path.join(ROOT, 'data', 'youtube', lang);
+fs.mkdirSync(ytDir, { recursive: true });
+fs.writeFileSync(path.join(ytDir, `${slug}.json`), JSON.stringify({ ...meta, file: final }, null, 2), 'utf8');
 fs.rmSync(listFile, { force: true });
 console.log(`\n✅ Compilación ${lang}: ${picks.length} temas, ${totalMin} min → ${final}`);
 console.log(`   Título: ${meta.title}`);
