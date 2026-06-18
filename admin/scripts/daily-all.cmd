@@ -8,6 +8,8 @@ REM Loop autónomo: 1) refresca métricas reales, 2) decide estrategia (repite l
 REM que funciona), 3) genera+publica usando esa estrategia, 4) refresca métricas.
 call npx tsx scripts/collect-stats.ts >> data\output\_admin_daily.log 2>&1
 call npx tsx scripts/optimize.ts >> data\output\_admin_daily.log 2>&1
+REM SabiKids = 100%% reuso (CERO Veo): remixes + compilacion antes de publicar.
+call npx tsx scripts/sabikids-daily.ts 2 >> data\output\_admin_daily.log 2>&1
 call npx tsx scripts/admin.ts all 6 >> data\output\_admin_daily.log 2>&1
 call npx tsx scripts/collect-stats.ts >> data\output\_admin_daily.log 2>&1
 echo ===== FIN %DATE% %TIME% ===== >> data\output\_admin_daily.log
