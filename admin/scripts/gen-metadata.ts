@@ -1,46 +1,28 @@
-// Metadata YouTube (canal + por video) para ES/EN/IT/ZH, con SEO + hashtags en minúsculas.
+// Metadata YouTube (canal + por video) para ES/EN/IT/ZH — estándar SEO 2026:
+// títulos keyword-first, descripciones ricas (intro → cuerpo → autoridad → CTA),
+// tags ~500 caracteres y hashtags curados. Los temas vienen del catálogo único
+// en src/seo/sabikids.ts (misma fuente que el re-sync y el orquestador diario).
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { writeJson, ensureDir } from '../src/lib/files';
 import { OUTPUT_DIR } from '../src/config';
+import { SABI_TOPICS, type SabiLang } from '../src/seo/sabikids';
 
-type Lang = 'es' | 'en' | 'it' | 'zh';
-
-const TOPICS: { slug: string; emoji: string; name: Record<Lang, string>; kw: string[] }[] = [
-  { slug: 'los-animales-de-la-granja', emoji: '🐄', name: { es: 'Los Animales de la Granja', en: 'Farm Animals', it: 'Gli Animali della Fattoria', zh: '农场动物' }, kw: ['animales', 'granja', 'farm animals', 'animali', '动物'] },
-  { slug: 'los-colores', emoji: '🎨', name: { es: 'Los Colores', en: 'Colors', it: 'I Colori', zh: '颜色' }, kw: ['colores', 'colors', 'colori', '颜色'] },
-  { slug: 'los-n-meros-del-1-al-10', emoji: '🔢', name: { es: 'Los Números del 1 al 10', en: 'Numbers 1 to 10', it: 'I Numeri da 1 a 10', zh: '1到10的数字' }, kw: ['numeros', 'numbers', 'contar', 'numeri', '数字'] },
-  { slug: 'los-animales-de-la-selva', emoji: '🦁', name: { es: 'Los Animales de la Selva', en: 'Jungle Animals', it: 'Gli Animali della Giungla', zh: '丛林动物' }, kw: ['animales', 'selva', 'jungle', 'leon', '动物'] },
-  { slug: 'las-frutas', emoji: '🍓', name: { es: 'Las Frutas', en: 'Fruits', it: 'La Frutta', zh: '水果' }, kw: ['frutas', 'fruits', 'frutta', '水果'] },
-  { slug: 'las-formas', emoji: '🔺', name: { es: 'Las Formas', en: 'Shapes', it: 'Le Forme', zh: '形状' }, kw: ['formas', 'shapes', 'forme', '形状'] },
-  { slug: 'los-veh-culos', emoji: '🚗', name: { es: 'Los Vehículos', en: 'Vehicles', it: 'I Veicoli', zh: '交通工具' }, kw: ['vehiculos', 'vehicles', 'carros', 'veicoli', '车'] },
-  { slug: 'los-animales-del-mar', emoji: '🐠', name: { es: 'Los Animales del Mar', en: 'Sea Animals', it: 'Gli Animali del Mare', zh: '海洋动物' }, kw: ['animales', 'mar', 'sea animals', 'oceano', '海洋'] },
-  { slug: 'las-emociones', emoji: '😊', name: { es: 'Las Emociones', en: 'Emotions', it: 'Le Emozioni', zh: '情绪' }, kw: ['emociones', 'emotions', 'emozioni', '情绪'] },
-  { slug: 'los-sonidos-de-los-animales', emoji: '🔊', name: { es: 'Los Sonidos de los Animales', en: 'Animal Sounds', it: 'I Versi degli Animali', zh: '动物的叫声' }, kw: ['sonidos', 'animal sounds', 'animales', '动物叫声'] },
-  { slug: 'el-abecedario', emoji: '🔤', name: { es: 'El Abecedario', en: 'The Alphabet', it: "L'Alfabeto", zh: '字母' }, kw: ['abecedario', 'alphabet', 'letras', 'abc', '字母'] },
-  { slug: 'las-mascotas', emoji: '🐶', name: { es: 'Las Mascotas', en: 'Pets', it: 'Gli Animali Domestici', zh: '宠物' }, kw: ['mascotas', 'pets', 'perro', 'gato', '宠物'] },
-  { slug: 'el-cuerpo-humano', emoji: '🧍', name: { es: 'El Cuerpo Humano', en: 'The Human Body', it: 'Il Corpo Umano', zh: '人体' }, kw: ['cuerpo', 'body', 'corpo', '人体'] },
-  { slug: 'la-ropa', emoji: '👕', name: { es: 'La Ropa', en: 'Clothes', it: 'I Vestiti', zh: '衣服' }, kw: ['ropa', 'clothes', 'vestiti', '衣服'] },
-  { slug: 'las-profesiones', emoji: '👩‍🚒', name: { es: 'Las Profesiones', en: 'Jobs', it: 'I Mestieri', zh: '职业' }, kw: ['profesiones', 'jobs', 'oficios', 'mestieri', '职业'] },
-  { slug: 'el-clima-y-las-estaciones', emoji: '☀️', name: { es: 'El Clima y las Estaciones', en: 'Weather and Seasons', it: 'Il Tempo e le Stagioni', zh: '天气和季节' }, kw: ['clima', 'weather', 'estaciones', 'tempo', '天气'] },
-  { slug: 'los-insectos', emoji: '🐛', name: { es: 'Los Insectos', en: 'Insects', it: 'Gli Insetti', zh: '昆虫' }, kw: ['insectos', 'insects', 'bichos', 'insetti', '昆虫'] },
-  { slug: 'el-espacio-y-los-planetas', emoji: '🪐', name: { es: 'El Espacio y los Planetas', en: 'Space and Planets', it: 'Lo Spazio e i Pianeti', zh: '太空和行星' }, kw: ['espacio', 'space', 'planetas', 'spazio', '太空'] },
-  { slug: 'los-instrumentos-musicales', emoji: '🎸', name: { es: 'Los Instrumentos Musicales', en: 'Musical Instruments', it: 'Gli Strumenti Musicali', zh: '乐器' }, kw: ['instrumentos', 'instruments', 'musica', 'strumenti', '乐器'] },
-  { slug: 'los-opuestos', emoji: '🔄', name: { es: 'Los Opuestos', en: 'Opposites', it: 'I Contrari', zh: '反义词' }, kw: ['opuestos', 'opposites', 'contrari', '反义词'] },
-];
+type Lang = SabiLang;
 
 const BASE_TAGS: Record<Lang, string[]> = {
-  es: ['Sabi', 'Sabi Kids', 'aprender para niños', 'videos educativos', 'educación infantil', 'preescolar', 'aprende jugando', 'videos para niños', 'dibujos animados'],
-  en: ['Sabi', 'Sabi Kids', 'learning for kids', 'educational videos', 'preschool', 'toddler learning', 'learn and play', 'kids videos', 'cartoons for kids'],
-  it: ['Sabi', 'Sabi Kids', 'imparare per bambini', 'video educativi', 'scuola materna', 'bambini', 'impara giocando', 'cartoni per bambini'],
-  zh: ['知宝', 'ZhiBao', '儿童学习', '幼儿教育', '启蒙', '宝宝', '玩中学', '儿歌', '早教'],
+  es: ['Sabi', 'Sabi Kids', 'aprender para niños', 'videos educativos', 'educación infantil', 'preescolar', 'aprende jugando', 'videos para niños', 'dibujos animados', 'estimulación temprana'],
+  en: ['Sabi', 'Sabi Kids', 'learning for kids', 'educational videos', 'preschool', 'toddler learning', 'learn and play', 'kids videos', 'cartoons for kids', 'early learning'],
+  it: ['Sabi', 'Sabi Kids', 'imparare per bambini', 'video educativi', 'scuola materna', 'bambini', 'impara giocando', 'cartoni per bambini', 'apprendimento precoce'],
+  zh: ['知宝', 'ZhiBao', '儿童学习', '幼儿教育', '启蒙', '宝宝', '玩中学', '儿歌', '早教', '亲子'],
 };
 
-const BASE_HASH: Record<Lang, string[]> = {
-  es: ['#sabikids', '#aprendeconsabi', '#videoseducativos', '#paraniños', '#educacióninfantil', '#preescolar', '#aprenderjugando', '#videosparaniños', '#niños', '#shorts'],
-  en: ['#sabikids', '#learnwithsabi', '#educationalvideos', '#forkids', '#preschool', '#toddlers', '#learning', '#kidsvideos', '#kids', '#shorts'],
-  it: ['#sabikids', '#imparaconsabi', '#videoeducativi', '#perbambini', '#scuolamaterna', '#bambini', '#imparagiocando', '#videoperbambini', '#shorts'],
-  zh: ['#知宝', '#儿童学习', '#幼儿教育', '#启蒙', '#宝宝', '#玩中学', '#儿歌', '#早教', '#shorts'],
+// Hashtags curados (3-5 fuertes, sin spam). Sin #shorts (los edu ya no son Shorts).
+const HASH_CORE: Record<Lang, string[]> = {
+  es: ['#sabikids', '#videoseducativos', '#paraniños'],
+  en: ['#sabikids', '#educationalvideos', '#forkids'],
+  it: ['#sabikids', '#videoeducativi', '#perbambini'],
+  zh: ['#知宝', '#儿童学习', '#幼儿教育'],
 };
 
 const CHANNELS: Record<Lang, { handle: string; title: string; description: string }> = {
@@ -54,7 +36,7 @@ const CHANNELS: Record<Lang, { handle: string; title: string; description: strin
     description: `欢迎来到知宝！🤖✨ 我是知宝，你的机器人小伙伴，这是你的儿童早教视频频道。在这里，2到8岁的宝宝们一起玩中学：农场、丛林和海洋的动物以及它们的叫声、颜色、1到10的数字、形状、水果、交通工具、情绪、字母、职业、人体、反义词等等。🐄🎨🔢🚗\n\n我们的视频短小、欢乐、色彩丰富，100%安全，适合幼儿，非常适合幼儿园和在家学习。每个视频用简单有趣的方式只教一个知识点，配有真实的声音和知宝亲切的声音。👶🎉\n\n订阅并打开小铃铛 🔔，不错过每周更新的早教视频。和知宝一起玩中学吧！🚀\n\n#知宝 #儿童学习 #幼儿教育 #启蒙` },
 };
 
-// Keywords del canal (hasta ~500 caracteres) — densas para búsqueda.
+// Keywords del canal (densas para búsqueda).
 const CH_KEYWORDS: Record<Lang, string[]> = {
   es: ['videos para niños', 'videos educativos', 'videos para bebés', 'educación infantil', 'preescolar', 'aprende jugando', 'dibujos animados educativos', 'animales para niños', 'colores para niños', 'números para niños', 'canciones infantiles', 'videos para niños pequeños', 'Sabi Kids', 'sonidos de animales', 'educación preescolar', 'estimulación temprana', 'videos para niños de 2 años', 'aprender para niños'],
   en: ['videos for kids', 'educational videos', 'videos for babies', 'preschool', 'learn and play', 'educational cartoons', 'animals for kids', 'colors for kids', 'numbers for kids', 'nursery videos', 'videos for toddlers', 'Sabi Kids', 'animal sounds', 'preschool learning', 'early learning', 'kids learning videos', 'toddler videos', 'learning for kids'],
@@ -68,49 +50,74 @@ const TITLE_TMPL: Record<Lang, (e: string, n: string) => string> = {
   it: (e, n) => `${e} ${n} per Bambini e Neonati 👶 Impara Giocando con Sabi Kids`,
   zh: (e, n) => `${e} ${n} 儿童早教启蒙 👶 和知宝一起玩中学`,
 };
-// Descripción con keywords AL INICIO (lo que más pesa para el algoritmo).
-const INTRO: Record<Lang, (n: string) => string> = {
-  es: (n) => `${n} para niños y bebés 👶 ¡Aprende ${n.toLowerCase()} con Sabi! Video educativo cortito, divertido y 100% seguro para niños pequeños de 2 a 8 años (preescolar). 🤖✨\n\n¡Dale me gusta 👍 y suscríbete para más videos educativos para niños cada semana! 🎉`,
-  en: (n) => `${n} for kids and toddlers 👶 Learn ${n.toLowerCase()} with Sabi! A short, fun and 100% safe educational video for little kids ages 2-8 (preschool). 🤖✨\n\nLike 👍 and subscribe for more learning videos for kids every week! 🎉`,
-  it: (n) => `${n} per bambini e neonati 👶 Impara ${n.toLowerCase()} con Sabi! Un video educativo breve e 100% sicuro per bambini piccoli dai 2 agli 8 anni (scuola materna). 🤖✨\n\nMetti mi piace 👍 e iscriviti per più video educativi ogni settimana! 🎉`,
-  zh: (n) => `${n} 儿童早教 👶 和知宝一起学${n}！短小、安全、有趣的启蒙教育视频，适合2-8岁的宝宝。🤖✨\n\n点赞 👍 并订阅，每周更多儿童学习视频！🎉`,
+
+// Descripción rica 2026: intro (keywords) → qué aprende → para padres → autoridad → CTA → hashtags.
+const DESC: Record<Lang, (n: string, hashtags: string) => string> = {
+  es: (n, h) => {
+    const nl = n.toLowerCase();
+    return `${n} para niños y bebés 👶 Aprende ${nl} con Sabi Kids, el canal de videos educativos para los más pequeños. En este video corto, alegre y 100% seguro, los niños de 2 a 8 años descubren ${nl} de forma simple y divertida, con colores vivos, sonidos reales y la voz amigable de Sabi. 🤖✨\n\n✨ ¿Qué aprende tu peque?\nTu niño aprende ${nl} paso a paso: vocabulario nuevo, reconocimiento visual y asociación de ideas. Perfecto para la estimulación temprana en casa o en preescolar, para la hora de aprender, para calmar antes de dormir o para disfrutar en familia.\n\n👨‍👩‍👧 Para papás y educadores\nMuchos padres buscan ${nl} para niños, ${nl} para bebés y videos educativos cortos y seguros. Sabi Kids está pensado para eso: una sola idea por video, sin sustos ni ruido molesto, apto para YouTube Kids.\n\n🤖 Sobre Sabi Kids\nSabi Kids es el canal donde los niños aprenden jugando: los animales, los colores, los números, las formas, las frutas, las emociones, el abecedario, las profesiones y mucho más. Subimos nuevos videos educativos cada semana.\n\n🔔 Suscríbete y activa la campanita para no perderte ningún video. ¡Dale me gusta 👍, comparte con otros papás y mira la playlist completa para seguir aprendiendo con Sabi! 🎉\n\n${h}`;
+  },
+  en: (n, h) => {
+    const nl = n.toLowerCase();
+    return `${n} for kids and toddlers 👶 Learn ${nl} with Sabi Kids, the educational channel for little ones. In this short, cheerful and 100% safe video, children ages 2 to 8 discover ${nl} in a simple and fun way, with bright colors, real sounds and Sabi's friendly voice. 🤖✨\n\n✨ What will your little one learn?\nYour child learns ${nl} step by step: new vocabulary, visual recognition and idea association. Perfect for early learning at home or in preschool — for learning time, to calm down before bed, or to enjoy together as a family.\n\n👨‍👩‍👧 For parents and teachers\nMany parents search for ${nl} for kids, ${nl} for toddlers and short, safe educational videos. That's exactly what Sabi Kids is made for: one simple idea per video, no scares and no harsh noise, safe for YouTube Kids.\n\n🤖 About Sabi Kids\nSabi Kids is the channel where children learn while playing: animals, colors, numbers, shapes, fruits, emotions, the alphabet, jobs and much more. We upload new educational videos every week.\n\n🔔 Subscribe and ring the bell so you never miss a video. Give it a like 👍, share it with other parents and watch the full playlist to keep learning with Sabi! 🎉\n\n${h}`;
+  },
+  it: (n, h) => {
+    const nl = n.toLowerCase();
+    return `${n} per bambini e neonati 👶 Impara ${nl} con Sabi Kids, il canale di video educativi per i più piccoli. In questo video breve, allegro e 100% sicuro, i bambini dai 2 agli 8 anni scoprono ${nl} in modo semplice e divertente, con colori vivaci, suoni reali e la voce amichevole di Sabi. 🤖✨\n\n✨ Cosa imparerà il tuo bambino?\nIl tuo bambino impara ${nl} passo dopo passo: nuovo vocabolario, riconoscimento visivo e associazione di idee. Perfetto per l'apprendimento precoce a casa o alla scuola materna — per il momento di imparare, per calmarsi prima di dormire o da gustare in famiglia.\n\n👨‍👩‍👧 Per genitori ed educatori\nMolti genitori cercano ${nl} per bambini, ${nl} per neonati e video educativi brevi e sicuri. Sabi Kids è pensato proprio per questo: una sola idea per video, senza spaventi né rumori fastidiosi, adatto a YouTube Kids.\n\n🤖 Su Sabi Kids\nSabi Kids è il canale dove i bambini imparano giocando: animali, colori, numeri, forme, frutta, emozioni, alfabeto, mestieri e tanto altro. Pubblichiamo nuovi video educativi ogni settimana.\n\n🔔 Iscriviti e attiva la campanella per non perdere nessun video. Metti mi piace 👍, condividi con altri genitori e guarda la playlist completa per continuare a imparare con Sabi! 🎉\n\n${h}`;
+  },
+  zh: (n, h) =>
+    `${n} 儿童早教启蒙 👶 和知宝一起学${n}！知宝是专为低龄宝宝打造的儿童教育视频频道。在这个短小、欢乐、100%安全的视频里，2到8岁的小朋友用简单有趣的方式认识${n}，配有鲜艳的色彩、真实的声音和知宝亲切的声音。🤖✨\n\n✨ 宝宝能学到什么？\n宝宝会一步一步地学习${n}：新词汇、视觉认知和联想能力，非常适合在家或幼儿园进行早教启蒙，可以用于学习时间、睡前安抚，也适合亲子共看。\n\n👨‍👩‍👧 给爸爸妈妈和老师\n很多家长在找适合宝宝的${n}启蒙视频、安全又简短的儿童教育视频。知宝正是为此而生：每个视频只讲一个知识点，没有惊吓、没有刺耳的噪音，适合 YouTube Kids。\n\n🤖 关于知宝\n知宝是宝宝玩中学的频道：动物、颜色、数字、形状、水果、情绪、字母、职业等等。我们每周更新全新的早教视频。\n\n🔔 订阅并打开小铃铛，不错过每一个视频。点赞 👍、分享给其他家长，并观看完整播放列表，和知宝一起继续学习吧！🎉\n\n${h}`,
 };
+
 // Tags long-tail (lo que buscan los padres).
 const LONG: Record<Lang, (n: string) => string[]> = {
-  es: (n) => [`${n.toLowerCase()} para niños`, `${n.toLowerCase()} para bebés`, `aprender ${n.toLowerCase()}`, 'videos educativos para niños', 'videos para bebés', 'educación preescolar', 'videos para niños pequeños'],
-  en: (n) => [`${n.toLowerCase()} for kids`, `${n.toLowerCase()} for toddlers`, `learn ${n.toLowerCase()}`, 'educational videos for kids', 'videos for babies', 'preschool learning', 'learning videos for toddlers'],
-  it: (n) => [`${n.toLowerCase()} per bambini`, `imparare ${n.toLowerCase()}`, 'video educativi per bambini', 'video per neonati', 'scuola materna', 'video per bambini piccoli'],
-  zh: (n) => [`${n}儿童`, `学${n}`, '儿童早教视频', '宝宝启蒙', '幼儿教育视频', '早教动画'],
+  es: (n) => [`${n.toLowerCase()} para niños`, `${n.toLowerCase()} para bebés`, `aprender ${n.toLowerCase()}`, 'videos educativos para niños', 'videos para bebés', 'educación preescolar', 'videos para niños pequeños', 'videos para niños de 2 años'],
+  en: (n) => [`${n.toLowerCase()} for kids`, `${n.toLowerCase()} for toddlers`, `learn ${n.toLowerCase()}`, 'educational videos for kids', 'videos for babies', 'preschool learning', 'learning videos for toddlers', 'nursery videos'],
+  it: (n) => [`${n.toLowerCase()} per bambini`, `imparare ${n.toLowerCase()}`, 'video educativi per bambini', 'video per neonati', 'scuola materna', 'video per bambini piccoli', 'apprendimento precoce'],
+  zh: (n) => [`${n}儿童`, `学${n}`, `${n}启蒙`, '儿童早教视频', '宝宝启蒙', '幼儿教育视频', '早教动画', '幼儿园学习'],
 };
 
 const norm = (s: string) => s.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9áéíóúñü一-鿿]+/g, '');
 
-function hashtags(topic: typeof TOPICS[number], lang: Lang): string[] {
-  const topical = ['#' + norm(topic.name[lang]), ...topic.kw.map((k) => '#' + norm(k))];
-  const all = [...topical, ...BASE_HASH[lang]];
-  return [...new Set(all)].filter((h) => h.length > 1).slice(0, 14); // YouTube ignora si >15
+// Hashtags 2026: 3-5 fuertes, sin spam ni #shorts.
+function hashtags(topic: typeof SABI_TOPICS[number], lang: Lang): string[] {
+  const all = ['#' + norm(topic.name[lang]), ...HASH_CORE[lang]];
+  return [...new Set(all)].filter((h) => h.length > 1).slice(0, 5);
+}
+
+// Tags: 18-26, deduplicados, hasta ~500 caracteres.
+function buildTags(list: string[]): string[] {
+  const out: string[] = []; let total = 0;
+  for (const raw of list) {
+    const t = raw.trim();
+    if (!t || out.includes(t)) continue;
+    const add = t.length + (out.length ? 1 : 0);
+    if (total + add > 480 || out.length >= 26) break;
+    out.push(t); total += add;
+  }
+  return out;
 }
 
 const DIR = path.join(OUTPUT_DIR, '..', 'youtube');
-let md = '# Metadata YouTube — Sabi Kids (SEO + hashtags)\n';
+let md = '# Metadata YouTube — Sabi Kids (SEO 2026)\n';
 
 for (const lang of ['es', 'en', 'it', 'zh'] as Lang[]) {
+  await ensureDir(path.join(DIR, lang));
   await writeJson(path.join(DIR, `channel_${lang}.json`), { ...CHANNELS[lang], keywords: CH_KEYWORDS[lang] });
   md += `\n## ${CHANNELS[lang].handle} (${lang})\n`;
-  for (const t of TOPICS) {
-    const tags = hashtags(t, lang);
+  for (const t of SABI_TOPICS) {
+    const hash = hashtags(t, lang);
     const meta = {
-      title: TITLE_TMPL[lang](t.emoji, t.name[lang]),
-      description: `${INTRO[lang](t.name[lang])}\n\n${tags.join(' ')}`,
-      tags: [...new Set([...t.kw, ...LONG[lang](t.name[lang]), ...BASE_TAGS[lang]])].slice(0, 18),
+      title: TITLE_TMPL[lang](t.emoji, t.name[lang]).slice(0, 100),
+      description: DESC[lang](t.name[lang], hash.join(' ')),
+      tags: buildTags([t.name[lang], ...t.kw, ...LONG[lang](t.name[lang]), ...BASE_TAGS[lang]]),
       categoryId: '27',
       madeForKids: true,
       file: `data/output/SABI_REELS/${lang}/${t.slug}.mp4`,
     };
     await writeJson(path.join(DIR, lang, `${t.slug}.json`), meta);
-    md += `- ${meta.title}\n  ${tags.join(' ')}\n`;
+    md += `- ${meta.title}\n  ${hash.join(' ')}\n`;
   }
 }
-await ensureDir(DIR);
 await fsp.writeFile(path.join(DIR, 'METADATA.md'), md, 'utf8');
-console.log(`Metadata + hashtags generada: ${TOPICS.length} temas × 4 idiomas.`);
+console.log(`Metadata SEO 2026 generada: ${SABI_TOPICS.length} temas × 4 idiomas.`);

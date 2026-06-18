@@ -15,12 +15,12 @@ import { readJson, writeJson, exists, ensureDir } from '../src/lib/files';
 import { ROOT, OUTPUT_DIR } from '../src/config';
 import { log } from '../src/lib/log';
 import type { SeleccionEdu } from '../src/formats/types';
+import { kidsSeoSystem, SABI_BRAND, type SabiLang } from '../src/seo/sabikids';
 
 const exec = promisify(execFile);
 const REMIXES = Number(process.argv[2] || 2);
 const LANGS = ['es', 'en', 'it', 'zh'];
 const YT = path.join(ROOT, 'data', 'youtube');
-const LANG_FULL: Record<string, string> = { es: 'Spanish', en: 'English', it: 'Italian', zh: 'Simplified Chinese' };
 const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
 
 // Tema NUEVO → tema BASE existente (reusa sus visuales). Rota por día.
@@ -58,15 +58,10 @@ async function selFor(topic: string): Promise<SeleccionEdu> {
 
 /** Metadata SEO ecosistémica publish-ready para el publicador SabiKids. */
 async function writeMeta(lang: string, slug: string, file: string, topic: string, kind: 'short' | 'compilation', cfg: any) {
-  const brand = cfg.title || 'Sabi Kids';
+  const brand = SABI_BRAND[lang as SabiLang] || 'Sabi Kids';
   let meta: any = { title: `${topic} | ${brand}`, description: '', tags: cfg.keywords || ['kids learning'], file };
   try {
-    const sys =
-      `You are the #1 YouTube SEO strategist (2026) for the kids channel "${brand}". Write ALL output in ${LANG_FULL[lang] || 'English'}. ` +
-      `${kind === 'compilation' ? 'This is a LONG learning compilation.' : 'This is a short educational video.'} Every video is ONE node in the channel's semantic ecosystem — reinforce its topical authority. Return ONLY JSON:\n` +
-      `- titulo: <=100 chars "keyword | benefit | ${brand}".\n` +
-      `- descripcion: RICH SEO (1200+ chars): intro (what kids learn, ages 2-8, keywords); body (related concepts, parent questions, long-tail); channel authority line; CTA (subscribe + playlist) + 8-12 hashtags.\n` +
-      `- tags: 18-26 kids-learning tags (~500 chars). Core channel keywords: ${(cfg.keywords || []).slice(0, 12).join(', ')}.`;
+    const sys = kidsSeoSystem(lang as SabiLang, { brand, channelDesc: cfg.description, keywords: cfg.keywords, kind });
     const out: any = await geminiJson(`Topic: "${topic}"`, { type: 'object', properties: { titulo: { type: 'string' }, descripcion: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } } }, required: ['titulo', 'descripcion', 'tags'] }, sys);
     meta = { title: (out.titulo || topic).slice(0, 100), description: out.descripcion || '', tags: (out.tags || meta.tags).slice(0, 30), file };
   } catch (e) { log.warn(`meta ${slug}: ${(e as Error).message.slice(0, 40)}`); }

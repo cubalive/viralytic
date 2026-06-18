@@ -8,6 +8,7 @@ import { getYtAccessToken } from '../src/youtube/auth';
 import { readJson } from '../src/lib/files';
 import { ROOT, OUTPUT_DIR } from '../src/config';
 import { log } from '../src/lib/log';
+import { resolveTopic, kidsSeoSystem, SABI_BRAND, type SabiLang } from '../src/seo/sabikids';
 
 const slot = process.argv[2];
 if (!slot) throw new Error('Uso: tsx scripts/reupdate-metadata.ts <slot>');
@@ -23,7 +24,7 @@ const lang = meta.defaultLanguage || meta.lang || 'en';
 
 const pillarKeys: string[] = (meta.pillars || []).map((p: any) => p.key);
 const pillarLines = (meta.pillars || []).map((p: any) => `${p.key}: ${p.title} — ${p.desc}`).join('\n');
-const brandName: string = meta.title || slot;
+const brandName: string = SABI ? (SABI_BRAND[lang as SabiLang] || 'Sabi Kids') : (meta.title || slot);
 const brandLine: string = meta.brandLine || meta.tagline || brandName;
 const nicheHint: string = meta.tagline ? ` (brand line: "${meta.tagline}")` : '';
 
@@ -39,8 +40,9 @@ const SCHEMA: any = {
 };
 const LANG_FULL: Record<string, string> = { es: 'Spanish', en: 'English', it: 'Italian', zh: 'Simplified Chinese' };
 const langName = LANG_FULL[lang] ?? 'English';
-const SYS =
-  `You are the world's #1 YouTube SEO strategist (2026 best practices) for the channel "${brandName}"${nicheHint}. ` +
+const SYS = SABI
+  ? kidsSeoSystem(lang as SabiLang, { brand: brandName, channelDesc: meta.description, keywords: meta.keywords })
+  : `You are the world's #1 YouTube SEO strategist (2026 best practices) for the channel "${brandName}"${nicheHint}. ` +
   `Write ALL output STRICTLY in ${langName}, tied to THIS video's message and the "${brandName}" niche. NEVER mention any other brand or channel name. Natural, human, professional — no keyword stuffing, no AI clichés.\n` +
   `Return ONLY JSON with:\n` +
   `- titulo: ≤100 characters. Structure "primary keyword | emotional hook | ${brandName}". Primary keyword near the start, natural (no clickbait), 1-2 emojis ok.\n` +
@@ -69,7 +71,9 @@ for (const [slug, pub] of Object.entries(published)) {
   let inputPrompt: string;
   let fallbackTitle = slug.replace(/-/g, ' ');
   if (SABI) {
-    inputPrompt = `Topic of this kids educational video: "${slug.replace(/-/g, ' ')}"`;
+    const rt = resolveTopic(slug, lang as SabiLang);
+    fallbackTitle = rt.name;
+    inputPrompt = `Topic of this kids educational video: "${rt.name}"${rt.kw.length ? ` (related keywords: ${rt.kw.join(', ')})` : ''}`;
   } else {
     const fr = await readJson<any>(path.join(localDir, slug, 'frase.json'), null);
     if (!fr?.frase) { log.warn(`${slug}: sin frase.json, salto`); continue; }
