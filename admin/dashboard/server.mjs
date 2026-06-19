@@ -206,10 +206,20 @@ http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/users') {
       const CFGF = path.join(ROOT, 'data', 'admin_config.json'); const cur = readJson(CFGF, {});
+      const pub = (list) => (list || []).map(x => ({ name: x.name, email: x.email || '', role: x.role, createdAt: x.createdAt || '' }));
       if (req.method === 'POST') { const chk = []; for await (const c of req) chk.push(c); const b = JSON.parse(Buffer.concat(chk).toString() || '{}');
-        cur.users = cur.users || []; if (b.del) cur.users = cur.users.filter(x => x.name !== b.del); else if (b.name && b.role) cur.users = cur.users.filter(x => x.name !== b.name).concat([{ name: b.name, role: b.role }]);
-        fs.writeFileSync(CFGF, JSON.stringify(cur, null, 2)); return json(res, { users: cur.users }); }
-      return json(res, { users: cur.users || [] });
+        cur.users = cur.users || [];
+        if (b.del) { cur.users = cur.users.filter(x => x.name !== b.del); fs.writeFileSync(CFGF, JSON.stringify(cur, null, 2)); return json(res, { users: pub(cur.users) }); }
+        if (b.name && b.role) {
+          const CH = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+          const pwd = Array.from(crypto.randomBytes(12)).map(x => CH[x % CH.length]).join('');
+          const passHash = crypto.createHash('sha256').update(pwd).digest('hex');
+          cur.users = cur.users.filter(x => x.name !== b.name).concat([{ name: b.name, email: (b.email || '').trim(), role: b.role, passHash, createdAt: new Date().toISOString() }]);
+          fs.writeFileSync(CFGF, JSON.stringify(cur, null, 2));
+          return json(res, { users: pub(cur.users), password: pwd, name: b.name, email: (b.email || '').trim() });
+        }
+        return json(res, { users: pub(cur.users) }); }
+      return json(res, { users: pub(cur.users) });
     }
     if (u.pathname === '/api/costs') {
       const USAGEF = path.join(ROOT, 'data', 'usage.jsonl');
@@ -388,8 +398,10 @@ small{color:var(--mut)}@media(max-width:760px){.vgrid{grid-template-columns:repe
   <div class=panel><b>🔒 Contraseña del admin</b><label>Nueva contraseña</label><input id=cf_pwd type=password><div style="margin-top:8px"><button class=btn onclick="savePwd()">Guardar contraseña</button> <span id=cf_pst></span></div></div>
   <div class=panel><b>👤 Roles y permisos</b><div id=cf_roles style="margin:8px 0"></div></div>
   <div class=panel><b>➕ Crear usuario</b>
-   <div class=row><div><label>Nombre</label><input id=us_name></div><div><label>Rol</label><select id=us_role><option value=superadmin>👑 superadmin</option><option value=manager>manager</option><option value=editor>editor</option></select></div></div>
+   <div class=row><div><label>Nombre</label><input id=us_name></div><div><label>Email</label><input id=us_email type=email placeholder="usuario@correo.com"></div></div>
+   <div class=row><div><label>Rol</label><select id=us_role><option value=superadmin>👑 superadmin</option><option value=manager>manager</option><option value=editor>editor</option></select></div><div></div></div>
    <div style="margin-top:8px"><button class=btn onclick="createUser()">Crear usuario</button></div>
+   <div id=us_new></div>
    <div id=us_list style="margin-top:12px"></div></div>
  </section>
  <section id=stats class=hide>
@@ -500,8 +512,12 @@ $('#nc_go').onclick=async()=>{const b={type:$('#nc_type').value,id:$('#nc_id').v
 let CFG={roles:[]};
 async function loadConfig(){CFG=await (await fetch('/api/config')).json();$('#cf_pst').innerHTML=CFG.hasPass?'<small>(hay contraseña puesta)</small>':'';renderRoles();loadUsers();}
 function renderRoles(){$('#cf_roles').innerHTML=(CFG.roles||[]).map(r=>'<div class=vid style="display:flex;gap:10px;align-items:center"><b style="min-width:130px">'+(r==='superadmin'?'👑 ':'')+r+'</b><small>'+(PERMS[r]||'')+'</small></div>').join('');}
-async function loadUsers(){const r=await (await fetch('/api/users')).json();$('#us_list').innerHTML=(r.users||[]).length?(r.users.map(u=>'<div class=vid style="display:flex;gap:10px;align-items:center"><b style="flex:1">'+u.name+'</b><span class=badge>'+(u.role==='superadmin'?'👑 ':'')+u.role+'</span> <a onclick="delUser(\\''+u.name.replace(/\\x27/g,"")+'\\')" style="cursor:pointer;color:#ff6b6b">✕</a></div>').join('')):'<small>sin usuarios aún</small>';}
-async function createUser(){const name=$('#us_name').value.trim();if(!name)return alert('pon un nombre');await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,role:$('#us_role').value})});$('#us_name').value='';loadUsers();}
+async function loadUsers(){const r=await (await fetch('/api/users')).json();$('#us_list').innerHTML=(r.users||[]).length?(r.users.map(u=>'<div class=vid style="display:flex;gap:10px;align-items:center"><b style="flex:1">'+u.name+(u.email?' <small style="font-weight:400;opacity:.8">· '+u.email+'</small>':'')+'</b><span class=badge>'+(u.role==='superadmin'?'👑 ':'')+u.role+'</span> <a onclick="delUser(\\''+u.name.replace(/\\x27/g,"")+'\\')" style="cursor:pointer;color:#ff6b6b">✕</a></div>').join('')):'<small>sin usuarios aún</small>';}
+async function createUser(){const name=$('#us_name').value.trim(),email=$('#us_email').value.trim();if(!name)return alert('pon un nombre');if(!email)return alert('pon el email del usuario');
+ const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,role:$('#us_role').value})})).json();
+ if(r.password){$('#us_new').innerHTML='<div class=panel style="border-color:var(--neon);margin:10px 0"><b>✅ Usuario creado</b><div style="font-size:13px;margin-top:6px">👤 '+name+' · 📧 '+email+'</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px"><label style="margin:0">Contraseña inicial</label><input id=us_pwd readonly value="'+r.password+'" style="flex:1;font-family:monospace;font-size:15px;letter-spacing:1px"><button class=btn onclick="copyPwd()">📋 Copiar</button></div><small>Cópiala y envíasela al usuario — no se vuelve a mostrar.</small></div>';}
+ $('#us_name').value='';$('#us_email').value='';loadUsers();}
+function copyPwd(){const el=$('#us_pwd');el.select();navigator.clipboard.writeText(el.value).then(()=>{const b=event.target;b.textContent='✅ Copiada';setTimeout(()=>b.textContent='📋 Copiar',1500);}).catch(()=>{document.execCommand('copy');});}
 async function delUser(n){await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({del:n})});loadUsers();}
 async function savePwd(){const p=$('#cf_pwd').value;if(!p)return;await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p})});$('#cf_pst').innerHTML='<small>✅ guardada</small>';$('#cf_pwd').value='';}
 async function addRole(){const r=$('#cf_newrole').value.trim();if(!r)return;CFG.roles=[...(CFG.roles||[]),r];await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roles:CFG.roles})});$('#cf_newrole').value='';renderRoles();}
