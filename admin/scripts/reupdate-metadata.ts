@@ -5,7 +5,7 @@
 import path from 'node:path';
 import { geminiJson } from '../src/ai/gemini';
 import { getYtAccessToken } from '../src/youtube/auth';
-import { readJson } from '../src/lib/files';
+import { readJson, writeJson } from '../src/lib/files';
 import { ROOT, OUTPUT_DIR } from '../src/config';
 import { log } from '../src/lib/log';
 import { resolveTopic, kidsSeoSystem, SABI_BRAND, type SabiLang } from '../src/seo/sabikids';
@@ -54,20 +54,25 @@ const SYS = SABI
 function capTags(tags: string[]): string[] {
   const out: string[] = []; let total = 0;
   for (const raw of tags || []) {
-    const t = String(raw).replace(/[<>"“”]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    const t = String(raw).replace(/[<>"“”]/g, '').replace(/\s+/g, ' ').trim().slice(0, 30);
     if (!t || out.includes(t)) continue;
-    const add = t.length + (out.length ? 1 : 0);
-    if (total + add > 480) break;
+    const eff = t.length + (t.includes(' ') ? 2 : 0); // YouTube cuenta comillas en tags con espacios
+    const add = eff + (out.length ? 1 : 0);
+    if (total + add > 460) break;
     out.push(t); total += add;
   }
   return out;
 }
 
 const token = await getYtAccessToken(slot);
-let done = 0, fail = 0;
+// Reanudable: salta los ya re-sincronizados (cuota de YouTube ~10k/día). Re-correr mañana retoma.
+const DONEF = path.join(YT, `resynced_${slot}.json`);
+const resynced = await readJson<Record<string, number>>(DONEF, {});
+let done = 0, fail = 0, skipped = 0;
 for (const [slug, pub] of Object.entries(published)) {
   const videoId = typeof pub === 'string' ? pub : (pub as any)?.videoId;
   if (!videoId || videoId === 'SKIP') continue;
+  if (resynced[videoId]) { skipped++; continue; }
   let inputPrompt: string;
   let fallbackTitle = slug.replace(/-/g, ' ');
   if (SABI) {
@@ -95,8 +100,13 @@ for (const [slug, pub] of Object.entries(published)) {
       body: JSON.stringify({ id: videoId, snippet }),
     });
     const j = await r.json();
-    if (!r.ok) throw new Error(`videos.update ${r.status}: ${JSON.stringify(j).slice(0, 160)}`);
+    if (!r.ok) {
+      const msg = JSON.stringify(j);
+      if (r.status === 403 && /quota/i.test(msg)) { log.warn(`CUOTA agotada — reanuda mañana (${done} hechos)`); break; }
+      throw new Error(`videos.update ${r.status}: ${msg.slice(0, 160)}`);
+    }
+    resynced[videoId] = 1; await writeJson(DONEF, resynced);
     done++; log.ok(`✏️  ${slug} → "${snippet.title.slice(0, 50)}" [${md.pillar}]`);
   } catch (e) { fail++; log.err(`${slug}: ${(e as Error).message.slice(0, 120)}`); }
 }
-console.log(`\n✅ ${slot}: ${done} re-actualizados, ${fail} fallos.`);
+console.log(`\n✅ ${slot}: ${done} re-actualizados, ${skipped} ya estaban, ${fail} fallos.`);
