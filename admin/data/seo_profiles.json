@@ -61,6 +61,13 @@
       "intent": "inspire + reflect + learn",
       "voice": "deep, reflective, poetic, calm"
     },
+    "claseo": {
+      "type": "topic", "brand": "ClaseoShow", "language": "es", "madeForKids": false,
+      "niche": "empoderamiento femenino — un refugio para mujeres en situaciones duras (embarazo en soledad, abandono de pareja, madres solteras, baja autoestima, relaciones tóxicas, independencia económica). Cada video nombra un problema real, valida el dolor y entrega una salida concreta y empoderamiento ('sí se puede, vas a renacer'). NO reemplaza ayuda profesional.",
+      "audience": "mujeres hispanohablantes que atraviesan momentos difíciles y buscan fuerza, compañía y soluciones",
+      "intent": "sentirse acompañada + encontrar una salida + empoderarse + sanar",
+      "voice": "cercana de amiga, cálida pero firme, real y esperanzadora, sin lástima ni promesas falsas"
+    },
     "signal": {
       "type": "topic", "brand": "Signal From The Future", "language": "en", "madeForKids": false,
       "niche": "technology, the future, artificial intelligence and finance — decoding what is coming next and how it changes money, work and life",

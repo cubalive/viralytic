@@ -52,7 +52,11 @@
           "outputsDir": "data/output/awakening-en", "channel": "data/youtube/channel_kat-en.json", "ytToken": "data/youtube/tokens/kat-en.json" },
         { "id": "signal", "name": "Signal From The Future", "handle": "", "kind": "faceless", "lang": "en",
           "desc": "Faceless tech/future/finance shorts.", "cmd": "npx tsx scripts/admin.ts signal {n}",
-          "outputsDir": "data/output/signal", "channel": "data/youtube/channel_signal.json", "ytToken": "data/youtube/tokens/signal.json" }
+          "outputsDir": "data/output/signal", "channel": "data/youtube/channel_signal.json", "ytToken": "data/youtube/tokens/signal.json" },
+        { "id": "claseo", "name": "ClaseoShow", "handle": "@ClaseoShow", "kind": "faceless", "lang": "es",
+          "desc": "Empoderamiento femenino — videos 9:16 con voz de mujer: situaciones reales (embarazo en soledad, abandono, madre soltera, autoestima, relaciones tóxicas) → solución y empoderamiento.",
+          "cmd": "npx tsx scripts/gen-claseo.ts {n}",
+          "outputsDir": "data/output/claseo", "channel": "data/youtube/channel_claseo.json", "ytToken": "data/youtube/tokens/claseo.json" }
       ]
     },
     {
