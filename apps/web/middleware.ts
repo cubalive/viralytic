@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-// El admin de la web ES el dashboard que construimos (corre en la PC, expuesto por túnel).
-// La SaaS vieja queda RETIRADA: todo getviralytic.com redirige al admin real.
+// Entrar por el dominio = ver NUESTRO admin (corre en la PC, expuesto por túnel).
+// Las PÁGINAS humanas de la SaaS vieja redirigen al admin; pero las APIs y el CRON
+// siguen VIVOS en Vercel (publican lo que Railway renderiza: Caroline + Supabase).
+// Por eso el matcher EXCLUYE /api/ — no rompemos lo que funciona.
 // ADMIN_TUNNEL_URL permite re-apuntar el túnel sin tocar código (vercel env + redeploy).
 const ADMIN =
   process.env.ADMIN_TUNNEL_URL ||
@@ -12,5 +14,5 @@ export function middleware(_request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
 };

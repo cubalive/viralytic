@@ -61,6 +61,10 @@ for g in REG["groups"]:
         if kind == "faceless":
             if p["id"] == "claseo": print("  claseo: lo maneja su tarea propia (ClaseoShowDaily), salto"); continue
             run(["npx", "tsx", "scripts/admin.ts", p["id"], "5"]); print("  faceless gen+pub 5")
+        elif kind == "edu":
+            # SabiKids: admin.ts sabikids publica los 4 idiomas (ES/EN/IT/ZH) round-robin desde el backlog.
+            # Solo se dispara una vez (en sabi-es, kind="edu"); los sabi-en/it/zh son "edu-view" (solo stats).
+            run(["npx", "tsx", "scripts/admin.ts", "sabikids", "5"]); print("  sabikids pub 5/idioma desde backlog")
         elif kind in ("music-zuri", "music-vallenato"):
             pend = [f for f in products(p["outputsDir"], p.get("filter")) if f not in done_files]
             reels = [f for f in pend if re.search(r"(reel|short)_\d", f)]; masters = [f for f in pend if f not in reels]
