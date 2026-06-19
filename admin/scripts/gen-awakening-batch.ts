@@ -23,6 +23,8 @@ const LANG = (process.argv[3] || 'es').toLowerCase();
 // Voz en off (ElevenLabs). On por defecto. Voz convincente, grave, multilingüe (Adam).
 const VOICE = (process.env.FACELESS_VOICE ?? 'on').toLowerCase() !== 'off';
 const VOICE_ID = process.env.FACELESS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB';
+const VOICE_M = process.env.FACELESS_VOICE_M ?? 'pNInz6obpgDQGcFmaJgB'; // hombre fuerte/seductor (Adam)
+const VOICE_F = process.env.FACELESS_VOICE_F ?? 'EXAVITQu4vr4xnSDxMaL'; // mujer calida/fuerte (Sarah)
 const baseDir = path.join(OUTPUT_DIR, LANG === 'es' ? 'awakening' : `awakening-${LANG}`);
 const storagePrefix = LANG === 'es' ? 'kids-studio/awakening' : `kids-studio/awakening-${LANG}`;
 const poolDir = path.join(OUTPUT_DIR, 'awakening', '_pool'); // pool compartido entre idiomas
@@ -100,7 +102,7 @@ const pool = fs.readdirSync(poolDir).filter((f) => /\.png$/.test(f)).map((f) => 
 if (pool.length < 4) throw new Error(`pool insuficiente (${pool.length})`);
 log.ok(`pool listo: ${pool.length} imágenes`);
 
-const SCHEMA = { type: 'object', properties: { fragmentos: { type: 'array', items: { type: 'string' } }, frase: { type: 'string' } }, required: ['fragmentos', 'frase'] };
+const SCHEMA = { type: 'object', properties: { fragmentos: { type: 'array', items: { type: 'string' } }, frase: { type: 'string' }, genero: { type: 'string', enum: ['hombre', 'mujer'] } }, required: ['fragmentos', 'frase', 'genero'] };
 const SYS: Record<string, string> = {
   es:
     'Eres un ingeniero de RETENCIÓN de talla mundial para un canal de DESPERTAR y consciencia. Escribes para el CEREBRO: parar el scroll en los primeros 0.5s y sostener hasta el último frame. REGLAS:\n' +
@@ -120,6 +122,8 @@ const SYS: Record<string, string> = {
     'Deep, awakened, inspiring (not childish, NOT nihilistic). Return ONLY JSON.',
 };
 let sys = SYS[LANG] || SYS.es;
+sys += '
+Elige el campo "genero" (hombre/mujer): la voz que mejor cuente ESTE tema. Usa "hombre" para fuerza, consciencia, dinero, tecnologia o intensidad; "mujer" para ternura, emocion suave o cercania.';
 
 async function renderOne(topic: string, idx: number, mood: string): Promise<string> {
   const slug = slugify(topic);
@@ -138,14 +142,14 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const userPrompt = LANG === 'en'
     ? `Theme / truth to expose: "${topic}". Create an awakening message in EXACTLY ${N} short fragments (1-4 words), that hooks, exposes that truth and ends with a powerful, positive awakening. {fragmentos:[...], frase:"..."}`
     : `Tema / verdad a desnudar: "${topic}". Crea un mensaje de despertar en EXACTAMENTE ${N} fragmentos cortos (1-4 palabras), que enganche, desnude esa verdad y termine con un despertar poderoso y positivo. {fragmentos:[...], frase:"..."}`;
-  const { fragmentos, frase } = await geminiJson<{ fragmentos: string[]; frase: string }>(userPrompt, SCHEMA, sys);
+  const { fragmentos, frase, genero } = await geminiJson<{ fragmentos: string[]; frase: string; genero?: string }>(userPrompt, SCHEMA, sys);
   await fsp.writeFile(path.join(dir, 'frase.json'), JSON.stringify({ topic, mood, frase, fragmentos }, null, 2), 'utf8');
 
   // Voz en off: narra los fragmentos y sincroniza su aparición a la voz.
   let voicePath: string | null = null, voiceDur = 0, voiceSeek = 0;
   if (VOICE) {
     try {
-      const nr = await narrate(fragmentos, dir, LANG, VOICE_ID);
+      const nr = await narrate(fragmentos, dir, LANG, genero === 'mujer' ? VOICE_F : VOICE_M);
       voiceSeek = nr.times[0] ?? 0;
       use = nr.times.map((t) => Math.max(0, t - voiceSeek));
       voiceDur = Math.max(0.5, nr.voiceDur - voiceSeek);

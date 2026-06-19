@@ -22,6 +22,8 @@ import { log } from '../src/lib/log';
 // multilingüe (Adam). Override: FACELESS_VOICE=off | FACELESS_VOICE_ID=<id>.
 const VOICE = (process.env.FACELESS_VOICE ?? 'on').toLowerCase() !== 'off';
 const VOICE_ID = process.env.FACELESS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB';
+const VOICE_M = process.env.FACELESS_VOICE_M ?? 'pNInz6obpgDQGcFmaJgB'; // hombre fuerte/seductor (Adam)
+const VOICE_F = process.env.FACELESS_VOICE_F ?? 'EXAVITQu4vr4xnSDxMaL'; // mujer calida/fuerte (Sarah)
 
 const THEME = 'wealth';
 const N_TARGET = Number(process.argv[2] || 20);
@@ -76,6 +78,8 @@ const SYS: Record<string, string> = {
     'Seguro, filoso, aspiracional (NADA de estafa ni riqueza rápida ni consejos financieros específicos). Devuelve SOLO JSON.',
 };
 let sys = SYS[LANG] || SYS.en;
+sys += '
+Elige el campo "genero" (hombre/mujer): la voz que mejor cuente ESTE tema. Usa "hombre" para fuerza, dinero, tecnologia, futuro o intensidad; "mujer" para ternura, emocion suave o cercania.';
 
 const PHOTO_THEMES = [
   'a glowing modern city skyline at golden hour, financial district',
@@ -105,7 +109,7 @@ for (let i = 0; i < PHOTO_THEMES.length; i++) {
 if (!photos.length) throw new Error('sin fotos');
 log.ok(`pool: ${photos.length} fotos | banco: ${loadBank(THEME).length} clips`);
 
-const SCHEMA = { type: 'object', properties: { fragmentos: { type: 'array', items: { type: 'string' } }, frase: { type: 'string' } }, required: ['fragmentos', 'frase'] };
+const SCHEMA = { type: 'object', properties: { fragmentos: { type: 'array', items: { type: 'string' } }, frase: { type: 'string' }, genero: { type: 'string', enum: ['hombre', 'mujer'] } }, required: ['fragmentos', 'frase', 'genero'] };
 
 async function renderOne(topic: string, idx: number, mood: string): Promise<string> {
   const slug = slugify(topic);
@@ -124,14 +128,14 @@ async function renderOne(topic: string, idx: number, mood: string): Promise<stri
   const userPrompt = LANG === 'es'
     ? `Tema: "${topic}". Crea un mensaje de mentalidad de riqueza en EXACTAMENTE ${N} fragmentos cortos (1-4 palabras), que enganche con una verdad del dinero, desnude la brecha de mentalidad y termine con un giro poderoso para construir riqueza. {fragmentos:[...], frase:"..."}`
     : `Theme: "${topic}". Create a wealth mindset message in EXACTLY ${N} short fragments (1-4 words), that hooks with a money truth, exposes the mindset gap and ends with a powerful wealth-building shift. {fragmentos:[...], frase:"..."}`;
-  const { fragmentos, frase } = await geminiJson<{ fragmentos: string[]; frase: string }>(userPrompt, SCHEMA, sys);
+  const { fragmentos, frase, genero } = await geminiJson<{ fragmentos: string[]; frase: string; genero?: string }>(userPrompt, SCHEMA, sys);
   await fsp.writeFile(path.join(dir, 'frase.json'), JSON.stringify({ topic, mood, frase, fragmentos }, null, 2), 'utf8');
 
   // Voz en off: narra los fragmentos y sincroniza su aparición a la voz.
   let voicePath: string | null = null, voiceDur = 0, voiceSeek = 0;
   if (VOICE) {
     try {
-      const nr = await narrate(fragmentos, dir, LANG, VOICE_ID);
+      const nr = await narrate(fragmentos, dir, LANG, genero === 'mujer' ? VOICE_F : VOICE_M);
       voiceSeek = nr.times[0] ?? 0;
       use = nr.times.map((t) => Math.max(0, t - voiceSeek));
       voiceDur = Math.max(0.5, nr.voiceDur - voiceSeek);
