@@ -56,15 +56,9 @@ const pool = fs.readdirSync(poolDir).filter((f) => /\.png$/.test(f)).map((f) => 
 if (pool.length < 3) throw new Error(`pool insuficiente (${pool.length})`);
 log.ok(`pool: ${pool.length} imágenes`);
 
-const PILARES = [
-  'una mujer embarazada y sola, sin el apoyo de su pareja',
-  'una mujer a la que su esposo dejó / abandonó',
-  'una madre soltera que cría a sus hijos sola y agotada',
-  'una mujer con la autoestima rota que siente que no vale',
-  'una mujer atrapada en una relación tóxica que no se atreve a salir',
-  'una mujer que quiere independencia económica y empezar de nuevo',
-  'una mujer que se está reconstruyendo y necesita creer que sí se puede',
-];
+// Banco de temas: 5 temas generales × subtemas (data/claseo/themes.json). Rota sin repetir.
+const themes = (JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'claseo', 'themes.json'), 'utf8')).themes) as { title: string; subtopics: string[] }[];
+const ALL_ITEMS = themes.flatMap((t) => t.subtopics.map((s) => ({ theme: t.title, sub: s })));
 
 const SCHEMA = { type: 'object', properties: { titulo: { type: 'string' }, chunks: { type: 'array', items: { type: 'string' } }, hashtags: { type: 'array', items: { type: 'string' } } }, required: ['titulo', 'chunks', 'hashtags'] };
 const SYS =
@@ -73,15 +67,16 @@ const SYS =
   "NUNCA lástima, NUNCA miedo, NUNCA promesas falsas, NUNCA culpas a la mujer. Estructura MIX: gancho que nombra el dolor → validación (te entiendo, no estás sola, no fue tu culpa) → UNA verdad que libera + UN paso concreto → cierre de empoderamiento breve ('sí se puede / vas a renacer'). " +
   "Es APOYO, no reemplaza ayuda profesional. Devuelve SOLO JSON.";
 
-async function renderOne(pilar: string, idx: number): Promise<void> {
+async function renderOne(item: { theme: string; sub: string }, idx: number): Promise<void> {
   const userPrompt =
-    `Situación: ${pilar}. Escribe el guion como ${'\"chunks\"'}: 8-12 líneas CORTAS (máx 6 palabras c/u) que, leídas seguidas, forman el mensaje hablado completo (90-120 palabras) en tono de amiga, estructura mix. ` +
-    `Cada línea es además un subtítulo en pantalla. Da también ${'\"titulo\"'} (<=70 chars, gancho emocional) y ${'\"hashtags\"'} (4-6, minúscula).`;
+    `Tema: ${item.theme}. Enfoque del video: "${item.sub}". Háblale a la mujer que vive esto. ` +
+    `Escribe el guion como "chunks": 8-12 líneas CORTAS (máx 6 palabras c/u) que, leídas seguidas, forman el mensaje hablado completo (90-120 palabras) en tono de amiga, estructura mix (gancho→validación→solución→empoderamiento). ` +
+    `Cada línea es además un subtítulo en pantalla. Da también "titulo" (<=70 chars, gancho emocional) y "hashtags" (4-6, minúscula).`;
   const { titulo, chunks, hashtags } = await geminiJson<{ titulo: string; chunks: string[]; hashtags: string[] }>(userPrompt, SCHEMA, SYS);
   const slug = slugify(titulo) || `claseo-${idx}`;
   const dir = path.join(baseDir, slug); await ensureDir(dir);
   const final = path.join(dir, 'video.mp4');
-  await fsp.writeFile(path.join(dir, 'guion.json'), JSON.stringify({ titulo, pilar, chunks, hashtags }, null, 2), 'utf8');
+  await fsp.writeFile(path.join(dir, 'guion.json'), JSON.stringify({ titulo, theme: item.theme, sub: item.sub, chunks, hashtags }, null, 2), 'utf8');
   log.step(`"${titulo}" — ${chunks.length} líneas`);
 
   // Voz de mujer (Sarah). narra los chunks y devuelve el tiempo de cada uno.
@@ -136,9 +131,19 @@ async function renderOne(pilar: string, idx: number): Promise<void> {
   } catch (e) { log.warn(`metadata SEO: ${(e as Error).message.slice(0, 70)}`); }
 }
 
+// Rota por el banco sin repetir (_used.json). Si se acaban, recicla.
+const usedFile = path.join(baseDir, '_used.json');
+let used: string[] = [];
+try { used = JSON.parse(fs.readFileSync(usedFile, 'utf8')); } catch { used = []; }
+let queue = ALL_ITEMS.filter((it) => !used.includes(it.sub));
+if (queue.length < N) queue = queue.concat(ALL_ITEMS);
+queue = queue.slice(0, N);
 let made = 0;
-for (let i = 0; i < N; i++) {
-  try { await renderOne(PILARES[i % PILARES.length], i); made++; }
-  catch (e) { log.err(`video ${i}: ${(e as Error).message.slice(0, 110)}`); }
+for (let i = 0; i < queue.length; i++) {
+  try {
+    await renderOne(queue[i], i); made++;
+    if (!used.includes(queue[i].sub)) used.push(queue[i].sub);
+    await fsp.writeFile(usedFile, JSON.stringify(used, null, 2), 'utf8');
+  } catch (e) { log.err(`video ${i}: ${(e as Error).message.slice(0, 110)}`); }
 }
-console.log(`\n✅ ClaseoShow: ${made}/${N} videos generados en data/output/claseo/`);
+console.log(`\n✅ ClaseoShow: ${made}/${queue.length} videos generados · ${used.length}/${ALL_ITEMS.length} subtemas usados`);

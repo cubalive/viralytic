@@ -1,0 +1,85 @@
+{
+  "_note": "Banco de temas de ClaseoShow: 5 temas generales × subtemas. gen-claseo.ts rota sin repetir (_used.json). 1 video/día por tema.",
+  "themes": [
+    {
+      "key": "maternidad",
+      "title": "Maternidad y embarazo en soledad",
+      "subtopics": [
+        "Estás embarazada y él no está: no estás sola",
+        "Madre soltera y agotada: tu fuerza es real",
+        "El primer año criando sola a tu bebé",
+        "La culpa de no ser la mamá perfecta",
+        "Tu cuerpo cambió después del bebé y está bien",
+        "Criar con poco dinero sin perder la esperanza",
+        "Pedir ayuda no te hace débil, te hace sabia",
+        "La soledad de la maternidad que nadie cuenta",
+        "Cuando sientes que ya no eres tú, solo mamá",
+        "El día que entendiste que sí podías sola"
+      ]
+    },
+    {
+      "key": "desamor",
+      "title": "Desamor, abandono y duelo",
+      "subtopics": [
+        "Se fue sin una explicación y duele",
+        "Te cambió por otra: tu valor no depende de él",
+        "Reconstruirte después del divorcio",
+        "Deja de esperar que regrese",
+        "El duelo de un amor que se terminó",
+        "No fue tu culpa que él no supiera amarte",
+        "Volver a confiar después de que te rompieron",
+        "Soltar a quien ya te soltó",
+        "Llorarlo está bien, quedarte ahí no",
+        "El amor propio empieza donde termina el que te lastima"
+      ]
+    },
+    {
+      "key": "autoestima",
+      "title": "Autoestima y amor propio",
+      "subtopics": [
+        "Cuando sientes que no vales nada",
+        "Deja de mendigar amor y atención",
+        "Reconoce todo lo que has logrado",
+        "Esa voz que te critica no eres tú",
+        "Ponerte a ti primero sin sentir culpa",
+        "Suelta lo que piensen los demás de ti",
+        "Mírate al espejo y háblate con amor",
+        "Sana a la niña que un día fuiste",
+        "Mereces lo mismo que tanto das",
+        "Tu historia no te define, tu decisión sí"
+      ]
+    },
+    {
+      "key": "limites",
+      "title": "Relaciones tóxicas y límites",
+      "subtopics": [
+        "Señales de que estás en una relación tóxica",
+        "Por qué te cuesta tanto irte (y no es debilidad)",
+        "Poner límites no es ser mala",
+        "El maltrato que aprendiste a normalizar",
+        "Recupera la identidad que te fueron quitando",
+        "Si el amor duele todo el tiempo, no es amor",
+        "Alejarte de quien te apaga",
+        "Cómo empezar de nuevo después de salir",
+        "Tu paz vale más que esa relación",
+        "Pedir ayuda cuando tienes miedo: no estás sola"
+      ]
+    },
+    {
+      "key": "renacer",
+      "title": "Renacer, fuerza e independencia",
+      "subtopics": [
+        "Independencia económica empezando desde cero",
+        "Nunca es tarde para empezar de nuevo",
+        "La fuerza que no sabías que tenías",
+        "Retoma los sueños que dejaste en pausa",
+        "Rodéate de mujeres que te suman",
+        "Tu historia va a inspirar a otra mujer",
+        "Construye la vida que de verdad mereces",
+        "Un paso pequeño hoy cambia todo mañana",
+        "Sí se puede: y tú eres la prueba",
+        "Renacer no es olvidar, es elegirte"
+      ]
+    }
+  ]
+}
