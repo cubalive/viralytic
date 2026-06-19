@@ -11,10 +11,11 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# Install deps with npm (runs esbuild's build script — pnpm v11 refuses to,
-# which broke the build). Standalone: no workspace deps.
-COPY package.json ./
-RUN npm install
+# Install deps from the LOCKFILE (npm ci = reproducible, versiones congeladas).
+# Antes era `npm install` sin lock: cada build flotaba a las últimas versiones y
+# una release nueva de upstream rompía el deploy. Con el lock, el build es estable.
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # App source (tsconfig + src). Runs via tsx — no compile step.
 COPY . .
