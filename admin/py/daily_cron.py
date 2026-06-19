@@ -59,6 +59,7 @@ for g in REG["groups"]:
         # 3) cadencia
         kind = p.get("kind", "")
         if kind == "faceless":
+            if p["id"] == "claseo": print("  claseo: lo maneja su tarea propia (ClaseoShowDaily), salto"); continue
             run(["npx", "tsx", "scripts/admin.ts", p["id"], "5"]); print("  faceless gen+pub 5")
         elif kind in ("music-zuri", "music-vallenato"):
             pend = [f for f in products(p["outputsDir"], p.get("filter")) if f not in done_files]
