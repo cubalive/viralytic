@@ -126,7 +126,7 @@ async function renderOne(item: { theme: string; sub: string }, idx: number): Pro
   try {
     await fsp.writeFile(path.join(dir, 'title.txt'), titulo, 'utf8');
     await fsp.writeFile(path.join(dir, 'topic.txt'), `${titulo}. ${chunks.join(' ')}`, 'utf8');
-    const { stdout } = await exec('python', ['py/seo_meta.py', 'claseo', dir, '--topic'], { cwd: ROOT, maxBuffer: 1 << 24 });
+    const { stdout } = await exec('python', ['py/seo_meta.py', 'claseo', dir, '--topic'], { cwd: ROOT, env: { ...process.env, PYTHONIOENCODING: 'utf-8' }, maxBuffer: 1 << 24 });
     log.ok('metadata SEO: ' + stdout.trim().split('\n').slice(-1)[0].slice(0, 80));
   } catch (e) { log.warn(`metadata SEO: ${(e as Error).message.slice(0, 70)}`); }
 }
