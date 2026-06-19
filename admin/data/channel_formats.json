@@ -1,0 +1,26 @@
+{
+  "_note": "Receta de producción por canal: formato(s) de retención + sonido viral + reglas. Derivado de formats.json. Los motores y el estratega (format_select.py) la usan para la mejor producción por canal.",
+  "channels": {
+    "claseo": {
+      "tipo": "women", "formatos": ["storytelling_emotivo", "texto_sobre_broll"], "sonido": "esperanzador",
+      "hook": "nombra el dolor exacto en 3s (2da persona, de amiga)",
+      "retencion": "dolor→validación→verdad+paso→empoderamiento; captions siguen la voz; cierre que invita a comentar",
+      "motor": "gen-claseo.ts", "estado": "implementado"
+    },
+    "wealth": {
+      "tipo": "faceless", "formatos": ["texto_sobre_broll"], "sonido": "retencion-tiktok",
+      "hook": "verdad incómoda / 'Tú...' en 0.5-3s",
+      "retencion": "fragmentos 1-3 palabras + corte al beat + open loop + payoff dopamina + último frame que reengancha",
+      "motor": "gen-wealth-batch.ts", "estado": "implementado"
+    },
+    "kat-es": { "tipo": "faceless", "formatos": ["texto_sobre_broll"], "sonido": "retencion-tiktok", "hook": "verdad de consciencia en 3s", "retencion": "fragmentos al beat + open loop + despertar final", "motor": "gen-awakening-batch.ts", "estado": "implementado" },
+    "kat-en": { "tipo": "faceless", "formatos": ["texto_sobre_broll"], "sonido": "retencion-tiktok", "hook": "consciousness truth in 3s", "retencion": "beat-cut fragments + open loop + awakening payoff", "motor": "gen-awakening-batch.ts", "estado": "implementado" },
+    "signal": { "tipo": "faceless", "formatos": ["texto_sobre_broll", "ranking_top"], "sonido": "retencion-tiktok", "hook": "future/tech shock in 3s", "retencion": "beat cuts + open loop + 'the future is now' payoff", "motor": "gen-tech-batch.ts", "estado": "implementado" },
+    "sabi-es": { "tipo": "kids", "formatos": ["pregunta_revelacion", "tablero_blanco", "con_objetos"], "sonido": "calido-folk", "hook": "pregunta divertida en 3s con analogía del niño", "retencion": "una idea + analogía + revelación al final; voz amable", "motor": "sabikids (edu-reels)", "estado": "revisar hook+sonido" },
+    "sabi-en": { "tipo": "kids", "formatos": ["pregunta_revelacion", "tablero_blanco"], "sonido": "calido-folk", "hook": "fun question in 3s", "retencion": "one idea + analogy + reveal", "motor": "sabikids", "estado": "revisar hook+sonido" },
+    "sabi-it": { "tipo": "kids", "formatos": ["pregunta_revelacion", "tablero_blanco"], "sonido": "calido-folk", "hook": "domanda divertente in 3s", "retencion": "una idea + analogia + rivelazione", "motor": "sabikids", "estado": "revisar hook+sonido" },
+    "sabi-zh": { "tipo": "kids", "formatos": ["pregunta_revelacion", "tablero_blanco"], "sonido": "calido-folk", "hook": "有趣的问题 3秒内", "retencion": "一个概念 + 类比 + 揭示", "motor": "sabikids", "estado": "revisar hook+sonido" },
+    "zuri-es": { "tipo": "music", "formatos": ["hiper_cinematico"], "sonido": "(la canción)", "hook": "coro/parte fuerte en los primeros 3-5s del reel", "retencion": "video musical con karaoke + reels recortando el coro; cortes al beat", "motor": "zuri_music.py + reel_from_master.py", "estado": "implementado (reels: priorizar coro al inicio)" },
+    "vallenato": { "tipo": "music", "formatos": ["hiper_cinematico", "texto_sobre_broll"], "sonido": "(la canción)", "hook": "coro al inicio del short", "retencion": "visualizer 16:9 + shorts del coro (vallenato_916) con karaoke; intro→loop→bookend", "motor": "gen-vallenato.ts + vallenato_916.py", "estado": "implementado" }
+  }
+}
