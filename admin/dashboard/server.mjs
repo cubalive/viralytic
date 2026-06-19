@@ -95,9 +95,57 @@ function renderCaptionPreviews() { // quema el sample en cada estilo → data/ca
 const ext = (fn) => (path.extname(fn || '') || '.bin').toLowerCase();
 const sib = (file, name) => { const f = path.join(ROOT, path.dirname(file), name); return fs.existsSync(f) ? f : null; };
 
+// ===== Autenticación (sesión firmada por cookie) =====
+function authSecret() {
+  const CFGF = path.join(ROOT, 'data', 'admin_config.json'); const cur = readJson(CFGF, {});
+  if (!cur.sessionSecret) { cur.sessionSecret = crypto.randomBytes(32).toString('hex'); fs.writeFileSync(CFGF, JSON.stringify(cur, null, 2)); }
+  return cur.sessionSecret;
+}
+function makeToken(user) {
+  const payload = Buffer.from(JSON.stringify({ u: user, exp: Date.now() + 7 * 864e5 })).toString('base64url');
+  const sig = crypto.createHmac('sha256', authSecret()).update(payload).digest('base64url');
+  return payload + '.' + sig;
+}
+function verifyToken(tok) {
+  if (!tok || tok.indexOf('.') < 0) return null;
+  const [payload, sig] = tok.split('.');
+  if (crypto.createHmac('sha256', authSecret()).update(payload).digest('base64url') !== sig) return null;
+  try { const p = JSON.parse(Buffer.from(payload, 'base64url').toString()); return p.exp > Date.now() ? p.u : null; } catch (e) { return null; }
+}
+const cookie = (req, n) => ((req.headers.cookie || '').split(';').map(s => s.trim()).find(x => x.startsWith(n + '=')) || '').split('=')[1] || null;
+const LOGIN_PAGE = `<!doctype html><meta charset=utf-8><title>getvirality · entrar</title><meta name=viewport content="width=device-width,initial-scale=1">
+<style>body{margin:0;background:#0B0B0F;color:#eee;font-family:Segoe UI,system-ui,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center}
+.box{background:#15151d;border:1px solid #23232e;border-radius:16px;padding:30px;width:330px}h1{margin:0 0 4px;font-size:20px;font-style:italic;background:linear-gradient(90deg,#FF0066,#00E5FF);-webkit-background-clip:text;color:transparent}
+label{display:block;font-size:12px;color:#9aa;margin:12px 0 4px}input{width:100%;padding:10px;border-radius:9px;border:1px solid #2a2a36;background:#0e0e14;color:#fff;box-sizing:border-box}
+button{width:100%;margin-top:16px;padding:11px;border:0;border-radius:10px;background:linear-gradient(90deg,#FF0066,#c0004e);color:#fff;font-weight:700;cursor:pointer}small{color:#ff6b6b}</style>
+<div class=box><h1>getvirality · admin</h1><small style="color:#9aa">Inicia sesión para continuar</small>
+<label>Email</label><input id=e type=email autofocus><label>Contraseña</label><input id=p type=password>
+<button onclick="go()">Entrar</button><div id=m style="margin-top:10px"></div></div>
+<script>async function go(){const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e.value.trim(),password:p.value})});const j=await r.json();if(j.ok)location.href='/';else m.innerHTML='<small>'+(j.error||'error')+'</small>';}
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter')go();});</script>`;
+
 http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   try {
+    // login (público)
+    if (req.method === 'POST' && u.pathname === '/api/login') {
+      const chk = []; for await (const c of req) chk.push(c); const b = JSON.parse(Buffer.concat(chk).toString() || '{}');
+      const cfg = readJson(path.join(ROOT, 'data', 'admin_config.json'), {});
+      const h = crypto.createHash('sha256').update(b.password || '').digest('hex');
+      let user = null;
+      if (cfg.passHash && h === cfg.passHash) user = 'admin';
+      else { const usr = (cfg.users || []).find(x => (x.email === b.email || x.name === b.email) && x.passHash === h); if (usr) user = usr.name; }
+      if (!user) return json(res, { error: 'Email o contraseña incorrectos' }, 401);
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Set-Cookie': `sid=${makeToken(user)}; Path=/; HttpOnly; Max-Age=604800; SameSite=Lax` });
+      return res.end(JSON.stringify({ ok: true, user }));
+    }
+    if (u.pathname === '/api/logout') { res.writeHead(200, { 'Content-Type': 'application/json', 'Set-Cookie': 'sid=; Path=/; Max-Age=0' }); return res.end('{"ok":true}'); }
+    // gate: todo lo demás requiere sesión
+    if (!verifyToken(cookie(req, 'sid'))) {
+      if (u.pathname === '/' || u.pathname === '/index.html') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(LOGIN_PAGE); }
+      if (u.pathname.startsWith('/api/') || u.pathname.startsWith('/file') || u.pathname.startsWith('/captionpreview')) return json(res, { error: 'no autenticado' }, 401);
+      res.writeHead(302, { Location: '/' }); return res.end();
+    }
     if (req.method === 'GET' && (u.pathname === '/' || u.pathname === '/index.html')) { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(PAGE); }
     if (u.pathname === '/api/projects') return json(res, { groups: REG.groups.map(g => ({ key: g.key, title: g.title, projects: g.projects.map(p => ({ id: p.id, name: p.name, handle: p.handle, kind: p.kind, lang: p.lang, desc: p.desc, cmd: !!p.cmd, char: p.char || (p.kind === 'music-zuri' ? 'zuri' : null), connected: tokenExists(p), videos: listMp4(p.outputsDir, p.filter).length })) })) });
     if (u.pathname === '/api/channel') { const p = PROJ[u.searchParams.get('id')]; return p ? json(res, channelInfo(p)) : json(res, { error: 'no' }, 404); }
@@ -339,7 +387,7 @@ label{display:block;font-size:12px;color:var(--mut);margin:9px 0 4px}input,selec
 small{color:var(--mut)}@media(max-width:760px){.vgrid{grid-template-columns:repeat(3,1fr)}}
 </style>
 <header><h1>getvirality · admin</h1>
-<div class=tabs><div class=tab data-t=proj>Proyectos</div><div class=tab data-t=canal>Canales</div><div class=tab data-t=cal>Calendario</div><div class=tab data-t=banco>🎬 Crear escena</div><div class=tab data-t=conex>🔌 Conexiones</div><div class=tab data-t=config>⚙️ Configuración</div><div class=tab data-t=stats>📊 Stats</div><div class=tab data-t=gastos>💰 Gastos</div></div></header>
+<div class=tabs><div class=tab data-t=proj>Proyectos</div><div class=tab data-t=canal>Canales</div><div class=tab data-t=cal>Calendario</div><div class=tab data-t=banco>🎬 Crear escena</div><div class=tab data-t=conex>🔌 Conexiones</div><div class=tab data-t=config>⚙️ Configuración</div><div class=tab data-t=stats>📊 Stats</div><div class=tab data-t=gastos>💰 Gastos</div></div><a onclick="fetch('/api/logout').then(()=>location.href='/')" style="cursor:pointer;color:#9aa;font-size:12px;white-space:nowrap;margin-left:10px">Salir ⏻</a></header>
 <div class=wrap>
  <section id=proj>
   <div class=panel><b>🎵 Subir canción y generar</b> <small>(pista + voz separada + letra .txt)</small>
