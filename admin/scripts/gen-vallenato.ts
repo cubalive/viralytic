@@ -195,11 +195,18 @@ async function main() {
   // 4) Soundwave moderno (opcional) + quemar karaoke + montar audio de la canción.
   const final = path.join(dir, 'video.mp4');
   const assEsc = assPath.replace(/\\/g, '/').replace(/:/g, '\\:');
-  const filter = WAVE
-    ? `[1:a]showwaves=s=1920x150:mode=cline:rate=30:colors=0xFF0066|0x00E5FF,format=rgba,colorchannelmixer=aa=0.9[w];` +
-      `[0:v][w]overlay=0:H-175[bv];[bv]subtitles='${assEsc}'[v]`
+  // Soundwave configurable: on/off, tamaño (small/medium/large) y posición (top/middle/bottom).
+  const waveCfg: any = (() => { try { return JSON.parse(fs.readFileSync(path.join(dir, 'wave.json'), 'utf8')); } catch { return {}; } })();
+  const waveOn = waveCfg.on != null ? !!waveCfg.on : WAVE;
+  const waveSize = String(waveCfg.size || process.env.VALLENATO_WAVE_SIZE || 'medium');
+  const waveH = ({ small: 90, medium: 150, large: 240 } as Record<string, number>)[waveSize] || 150;
+  const wavePos = String(waveCfg.pos || process.env.VALLENATO_WAVE_POS || 'bottom');
+  const waveY = wavePos === 'top' ? '20' : wavePos === 'middle' ? '(H-h)/2' : `H-${waveH + 25}`;
+  const filter = waveOn
+    ? `[1:a]showwaves=s=1920x${waveH}:mode=cline:rate=30:colors=0xFF0066|0x00E5FF,format=rgba,colorchannelmixer=aa=0.9[w];` +
+      `[0:v][w]overlay=0:${waveY}[bv];[bv]subtitles='${assEsc}'[v]`
     : `[0:v]subtitles='${assEsc}'[v]`;
-  log.step(`Montaje final${WAVE ? ' (con soundwave)' : ''}…`);
+  log.step(`Montaje final${waveOn ? ` (soundwave ${waveSize} ${wavePos})` : ' (sin soundwave)'}…`);
   await ff(['-y', '-i', silent, '-i', songP, '-filter_complex', filter,
     '-map', '[v]', '-map', '1:a', '-t', dur.toFixed(2),
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', final]);

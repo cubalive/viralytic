@@ -140,6 +140,7 @@ http.createServer(async (req, res) => {
         if (fields.loopprompt) fs.writeFileSync(path.join(dir, 'loop_prompt.txt'), fields.loopprompt);
         if (fields.loopneg) fs.writeFileSync(path.join(dir, 'loop_neg.txt'), fields.loopneg);
         if (fields.loopdur) fs.writeFileSync(path.join(dir, 'loop_dur.txt'), fields.loopdur);
+        if (fields.wave_on != null) fs.writeFileSync(path.join(dir, 'wave.json'), JSON.stringify({ on: fields.wave_on === '1', size: fields.wave_size || 'medium', pos: fields.wave_pos || 'bottom' }));
         if (fields.title) fs.writeFileSync(path.join(dir, 'title.txt'), fields.title);
         if (fields.artist) fs.writeFileSync(path.join(dir, 'artist.txt'), fields.artist);
         return json(res, { ok: true });
@@ -360,6 +361,10 @@ small{color:var(--mut)}@media(max-width:760px){.vgrid{grid-template-columns:repe
      <label>Prompt de movimiento</label><input id=loopprompt placeholder="ej: luces suaves que se mueven, bokeh, movimiento mínimo y algún detalle">
      <label>Prompt negativo</label><input id=loopneg placeholder="texto, watermark, deformaciones, manos raras, morphing, logos">
      <label>Duración del clip Veo</label><select id=loopdur style="width:auto"><option>4</option><option>6</option><option selected>8</option></select> <small>seg (igual que Veo)</small></div>
+    <div style="margin-top:8px;padding:9px;background:#15151d;border-radius:8px">
+     <b style="font-size:12px">🌊 Soundwave</b>
+     <div style="margin:6px 0"><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin:0"><input type=checkbox id=wave_on checked style="width:auto"> Incluir soundwave</label></div>
+     <div class=row><div><label>Tamaño</label><select id=wave_size><option value=small>Pequeño</option><option value=medium selected>Mediano</option><option value=large>Grande</option></select></div><div><label>Posición</label><select id=wave_pos><option value=bottom selected>Abajo</option><option value=middle>En medio</option><option value=top>Arriba</option></select></div></div></div>
     <label>🎤 Nombre del cantante (opcional)</label><input id=artist placeholder="ej: Octavio Daza"> <small>(SOLO si quieres que el sistema lo superponga; si tu imagen de intro ya trae el título y el cantante, déjalo vacío)</small>
     <div style="margin-top:12px"><b style="font-size:13px">🅰️ Estilo de letra (captions)</b> <small>(elige cómo se ven quemadas — enfocado en música de adultos)</small><div id=capstyles class=cards style="margin-top:8px"></div></div></div>
    <div style="margin-top:12px"><button class=btn id=go>⬆️ Subir y generar</button> <button class="btn g" id=gen>⚙️ Generar (ya subí los archivos)</button> <span id=st><small></small></span></div>
@@ -450,7 +455,7 @@ function attachCounter(id,rec,max){const el=$('#'+id);if(!el||el.dataset.cc)retu
 ['sc_neg','introneg','loopneg'].forEach(id=>attachCounter(id,400,800));
 $('#go').onclick=async()=>{const id=$('#mp').value,slug=$('#slug').value.trim();if(!slug)return alert('pon slug');
  const fd=new FormData();fd.append('project',id);fd.append('slug',slug);fd.append('title',$('#title').value);for(const k of['track','vocal','lyrics']){const f=$('#'+k).files[0];if(f)fd.append(k,f);}
- if(projKind(id)==='music-vallenato'){for(const k of['frameintro','frame1','frame2']){const f=$('#'+k).files[0];if(f)fd.append(k,f);}for(const k of['introprompt','introneg','introdur','loopprompt','loopneg','loopdur','artist']){const el=$('#'+k);if(el&&el.value.trim())fd.append(k,el.value.trim());}}
+ if(projKind(id)==='music-vallenato'){for(const k of['frameintro','frame1','frame2']){const f=$('#'+k).files[0];if(f)fd.append(k,f);}for(const k of['introprompt','introneg','introdur','loopprompt','loopneg','loopdur','artist']){const el=$('#'+k);if(el&&el.value.trim())fd.append(k,el.value.trim());}if($('#wave_on')){fd.append('wave_on',$('#wave_on').checked?'1':'0');fd.append('wave_size',$('#wave_size').value);fd.append('wave_pos',$('#wave_pos').value);}}
  $('#go').disabled=true;$('#st').innerHTML='<small>subiendo…</small>';const up=await (await fetch('/api/upload',{method:'POST',body:fd})).json();
  if(up.error){$('#st').innerHTML='<small>❌ '+up.error+'</small>';$('#go').disabled=false;return;}$('#st').innerHTML='<small>generando…</small>';
  const gg=await (await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,slug})})).json();if(gg.error){$('#st').innerHTML='<small>❌ '+gg.error+'</small>';$('#go').disabled=false;return;}if(gg.job)poll(gg.job,()=>{init();showGenPreview(id,slug);});};
