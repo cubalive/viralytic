@@ -39,3 +39,11 @@ admin/data/vallenato/**/_*.png
 # python cache
 __pycache__/
 *.pyc
+
+admin/.tunnel_token
+admin/.tunnel_id
+
+admin/.suno_token
+
+admin/data/bank/vallenato-loops/
+admin/data/bank/vallenato-titles/
