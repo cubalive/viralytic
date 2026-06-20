@@ -1,0 +1,13 @@
+{
+  "_note": "Necesidad semanal por canal para el botón 'Generar semana'. perDay × 7 = videos/semana. slots = horas Miami. tzOffset = horas vs UTC (Miami EDT jun = -4). gen = comando ({n} = cuántos generar). loop=true → llamar el gen 1 vez por video.",
+  "tzOffset": -4,
+  "channels": {
+    "fe": { "perDay": 3, "slots": ["08:00", "13:00", "19:00"], "gen": "npx tsx scripts/gen-fe.ts {n}", "lang": "es" },
+    "claseo": { "perDay": 3, "slots": ["07:00", "13:00", "19:00"], "gen": "npx tsx scripts/gen-claseo.ts {n}", "lang": "es" },
+    "dormir-bebes": { "perDay": 1, "slots": ["20:00"], "gen": "python py/gen_dormir_bebes.py 8", "loop": true, "lang": "es" },
+    "wealth": { "perDay": 2, "slots": ["09:00", "18:00"], "gen": "npx tsx scripts/gen-wealth-batch.ts {n} en", "lang": "en" },
+    "signal": { "perDay": 2, "slots": ["09:00", "18:00"], "gen": "npx tsx scripts/gen-tech-batch.ts {n} en", "lang": "en" },
+    "kat-es": { "perDay": 2, "slots": ["08:00", "19:00"], "gen": "npx tsx scripts/gen-awakening-batch.ts {n} es", "lang": "es" },
+    "kat-en": { "perDay": 2, "slots": ["08:00", "19:00"], "gen": "npx tsx scripts/gen-awakening-batch.ts {n} en", "lang": "en" }
+  }
+}
