@@ -5,3 +5,5 @@ for /f "tokens=1,* delims==" %%a in ('findstr /b "OPENAI_API_KEY=" .env') do set
 echo ===== %date% %time% ===== >> data\output\claseo\daily.log
 npx tsx scripts/gen-claseo.ts 5 >> data\output\claseo\daily.log 2>&1
 npx tsx scripts/claseo-publish.ts 5 >> data\output\claseo\daily.log 2>&1
+REM Sincroniza los videos + su JSON de descripcion a E:\...\Clase o show
+python py\sync_claseo_e.py >> data\output\claseo\daily.log 2>&1
