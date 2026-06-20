@@ -146,4 +146,12 @@ for g in REG["groups"]:
                 if m:
                     j = json.loads(m.group(0)); CAL.append({"project": p["id"], "channel": p["name"], "file": f, "videoId": j["id"], "url": j["url"], "when": now.isoformat(), "privacy": j.get("privacy"), "title": title, "ts": now.isoformat()}); done_files.add(f); print("  publicado", f)
 json.dump(CAL, open(CALF, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+
+# Sincronizar a E: (carpetas propias) — Fe en la Vida Real y Dormir Bebés
+for sub, folder in [("fe", "Fe en la Vida Real"), ("dormir-bebes", "Dormir Bebes")]:
+    try:
+        r = run(["python", "py/sync_e.py", sub, folder])
+        print(" ", (r.stdout or "").strip().split("\n")[-1] if r.stdout else "sync_e")
+    except Exception as e:
+        print("  sync_e err", str(e)[:60])
 print("DONE cron")
