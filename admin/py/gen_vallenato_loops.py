@@ -26,6 +26,13 @@ loops = {
     "05_mar_calma": "calm sea at sunrise with gentle waves and warm golden horizon, peace, " + STYLE,
     "06_ventana_lluvia": "rain sliding down a dark window at night with soft warm light behind, intimate, " + STYLE,
     "07_cuarto_vacio": "an empty dim room with a single wooden chair by a window, cold blue morning light, lonely, " + STYLE,
+    "08_bar_botella": "a glass and a bottle of liquor on a dark bar counter with warm dim light, lonely drinking, despecho, " + STYLE,
+    "09_pareja_lejos": "two distant blurred silhouettes of a couple walking together far away on a night street, seen from afar, jealousy, " + STYLE,
+    "10_lujo_vacio": "an elegant empty luxury living room at night with money on a glass table, success but lonely, cold light, " + STYLE,
+    "11_cama_vacia": "an empty unmade bed in a dark bedroom at night with soft moonlight, insomnia, longing, " + STYLE,
+    "12_telefono_noche": "a smartphone glowing in the dark on a table showing a chat, late night, anxiety, " + STYLE,
+    "13_deseo_noche": "a dim intimate bedroom in red and amber low light, tension and forbidden desire, cinematic, " + STYLE,
+    "14_foto_mesa": "a framed photo standing on a table next to a candle, warm nostalgic light, attachment, " + STYLE,
 }
 titles = {
     "title_a": "cinematic vallenato album cover background, dark moody, rain and warm streetlight glow, lots of empty negative space at the top for a title, premium, " + STYLE,

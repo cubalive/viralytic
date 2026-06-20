@@ -15,7 +15,7 @@ import { geminiImage } from '../src/ai/gemini-image';
 import { ff, probeDuration } from '../src/lib/ffmpeg';
 import { detectBeats } from '../src/beat/detect';
 import { ensureDir } from '../src/lib/files';
-import { ROOT } from '../src/config';
+import { ROOT, config } from '../src/config';
 import { log } from '../src/lib/log';
 
 const exec = promisify(execFile);
@@ -106,7 +106,52 @@ async function main() {
   const silent = path.join(dir, '_silent.mp4');
   let segs: string[] = []; let listFile = '';
 
-  if (LOOP) {
+  const LOOPBANK = path.resolve(ROOT, 'data', 'bank', 'vallenato-loops');
+  const bankExists = fs.existsSync(LOOPBANK) && fs.readdirSync(LOOPBANK).some((f) => f.endsWith('.mp4'));
+  const useBank = process.env.VALLENATO_VEO !== '1' && bankExists;
+
+  if (useBank) {
+    // === MODO BANCO (CERO Veo): selector por letra elige loops + título desde template J.J ===
+    const TITLEBANK = path.resolve(ROOT, 'data', 'bank', 'vallenato-titles');
+    try { await exec('python', ['py/pick_loops.py', dir], { cwd: ROOT, maxBuffer: 1 << 24 }); } catch (e) { log.warn('pick_loops: ' + (e as Error).message.slice(0, 60)); }
+    let sel: any = {}; try { sel = JSON.parse(fs.readFileSync(path.join(dir, 'loops.json'), 'utf8')); } catch {}
+    let loopFiles: string[] = (sel.loops || ['01_lluvia_calle', '06_ventana_lluvia', '03_silueta_carretera']).map((n: string) => path.join(LOOPBANK, n + '.mp4')).filter((f: string) => fs.existsSync(f));
+    if (!loopFiles.length) loopFiles = fs.readdirSync(LOOPBANK).filter((f) => f.endsWith('.mp4')).map((f) => path.join(LOOPBANK, f));
+    log.ok(`Banco (cero Veo): ${sel.etapa || ''} · ${loopFiles.map((f) => path.basename(f, '.mp4')).join(', ')}`);
+    const introWindow = Math.max(5, voiceStart);
+    const introSeg = path.join(dir, '_intro.mp4');
+    const loopSeg = path.join(dir, '_loopfill.mp4');
+    const esc = (s: string) => s.replace(/\\/g, '/').replace(/:/g, '\\:');
+    // INTRO: template de título + título de la canción + J.J (Ken Burns)
+    const titleImg = path.join(TITLEBANK, (sel.title === 'title_b' ? 'title_b' : 'title_a') + '.png');
+    const introImgBank = fs.existsSync(titleImg) ? titleImg : loopFiles[0];
+    const songTitle = (rd('title.txt') || slug.replace(/-/g, ' ')).toUpperCase();
+    const tFile = path.join(dir, '_title.txt'); fs.writeFileSync(tFile, songTitle, 'utf8');
+    const introFrames = Math.max(1, Math.round(introWindow * 30));
+    const drawT = `drawtext=fontfile='${esc(config.fonts.latin)}':textfile='${esc(tFile)}':fontcolor=white:fontsize=90:borderw=3:bordercolor=black@0.7:shadowcolor=black@0.6:shadowx=0:shadowy=4:x=(w-text_w)/2:y=h*0.34:line_spacing=12`;
+    const drawJ = `drawtext=fontfile='${esc(config.fonts.latin)}':text='J.J':fontcolor=0xFFD700:fontsize=58:borderw=2:bordercolor=black@0.7:x=(w-text_w)/2:y=h*0.60`;
+    if (/\.(mp4|mov|webm)$/i.test(introImgBank)) {
+      await ff(['-y', '-stream_loop', '-1', '-i', introImgBank, '-t', introWindow.toFixed(2), '-vf', `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,${drawT},${drawJ},format=yuv420p`, '-r', '30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', introSeg]);
+    } else {
+      const introVf = `scale=2304:1296:force_original_aspect_ratio=increase,crop=2304:1296,zoompan=z='min(1.0+0.0007*on,1.12)':d=${introFrames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1920x1080:fps=30,${drawT},${drawJ},format=yuv420p`;
+      await ff(['-loop', '1', '-i', introImgBank, '-t', introWindow.toFixed(2), '-vf', introVf, '-r', '30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', introSeg]);
+    }
+    // BODY: secuencia de loops del banco repetida hasta llenar la canción
+    const seqList = path.join(dir, '_seq.txt');
+    fs.writeFileSync(seqList, loopFiles.map((c) => `file '${path.resolve(c).replace(/\\/g, '/')}'`).join('\n'), 'utf8');
+    const seq = path.join(dir, '_seq.mp4');
+    await ff(['-y', '-f', 'concat', '-safe', '0', '-i', seqList, '-c', 'copy', seq]);
+    const bookend = dur > (introWindow * 2 + 3);
+    const loopFill = Math.max(1, dur - introWindow - (bookend ? introWindow : 0));
+    log.step(`Banco: rellenando ${loopFill.toFixed(0)}s con los loops${bookend ? ' (+ título al cierre)' : ''}…`);
+    await ff(['-y', '-stream_loop', '-1', '-i', seq, '-t', loopFill.toFixed(2), '-r', '30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', loopSeg]);
+    listFile = path.join(dir, '_list.txt');
+    const parts = bookend ? [introSeg, loopSeg, introSeg] : [introSeg, loopSeg];
+    fs.writeFileSync(listFile, parts.map((c) => `file '${path.resolve(c).replace(/\\/g, '/')}'`).join('\n'), 'utf8');
+    await ff(['-y', '-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', silent]);
+    segs.push(introSeg, loopSeg, seq);
+    try { fs.unlinkSync(seqList); fs.unlinkSync(tFile); } catch {}
+  } else if (LOOP) {
     if (!frame1 || !frame2) throw new Error('El visualizer necesita Imagen A e Imagen B (inicio y fin del loop)');
     const VEO = path.join(ROOT, 'py', 'veo_loop.py');
     const fileArg = (n: string) => fs.existsSync(path.join(dir, n)) ? path.join(dir, n) : '-';

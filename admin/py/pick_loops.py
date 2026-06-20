@@ -30,6 +30,13 @@ CATALOG = {
     "05_mar_calma": "mar en calma al amanecer, paz — cierre, paz, perdón, superación total",
     "06_ventana_lluvia": "lluvia en la ventana de noche, íntimo — recuerdo, nostalgia, lo que duele",
     "07_cuarto_vacio": "cuarto vacío con una silla, luz fría — abandono, ausencia, la casa que recuerda",
+    "08_bar_botella": "trago y botella en un bar oscuro — despecho, vicio, beber para olvidar, alcohol",
+    "09_pareja_lejos": "dos siluetas de pareja a lo lejos en la noche — celos, la vi con otro, comparación, humillación",
+    "10_lujo_vacio": "sala de lujo vacía con dinero en la mesa — éxito vacío, dinero y soledad",
+    "11_cama_vacia": "cama vacía de noche con luz de luna — insomnio, la cama no te olvida, soledad nocturna",
+    "12_telefono_noche": "teléfono brillando en la oscuridad con un chat — ansiedad digital, el chat, la llamada que no llegó",
+    "13_deseo_noche": "habitación íntima en penumbra roja/ámbar — deseo, mujer prohibida, tentación, conflicto",
+    "14_foto_mesa": "foto enmarcada sobre la mesa junto a una vela — apego visual, recuerdo, tu foto en la mesa",
 }
 cat_txt = "\n".join(f"- {k}: {v}" for k, v in CATALOG.items())
 

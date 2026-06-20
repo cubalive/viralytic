@@ -1,0 +1,159 @@
+{
+  "hechas": [
+    "La Silla Vacía",
+    "Te Fuiste y Me Quedé",
+    "Donde Dormía Tu Nombre"
+  ],
+  "proximas": [
+    {
+      "n": 4,
+      "t": "No Pregunten Por Ella",
+      "f": "vergüenza emocional"
+    },
+    {
+      "n": 5,
+      "t": "La Casa Sin Tu Risa",
+      "f": "ausencia familiar"
+    },
+    {
+      "n": 6,
+      "t": "El Último Beso Fue Mentira",
+      "f": "traición silenciosa"
+    },
+    {
+      "n": 7,
+      "t": "Me Dejaste Con La Noche",
+      "f": "soledad nocturna"
+    },
+    {
+      "n": 8,
+      "t": "Tu Foto En La Mesa",
+      "f": "apego visual"
+    },
+    {
+      "n": 9,
+      "t": "La Mujer Que Se Me Fue",
+      "f": "dolor clásico"
+    },
+    {
+      "n": 10,
+      "t": "Yo No Aprendí A Olvidarte",
+      "f": "amor no superado"
+    },
+    {
+      "n": 11,
+      "t": "El Trago No Cura",
+      "f": "vicio y despecho"
+    },
+    {
+      "n": 12,
+      "t": "La Vi Con Otro",
+      "f": "celos y humillación"
+    },
+    {
+      "n": 13,
+      "t": "La Llamada Que No Llegó",
+      "f": "ansiedad amorosa"
+    },
+    {
+      "n": 14,
+      "t": "El Amigo Que Traicionó",
+      "f": "rabia triste"
+    },
+    {
+      "n": 15,
+      "t": "La Calle Me Cambió",
+      "f": "transformación dura"
+    },
+    {
+      "n": 16,
+      "t": "Dinero y Soledad",
+      "f": "vacío con éxito"
+    },
+    {
+      "n": 17,
+      "t": "La Mujer Prohibida",
+      "f": "deseo y conflicto"
+    },
+    {
+      "n": 18,
+      "t": "Perdóname Tarde",
+      "f": "arrepentimiento"
+    },
+    {
+      "n": 19,
+      "t": "Volví Distinto",
+      "f": "renacimiento"
+    },
+    {
+      "n": 20,
+      "t": "El Último Adiós",
+      "f": "paz con dolor"
+    },
+    {
+      "n": 21,
+      "t": "No Era Amor, Era Costumbre",
+      "f": "despertar doloroso"
+    },
+    {
+      "n": 22,
+      "t": "Tu Nueva Vida Me Rompió La Mía",
+      "f": "comparación y celos"
+    },
+    {
+      "n": 23,
+      "t": "El Chat Que Nunca Cerré",
+      "f": "ansiedad digital"
+    },
+    {
+      "n": 24,
+      "t": "La Botella Sabe Tu Nombre",
+      "f": "despecho alcohólico"
+    },
+    {
+      "n": 25,
+      "t": "Mi Mejor Amigo También Te Miraba",
+      "f": "traición doble"
+    },
+    {
+      "n": 26,
+      "t": "Dinero En La Mesa, Nadie A Mi Lado",
+      "f": "éxito vacío"
+    },
+    {
+      "n": 27,
+      "t": "Una Noche Contigo Me Condenó",
+      "f": "deseo peligroso"
+    },
+    {
+      "n": 28,
+      "t": "Perdón Sin Dirección",
+      "f": "culpa sin respuesta"
+    },
+    {
+      "n": 29,
+      "t": "Ya No Soy El Que Lloraba",
+      "f": "reconstrucción"
+    },
+    {
+      "n": 30,
+      "t": "Me Fui Sin Odiarte",
+      "f": "cierre maduro"
+    },
+    {
+      "n": 31,
+      "t": "La Cama No Te Olvida",
+      "f": "insomnio romántico"
+    },
+    {
+      "n": 32,
+      "t": "La Risa Que Se Apagó",
+      "f": "ausencia emocional"
+    },
+    {
+      "n": 33,
+      "t": "El Día Que Me Soltaste",
+      "f": "ruptura interna"
+    }
+  ]
+}
