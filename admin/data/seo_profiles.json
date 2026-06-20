@@ -102,6 +102,16 @@
       "audience": "cristianos y personas que buscan fe, propósito, paz, disciplina y sanidad emocional; gente cansada de religión vacía pero abierta a Dios",
       "intent": "entender la Biblia para hoy + encontrar propósito y paz + sanar + levantarse y actuar con fe",
       "voice": "masculina profunda, pausada, con autoridad, espiritual-cinematográfica, motivadora sin gritar ni manipular"
+    },
+    "dormir-bebes": {
+      "type": "topic",
+      "brand": "Dormir Bebés",
+      "language": "es",
+      "madeForKids": false,
+      "niche": "canal de SLEEP MUSIC / música para dormir bebés: nanas y canciones de cuna relajantes en videos largos (5-8 horas) con PANTALLA NEGRA (el televisor se ve apagado, ideal para la noche, ahorra energía). Para calmar al bebé, conciliar el sueño profundo y crear un ambiente sereno.",
+      "audience": "padres y madres que buscan dormir a su bebé; familias con recién nacidos; también útil para sueño/relajación de adultos",
+      "intent": "dormir al bebé + sueño profundo y continuo toda la noche + relajación + ambiente tranquilo sin luz",
+      "voice": "instrumental suave, cálido, relajante; sin voz hablada"
     }
   }
 }

@@ -154,4 +154,10 @@ for sub, folder in [("fe", "Fe en la Vida Real"), ("dormir-bebes", "Dormir Bebes
         print(" ", (r.stdout or "").strip().split("\n")[-1] if r.stdout else "sync_e")
     except Exception as e:
         print("  sync_e err", str(e)[:60])
+
+# Vigilar crédito por proveedor y AVISAR POR EMAIL si alguno está por agotarse
+try:
+    r = run(["python", "py/check_balances.py"]); print(" ", (r.stdout or "").strip().split("\n")[-1] if r.stdout else "check_balances")
+except Exception as e:
+    print("  check_balances err", str(e)[:60])
 print("DONE cron")

@@ -293,6 +293,8 @@ http.createServer(async (req, res) => {
       const days = Object.entries(byDay).map(([d, v]) => ({ day: d, usd: +v.toFixed(4) })).sort((a, b) => a.day < b.day ? 1 : -1).slice(0, 30);
       return json(res, { total: +total.toFixed(4), total30: +total30.toFixed(4), count: rows.length, projects: mapArr(byProject, 'id'), providers: mapArr(byProvider, 'key'), kinds: mapArr(byKind, 'kind'), days, balances });
     }
+    if (u.pathname === '/api/alerts') { return json(res, readJson(path.join(ROOT, 'data', 'alerts.json'), { low: [], all: [] })); }
+    if (req.method === 'POST' && u.pathname === '/api/checkbalances') { const jb = runJob('checkbal', 'python', ['py/check_balances.py', '--force']); return json(res, { job: jb }); }
     if (u.pathname === '/api/balances') {
       const BF = path.join(ROOT, 'data', 'balances.json');
       if (req.method === 'POST') { const chk = []; for await (const c of req) chk.push(c); const b = JSON.parse(Buffer.concat(chk).toString() || '{}'); const cur = readJson(BF, { providers: [] }); if (Array.isArray(b.providers)) cur.providers = b.providers; fs.writeFileSync(BF, JSON.stringify(cur, null, 2)); return json(res, { ok: true, providers: cur.providers }); }
@@ -394,6 +396,7 @@ small{color:var(--mut)}@media(max-width:760px){.vgrid{grid-template-columns:repe
 <header><h1>getvirality · admin</h1>
 <div class=tabs><div class=tab data-t=proj>Proyectos</div><div class=tab data-t=canal>Canales</div><div class=tab data-t=cal>Calendario</div><div class=tab data-t=banco>🎬 Crear escena</div><div class=tab data-t=conex>🔌 Conexiones</div><div class=tab data-t=config>⚙️ Configuración</div><div class=tab data-t=stats>📊 Stats</div><div class=tab data-t=cuentas>🏦 Cuentas</div><div class=tab data-t=gastos>💰 Gastos</div></div><a onclick="fetch('/api/logout').then(()=>location.href='/')" style="cursor:pointer;color:#9aa;font-size:12px;white-space:nowrap;margin-left:10px">Salir ⏻</a></header>
 <div class=wrap>
+ <div id=alertbar></div>
  <section id=proj>
   <div class=panel><b>🎵 Subir canción y generar</b> <small>(pista + voz separada + letra .txt)</small>
    <div class=row><div><label>Proyecto</label><select id=mp></select></div><div><label>Slug / ID</label><input id=slug placeholder="ej: la-distancia"></div></div>
@@ -644,7 +647,11 @@ async function loadCosts(){
  // precios editables
  const rows=[];for(const prov of Object.keys(PRICING)){if(prov[0]==='_'||typeof PRICING[prov]!=='object')continue;for(const m of Object.keys(PRICING[prov])){const r=PRICING[prov][m];if(typeof r!=='object')continue;rows.push('<tr><td>'+prov+'</td><td>'+m+'</td><td>'+(r.per||'')+'</td><td><input data-pp="'+prov+'|'+m+'|usd" value="'+(r.usd!=null?r.usd:'')+'" style="width:90px"></td><td>'+('usd_in'in r?'<input data-pp="'+prov+'|'+m+'|usd_in" value="'+r.usd_in+'" style="width:90px">':'')+'</td></tr>');}}
  $('#pricebox').innerHTML='<table class=ctbl><tr><th>Proveedor</th><th>Modelo</th><th>Unidad</th><th>USD/unidad</th><th>USD/1k entrada</th></tr>'+rows.join('')+'</table>';
+ $('#costcards').insertAdjacentHTML('afterend','<div style="margin:8px 0"><button class=btn onclick="checkBalances()">✉️ Probar aviso de crédito</button> <span id=cbst></span> <small style="opacity:.7">— el sistema avisa por email a info@passkal.com cuando un crédito baja del umbral</small></div>');
+ loadAlerts();
 }
+async function loadAlerts(){try{const a=await (await fetch('/api/alerts')).json();const low=(a.low||[]).filter(x=>x.low);$('#alertbar').innerHTML=low.length?('<div style="background:#3a0d0d;border:1px solid #ff6b6b;border-radius:10px;padding:12px 16px;margin-bottom:12px;color:#ffd5d5"><b>⚠️ Crédito por agotarse:</b> '+low.map(x=>x.label+' ($'+x.remaining+')').join(' · ')+' — recarga o ese motor dejará de generar. <small style="opacity:.8">(se envió aviso por email)</small></div>'):'';}catch(e){}}
+async function checkBalances(){$('#cbst').innerHTML='<small>enviando prueba…</small>';const r=await (await fetch('/api/checkbalances',{method:'POST'})).json();if(r.error){$('#cbst').innerHTML='<small>❌ '+r.error+'</small>';return;}const t=setInterval(async()=>{const j=await (await fetch('/api/job?id='+r.job)).json();if(j.done){clearInterval(t);$('#cbst').innerHTML='<small>'+(j.code===0?'✅ revisado (si algún crédito está bajo, se envió email)':'⚠️ error')+'</small>';loadAlerts();}},1500);}
 async function saveBalances(){BAL.providers.forEach((p,i)=>{const el=document.querySelector('[data-bk="'+i+'"]');if(el)p.credit=parseFloat(el.value)||0;});await fetch('/api/balances',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(BAL)});$('#balst').innerHTML='<small>✅ guardado</small>';loadCosts();}
 async function savePricing(){document.querySelectorAll('[data-pp]').forEach(el=>{const[prov,m,f]=el.dataset.pp.split('|');if(PRICING[prov]&&PRICING[prov][m])PRICING[prov][m][f]=parseFloat(el.value)||0;});await fetch('/api/pricing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(PRICING)});$('#prst').innerHTML='<small>✅ precios guardados</small>';}
 // Persistencia: guarda/restaura todos los campos de texto y selects en localStorage (los archivos no se pueden guardar por seguridad del navegador).
@@ -662,4 +669,5 @@ function persistInputs(){
   try{const tb=localStorage.getItem('tab');if(tb){const el=[...document.querySelectorAll('.tab')].find(x=>x.dataset.t===tb);if(el)el.click();}}catch(e){}
 }
 init().then(persistInputs);
+loadAlerts();
 </script>`;

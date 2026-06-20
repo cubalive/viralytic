@@ -93,7 +93,11 @@ for f, when in zip(pend, slotsdt):
         done.add(f); scheduled += 1
         print(f"  📅 {iso}  {title[:50]}")
     else:
-        print(f"  ⚠️ no programado: {os.path.basename(os.path.dirname(f))} · {(r.stderr or r.stdout or '')[-120:]}")
+        err = (r.stderr or r.stdout or "")
+        if re.search(r"quota|403|exceeded", err, re.I):
+            print(f"  ⛔ CUOTA de YouTube agotada — paro de programar. Quedan {len(pend)-scheduled} en backlog (el cron diario los publicará).")
+            break
+        print(f"  ⚠️ no programado: {os.path.basename(os.path.dirname(f))} · {err[-120:]}")
 
 json.dump(CAL, open(CALF, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 print(f"✅ [{cid}] {scheduled} videos PROGRAMADOS en 7 días (publishAt). Backlog restante: {len(pending())}")

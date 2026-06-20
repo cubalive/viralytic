@@ -1,22 +1,26 @@
 {
-  "_note": "Saldo/crédito disponible por proveedor (USD). Edítalo desde 💰 Gastos. El sistema resta lo gastado.",
+  "_note": "Saldo/crédito disponible por proveedor (USD). Edítalo desde 💰 Gastos. El sistema resta lo gastado. alertAt = avisar por email cuando el saldo restante baje de ese valor.",
+  "alertEmail": "info@passkal.com",
   "providers": [
     {
       "key": "veo",
       "label": "Veo / Vertex (Google Cloud)",
       "credit": 250,
+      "alertAt": 30,
       "note": "crédito proyecto zuri-499408"
     },
     {
       "key": "openai",
       "label": "OpenAI (gpt-image · gpt-4o · whisper)",
       "credit": 12,
+      "alertAt": 3,
       "note": ""
     },
     {
       "key": "elevenlabs",
       "label": "ElevenLabs (voz)",
       "credit": 33,
+      "alertAt": 5,
       "note": ""
     }
   ]
