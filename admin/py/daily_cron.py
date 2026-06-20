@@ -55,6 +55,13 @@ for p in [pp for g in REG["groups"] for pp in g["projects"] if pp.get("kind") ==
         r = run(["python", "py/gen_dormir_bebes.py", "8"])
         print("  ", "ok" if r.returncode == 0 else f"err {r.stderr[-200:] if r.stderr else ''}")
 
+# Fe en la Vida Real: motor autónomo (Shorts cristianos, voz hombre profundo). Auto-genera si backlog < 3.
+for p in [pp for g in REG["groups"] for pp in g["projects"] if pp.get("id") == "fe" and not pp.get("paused")]:
+    if len(pend_of(p)) < 3:
+        print("== auto-generando Fe en la Vida Real (3 shorts)")
+        r = run(["npx", "tsx", "scripts/gen-fe.ts", "3"])
+        print("  ", "ok" if r.returncode == 0 else f"err {r.stderr[-200:] if r.stderr else ''}")
+
 # Música real (Zuri/Vallenato): el motor NECESITA una canción; no se puede auto-crear.
 # Avisar cuando un canal de música se quede sin backlog (para subir canción / decidir AI-music).
 for g in REG["groups"]:
@@ -93,6 +100,20 @@ for g in REG["groups"]:
         kind = p.get("kind", "")
         if kind == "faceless":
             if p["id"] == "claseo": print("  claseo: lo maneja su tarea propia (ClaseoShowDaily), salto"); continue
+            if p["id"] == "fe":
+                # Fe en la Vida Real: publica hasta 3/día desde el backlog con su título SEO.
+                lang = p.get("lang", "es")
+                pend = [f for f in products(p["outputsDir"], p.get("filter")) if f not in done_files]
+                for f in pend[:3]:
+                    dd = os.path.dirname(f)
+                    tfile = absf(os.path.join(dd, f"{lang}_title.txt"))
+                    title = open(tfile, encoding="utf-8").read().strip() if os.path.exists(tfile) else "Fe en la Vida Real"
+                    desc = absf(os.path.join(dd, f"{lang}_desc.txt")); tags = absf(os.path.join(dd, f"{lang}_tags.txt"))
+                    r = run(["python", "py/yt_schedule.py", tf, absf(f), "now", lang, title, desc if os.path.exists(desc) else "-", tags if os.path.exists(tags) else "-", ""])
+                    m = re.search(r'\{"id".*?\}', r.stdout or "")
+                    if m:
+                        j = json.loads(m.group(0)); CAL.append({"project": "fe", "channel": p["name"], "file": f, "videoId": j["id"], "url": j["url"], "when": now.isoformat(), "privacy": j.get("privacy"), "title": title, "ts": now.isoformat()}); done_files.add(f); print("  publicado", f)
+                continue
             run(["npx", "tsx", "scripts/admin.ts", p["id"], "5"]); print("  faceless gen+pub 5")
         elif kind == "edu":
             # SabiKids: admin.ts sabikids publica los 4 idiomas (ES/EN/IT/ZH) round-robin desde el backlog.

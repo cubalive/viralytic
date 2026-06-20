@@ -39,41 +39,69 @@
     }
   },
   "channels": {
-    "vallenato": { "brand": "Vallenatos para Curar el Alma", "handle": "@vallenatoinc" },
+    "vallenato": {
+      "brand": "Vallenatos para Curar el Alma",
+      "handle": "@vallenatoinc"
+    },
     "wealth": {
-      "type": "topic", "brand": "World Wealth Mindset", "language": "en", "madeForKids": false,
+      "type": "topic",
+      "brand": "World Wealth Mindset",
+      "language": "en",
+      "madeForKids": false,
       "niche": "wealth psychology, money mindset and the habits and mentality of millionaires and high achievers; practical financial education and the inner game of building wealth",
       "audience": "ambitious adults who want financial freedom and a millionaire mindset",
       "intent": "learn + be inspired + invest + improve money mindset",
       "voice": "confident, authoritative, motivational, data-informed"
     },
     "kat-es": {
-      "type": "topic", "brand": "Katharsis Oficial", "language": "es", "madeForKids": false,
+      "type": "topic",
+      "brand": "Katharsis Oficial",
+      "language": "es",
+      "madeForKids": false,
       "niche": "consciencia, despertar espiritual, autoconocimiento y transformación interior; reflexiones profundas sobre la mente, el ego y el sentido de la vida",
       "audience": "adultos hispanohablantes en un camino de despertar y crecimiento interior",
       "intent": "inspirar + reflexionar + aprender",
       "voice": "profunda, reflexiva, poética, serena"
     },
     "kat-en": {
-      "type": "topic", "brand": "Katharsis Code", "language": "en", "madeForKids": false,
+      "type": "topic",
+      "brand": "Katharsis Code",
+      "language": "en",
+      "madeForKids": false,
       "niche": "consciousness, awakening, self-knowledge and inner transformation; deep reflections on the mind, the ego and the meaning of life",
       "audience": "English-speaking adults seeking awakening and inner growth",
       "intent": "inspire + reflect + learn",
       "voice": "deep, reflective, poetic, calm"
     },
     "claseo": {
-      "type": "topic", "brand": "ClaseoShow", "language": "es", "madeForKids": false,
+      "type": "topic",
+      "brand": "ClaseoShow",
+      "language": "es",
+      "madeForKids": false,
       "niche": "empoderamiento femenino — un refugio para mujeres en situaciones duras (embarazo en soledad, abandono de pareja, madres solteras, baja autoestima, relaciones tóxicas, independencia económica). Cada video nombra un problema real, valida el dolor y entrega una salida concreta y empoderamiento ('sí se puede, vas a renacer'). NO reemplaza ayuda profesional.",
       "audience": "mujeres hispanohablantes que atraviesan momentos difíciles y buscan fuerza, compañía y soluciones",
       "intent": "sentirse acompañada + encontrar una salida + empoderarse + sanar",
       "voice": "cercana de amiga, cálida pero firme, real y esperanzadora, sin lástima ni promesas falsas"
     },
     "signal": {
-      "type": "topic", "brand": "Signal From The Future", "language": "en", "madeForKids": false,
+      "type": "topic",
+      "brand": "Signal From The Future",
+      "language": "en",
+      "madeForKids": false,
       "niche": "technology, the future, artificial intelligence and finance — decoding what is coming next and how it changes money, work and life",
       "audience": "curious adults into tech, the future, AI and money",
       "intent": "learn + be inspired + stay ahead",
       "voice": "futuristic, sharp, cinematic, insightful"
+    },
+    "fe": {
+      "type": "topic",
+      "brand": "Fe en la Vida Real",
+      "language": "es",
+      "madeForKids": false,
+      "niche": "canal cristiano que explica la BIBLIA aplicada a la vida real de forma moderna, profunda, emocional y práctica. Cada mensaje responde una pregunta humana (ansiedad, propósito, disciplina, familia, dinero, tentación, soledad, heridas, decisiones, carácter, fe) con un puente bíblico y aplicación concreta. Voz propia, NO sermones reciclados, NO evangelio de prosperidad, NO frases religiosas vacías.",
+      "audience": "cristianos y personas que buscan fe, propósito, paz, disciplina y sanidad emocional; gente cansada de religión vacía pero abierta a Dios",
+      "intent": "entender la Biblia para hoy + encontrar propósito y paz + sanar + levantarse y actuar con fe",
+      "voice": "masculina profunda, pausada, con autoridad, espiritual-cinematográfica, motivadora sin gritar ni manipular"
     }
   }
 }

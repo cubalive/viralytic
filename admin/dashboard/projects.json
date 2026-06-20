@@ -242,6 +242,24 @@
           "ytToken": "data/youtube/tokens/dormir-bebes.json"
         }
       ]
+    },
+    {
+      "key": "fe",
+      "title": "✝️ Fe en la Vida Real (cristiano, Shorts — auto-genera)",
+      "projects": [
+        {
+          "id": "fe",
+          "name": "Fe en la Vida Real",
+          "handle": "",
+          "kind": "faceless",
+          "lang": "es",
+          "desc": "Canal cristiano: la Biblia aplicada a la vida real. Shorts 9:16, voz hombre profundo, visual cinematográfico. Auto-genera + publica.",
+          "cmd": "npx tsx scripts/gen-fe.ts {n}",
+          "outputsDir": "data/output/fe",
+          "channel": "data/youtube/channel_fe.json",
+          "ytToken": "data/youtube/tokens/fe.json"
+        }
+      ]
     }
   ]
 }
