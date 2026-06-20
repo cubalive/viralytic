@@ -31,6 +31,30 @@ def products(dirr, filt):
     return sorted(out)
 def run(a): return subprocess.run(a, cwd=ADMIN, capture_output=True, text=True)
 
+# === AUTO-RELLENADO: genera contenido cuando el backlog está bajo, SIN intervención ===
+# SabiKids tiene motor autónomo (sabikids-daily.ts: remixes cero-Veo + compilación).
+# Si el idioma con menos pendientes baja del umbral, genera más solo.
+SABI_MIN = 10
+def pend_of(p): return [f for f in products(p.get("outputsDir", ""), p.get("filter")) if f not in done_files]
+sabi = [p for g in REG["groups"] for p in g["projects"]
+        if p.get("kind") in ("edu", "edu-view") and os.path.exists(absf(p.get("ytToken", "")))]
+if sabi:
+    mins = min(len(pend_of(p)) for p in sabi)
+    if mins < SABI_MIN:
+        print(f"== auto-rellenado SabiKids: backlog bajo ({mins} mín) -> generando (cero Veo)")
+        r = run(["npx", "tsx", "scripts/sabikids-daily.ts", "3"])
+        print("  ", "ok" if r.returncode == 0 else f"err {r.stderr[-200:] if r.stderr else ''}")
+    else:
+        print(f"== SabiKids backlog OK ({mins} mín por idioma), no hace falta generar")
+
+# Música real (Zuri/Vallenato): el motor NECESITA una canción; no se puede auto-crear.
+# Avisar cuando un canal de música se quede sin backlog (para subir canción / decidir AI-music).
+for g in REG["groups"]:
+    for p in g["projects"]:
+        if p.get("kind") in ("music-zuri", "music-vallenato") and os.path.exists(absf(p.get("ytToken", ""))):
+            if not pend_of(p):
+                print(f"!! {p['id']}: SIN backlog — necesita canción (no se auto-genera música)")
+
 for g in REG["groups"]:
     for p in g["projects"]:
         tf = absf(p.get("ytToken", ""))
