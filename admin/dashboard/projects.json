@@ -233,7 +233,7 @@
         {
           "id": "dormir-bebes",
           "name": "Dormir Bebés",
-          "handle": "",
+          "handle": "@DormirBabyMusic",
           "kind": "music-sleep",
           "lang": "es",
           "desc": "Sleep music: 1 pista en loop 8h, PANTALLA NEGRA. Auto-genera (cero Veo) + publica.",
