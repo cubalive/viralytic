@@ -7,7 +7,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 // ADMIN_TUNNEL_URL permite re-apuntar el túnel sin tocar código (vercel env + redeploy).
 const ADMIN =
   process.env.ADMIN_TUNNEL_URL ||
-  'https://angel-muslim-proven-professional.trycloudflare.com';
+  'https://admin.getviralytic.com';
 
 export function middleware(_request: NextRequest) {
   return NextResponse.redirect(ADMIN, 307);
