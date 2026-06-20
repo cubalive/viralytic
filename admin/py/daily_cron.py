@@ -55,11 +55,12 @@ for p in [pp for g in REG["groups"] for pp in g["projects"] if pp.get("kind") ==
         r = run(["python", "py/gen_dormir_bebes.py", "8"])
         print("  ", "ok" if r.returncode == 0 else f"err {r.stderr[-200:] if r.stderr else ''}")
 
-# Fe en la Vida Real: motor autónomo (Shorts cristianos, voz hombre profundo). Auto-genera si backlog < 3.
+# Fe Vida Real: motor de SERMONES 16:9 (voz Yovanny) + reels 9:16. Auto-genera si hay < 2 sermones pendientes.
 for p in [pp for g in REG["groups"] for pp in g["projects"] if pp.get("id") == "fe" and not pp.get("paused")]:
-    if len(pend_of(p)) < 3:
-        print("== auto-generando Fe en la Vida Real (3 shorts)")
-        r = run(["npx", "tsx", "scripts/gen-fe.ts", "3"])
+    sermons_pend = len([f for f in pend_of(p) if os.path.basename(f) == "video.mp4"])
+    if sermons_pend < 2:
+        print("== auto-generando Fe Vida Real (sermón 16:9 + reels)")
+        r = run(["npx", "tsx", "scripts/gen-sermon.ts", "1"])
         print("  ", "ok" if r.returncode == 0 else f"err {r.stderr[-200:] if r.stderr else ''}")
 
 # Música real (Zuri/Vallenato): el motor NECESITA una canción; no se puede auto-crear.
@@ -101,13 +102,22 @@ for g in REG["groups"]:
         if kind == "faceless":
             if p["id"] == "claseo": print("  claseo: lo maneja su tarea propia (ClaseoShowDaily), salto"); continue
             if p["id"] == "fe":
-                # Fe en la Vida Real: publica hasta 3/día desde el backlog con su título SEO.
+                # Fe Vida Real: publica 1 SERMÓN 16:9 (video.mp4) + sus 3 reels 9:16 (reel_*.mp4) del día.
                 lang = p.get("lang", "es")
-                pend = [f for f in products(p["outputsDir"], p.get("filter")) if f not in done_files]
-                for f in pend[:3]:
+                allp = [f for f in products(p["outputsDir"], None) if f not in done_files]
+                sermons = [f for f in allp if os.path.basename(f) == "video.mp4"]
+                reels = [f for f in allp if re.match(r"reel_\d+\.mp4$", os.path.basename(f))]
+                for f in sermons[:1] + reels[:3]:
                     dd = os.path.dirname(f)
-                    tfile = absf(os.path.join(dd, f"{lang}_title.txt"))
-                    title = open(tfile, encoding="utf-8").read().strip() if os.path.exists(tfile) else "Fe en la Vida Real"
+                    base = open(absf(os.path.join(dd, f"{lang}_title.txt")), encoding="utf-8").read().strip() if os.path.exists(absf(os.path.join(dd, f"{lang}_title.txt"))) else "Fe Vida Real"
+                    mb = re.match(r"reel_(\d+)\.mp4$", os.path.basename(f))
+                    if mb:  # reel: título = gancho del guion + #Shorts
+                        gj = J(os.path.join(dd, "guion.json"), {}); rls = gj.get("reels", [])
+                        ri = int(mb.group(1)) - 1
+                        hook = rls[ri].get("titulo", "") if 0 <= ri < len(rls) else ""
+                        title = ((hook or base)[:84] + " #Shorts")
+                    else:
+                        title = base
                     desc = absf(os.path.join(dd, f"{lang}_desc.txt")); tags = absf(os.path.join(dd, f"{lang}_tags.txt"))
                     r = run(["python", "py/yt_schedule.py", tf, absf(f), "now", lang, title, desc if os.path.exists(desc) else "-", tags if os.path.exists(tags) else "-", ""])
                     m = re.search(r'\{"id".*?\}', r.stdout or "")

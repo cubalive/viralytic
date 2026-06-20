@@ -172,7 +172,7 @@ http.createServer(async (req, res) => {
     if (u.pathname === '/api/mvstatus') { return json(res, readJson(path.join(ROOT, 'data', 'youtube', 'mv_status.json'), { syncedAt: null, totals: {}, channels: [] })); }
     if (u.pathname === '/api/mvstatussync') { const jb = runJob('mvstatus', 'python', ['py/mv_status.py']); return json(res, { job: jb }); }
     if (u.pathname === '/api/job') { const j = jobs.get(Number(u.searchParams.get('id'))); return j ? json(res, { done: j.done, code: j.code, log: j.log.join('') }) : json(res, { error: 'no job' }, 404); }
-    if (u.pathname === '/file') { const rel = u.searchParams.get('p') || ''; const a = path.join(ROOT, rel); if (!a.startsWith(ROOT) || !a.endsWith('.mp4') || !fs.existsSync(a)) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': 'video/mp4' }); return fs.createReadStream(a).pipe(res); }
+    if (u.pathname === '/file') { const rel = u.searchParams.get('p') || ''; const a = path.join(ROOT, rel); const ext = a.endsWith('.mp3') ? 'audio/mpeg' : a.endsWith('.mp4') ? 'video/mp4' : null; if (!a.startsWith(ROOT) || !ext || !fs.existsSync(a)) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': ext }); return fs.createReadStream(a).pipe(res); }
     if (req.method === 'POST' && u.pathname === '/api/upload') {
       const m = (req.headers['content-type'] || '').match(/boundary=(.+)$/); if (!m) return json(res, { error: 'no boundary' }, 400);
       const ch = []; for await (const c of req) ch.push(c); const { fields, files } = parseMultipart(Buffer.concat(ch), m[1]);
