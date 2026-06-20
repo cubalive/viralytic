@@ -31,7 +31,7 @@ loops = {
     "10_lujo_vacio": "an elegant empty luxury living room at night with money on a glass table, success but lonely, cold light, " + STYLE,
     "11_cama_vacia": "an empty unmade bed in a dark bedroom at night with soft moonlight, insomnia, longing, " + STYLE,
     "12_telefono_noche": "a smartphone glowing in the dark on a table showing a chat, late night, anxiety, " + STYLE,
-    "13_deseo_noche": "a dim intimate bedroom in red and amber low light, tension and forbidden desire, cinematic, " + STYLE,
+    "13_deseo_noche": "a half-open door with warm amber light spilling into a dark hallway at night, mysterious tense atmosphere, secret, cinematic, " + STYLE,
     "14_foto_mesa": "a framed photo standing on a table next to a candle, warm nostalgic light, attachment, " + STYLE,
 }
 titles = {
