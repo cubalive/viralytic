@@ -51,12 +51,13 @@ if sabi:
 # Avisar cuando un canal de música se quede sin backlog (para subir canción / decidir AI-music).
 for g in REG["groups"]:
     for p in g["projects"]:
-        if p.get("kind") in ("music-zuri", "music-vallenato") and os.path.exists(absf(p.get("ytToken", ""))):
+        if p.get("kind") in ("music-zuri", "music-vallenato") and not p.get("paused") and os.path.exists(absf(p.get("ytToken", ""))):
             if not pend_of(p):
                 print(f"!! {p['id']}: SIN backlog — necesita canción (no se auto-genera música)")
 
 for g in REG["groups"]:
     for p in g["projects"]:
+        if p.get("paused"): continue  # canal en pausa: no publicar ni generar
         tf = absf(p.get("ytToken", ""))
         if not tf or not os.path.exists(tf): continue
         t = J(tf, {})

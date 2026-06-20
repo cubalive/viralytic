@@ -5,77 +5,225 @@
       "key": "zuri",
       "title": "🎵 Zuri — 7 canales (sube pista + voz + letra)",
       "projects": [
-        { "id": "zuri-es", "name": "Zuri Rockstar · Español", "handle": "@ZuriRockstar", "kind": "music-zuri", "lang": "es",
+        {
+          "id": "zuri-es",
+          "name": "Zuri Rockstar · Español",
+          "handle": "@ZuriRockstar",
+          "kind": "music-zuri",
+          "lang": "es",
           "desc": "Video musical infantil desde el banco (karaoke acústico + capítulos).",
-          "outputsDir": "data/output/zuri/es", "channel": "data/youtube/channel_zuri-es.json", "ytToken": "C:/Users/alain/.secrets/yt-token-es.json" },
-        { "id": "zuri-en", "name": "Zuri RockStar · English", "handle": "@ZuriRockStarEnglish", "kind": "music-zuri", "lang": "en",
+          "outputsDir": "data/output/zuri/es",
+          "channel": "data/youtube/channel_zuri-es.json",
+          "ytToken": "C:/Users/alain/.secrets/yt-token-es.json"
+        },
+        {
+          "id": "zuri-en",
+          "name": "Zuri RockStar · English",
+          "handle": "@ZuriRockStarEnglish",
+          "kind": "music-zuri",
+          "lang": "en",
           "desc": "Kids music video from the reusable bank (acoustic karaoke + chapters).",
-          "outputsDir": "data/output/zuri/en", "channel": "data/youtube/channel_zuri-en.json", "ytToken": "C:/Users/alain/.secrets/yt-token-en.json" },
-        { "id": "zuri-zh", "name": "祖瑞摇滚秀 · 中文", "handle": "@祖瑞", "kind": "music-zuri", "lang": "zh",
+          "outputsDir": "data/output/zuri/en",
+          "channel": "data/youtube/channel_zuri-en.json",
+          "ytToken": "C:/Users/alain/.secrets/yt-token-en.json"
+        },
+        {
+          "id": "zuri-zh",
+          "name": "祖瑞摇滚秀 · 中文",
+          "handle": "@祖瑞",
+          "kind": "music-zuri",
+          "lang": "zh",
           "desc": "儿童音乐视频（来自素材库 + 卡拉OK字幕）。",
-          "outputsDir": "data/output/zuri/zh", "channel": "data/youtube/channel_zuri-zh.json", "ytToken": "C:/Users/alain/.secrets/yt-token-zh.json" },
-        { "id": "zuri-hi", "name": "Zuri HINDI 🇮🇳 — ज़ूरीम्यूज़िक (हिन्दी / Devanagari)", "handle": "@ZuriHindi", "kind": "music-zuri", "lang": "hi",
+          "outputsDir": "data/output/zuri/zh",
+          "channel": "data/youtube/channel_zuri-zh.json",
+          "ytToken": "C:/Users/alain/.secrets/yt-token-zh.json"
+        },
+        {
+          "id": "zuri-hi",
+          "name": "Zuri HINDI 🇮🇳 — ज़ूरीम्यूज़िक (हिन्दी / Devanagari)",
+          "handle": "@ZuriHindi",
+          "kind": "music-zuri",
+          "lang": "hi",
           "desc": "हिंदी में ज़ूरी का संगीत वीडियो (कैरोकी सबटाइटल).",
-          "outputsDir": "data/output/zuri/hi", "channel": "data/youtube/channel_zuri-hi.json", "ytToken": "C:/Users/alain/.secrets/yt-token-hi.json" },
-        { "id": "zuri-pa", "name": "Zuri PUNJABI 🇮🇳 — ਜ਼ੂਰੀਮਿਊਜ਼ਿਕ (ਪੰਜਾਬੀ / Gurmukhi)", "handle": "@ZuriPunjabi", "kind": "music-zuri", "lang": "pa",
+          "outputsDir": "data/output/zuri/hi",
+          "channel": "data/youtube/channel_zuri-hi.json",
+          "ytToken": "C:/Users/alain/.secrets/yt-token-hi.json",
+          "paused": true
+        },
+        {
+          "id": "zuri-pa",
+          "name": "Zuri PUNJABI 🇮🇳 — ਜ਼ੂਰੀਮਿਊਜ਼ਿਕ (ਪੰਜਾਬੀ / Gurmukhi)",
+          "handle": "@ZuriPunjabi",
+          "kind": "music-zuri",
+          "lang": "pa",
           "desc": "ਪੰਜਾਬੀ ਵਿੱਚ ਜ਼ੂਰੀ ਦਾ ਸੰਗੀਤ ਵੀਡੀਓ (ਕੈਰਾਓਕੇ).",
-          "outputsDir": "data/output/zuri/pa", "channel": "data/youtube/channel_zuri-pa.json", "ytToken": "C:/Users/alain/.secrets/yt-token-pa.json" },
-        { "id": "zuri-pt", "name": "Zuri RockStar Show · Português", "handle": "@ZuriRockStarShowPortugues", "kind": "music-zuri", "lang": "pt",
+          "outputsDir": "data/output/zuri/pa",
+          "channel": "data/youtube/channel_zuri-pa.json",
+          "ytToken": "C:/Users/alain/.secrets/yt-token-pa.json",
+          "paused": true
+        },
+        {
+          "id": "zuri-pt",
+          "name": "Zuri RockStar Show · Português",
+          "handle": "@ZuriRockStarShowPortugues",
+          "kind": "music-zuri",
+          "lang": "pt",
           "desc": "Vídeo musical infantil da Zuri (karaokê + capítulos).",
-          "outputsDir": "data/output/zuri/pt", "channel": "data/youtube/channel_zuri-pt.json", "ytToken": "C:/Users/alain/.secrets/yt-token-pt.json" },
-        { "id": "zuri-it", "name": "Zuri RokStar Show · Italia", "handle": "@ZuriRokStarShowItalia", "kind": "music-zuri", "lang": "it",
+          "outputsDir": "data/output/zuri/pt",
+          "channel": "data/youtube/channel_zuri-pt.json",
+          "ytToken": "C:/Users/alain/.secrets/yt-token-pt.json",
+          "paused": true
+        },
+        {
+          "id": "zuri-it",
+          "name": "Zuri RokStar Show · Italia",
+          "handle": "@ZuriRokStarShowItalia",
+          "kind": "music-zuri",
+          "lang": "it",
           "desc": "Video musicale per bambini di Zuri (karaoke + capitoli).",
-          "outputsDir": "data/output/zuri/it", "channel": "data/youtube/channel_zuri-it.json", "ytToken": "C:/Users/alain/.secrets/yt-token-it.json" }
+          "outputsDir": "data/output/zuri/it",
+          "channel": "data/youtube/channel_zuri-it.json",
+          "ytToken": "C:/Users/alain/.secrets/yt-token-it.json",
+          "paused": true
+        }
       ]
     },
     {
       "key": "vallenato",
       "title": "🪗 Vallenato (sube pista + voz + letra)",
       "projects": [
-        { "id": "vallenato", "name": "Vallenatos para Curar el Alma", "handle": "@vallenatoinc", "kind": "music-vallenato", "lang": "es",
+        {
+          "id": "vallenato",
+          "name": "Vallenatos para Curar el Alma",
+          "handle": "@vallenatoinc",
+          "kind": "music-vallenato",
+          "lang": "es",
           "desc": "Visualizer 16:9 (Ken Burns + soundwave + karaoke) + 2-3 Shorts 9:16 (coro + mejores partes).",
-          "outputsDir": "data/vallenato", "channel": "data/youtube/channel_vallenato.json", "ytToken": "data/youtube/tokens/vallenato.json" }
+          "outputsDir": "data/vallenato",
+          "channel": "data/youtube/channel_vallenato.json",
+          "ytToken": "data/youtube/tokens/vallenato.json"
+        }
       ]
     },
     {
       "key": "faceless",
       "title": "🎯 Faceless (generación por lotes — 5/día)",
       "projects": [
-        { "id": "wealth", "name": "World Wealth Mindset", "handle": "", "kind": "faceless", "lang": "en",
-          "desc": "Shorts faceless de mentalidad financiera.", "cmd": "npx tsx scripts/admin.ts wealth {n}",
-          "outputsDir": "data/output/wealth", "channel": "data/youtube/channel_wealth.json", "ytToken": "data/youtube/tokens/wealth.json" },
-        { "id": "kat-es", "name": "Katharsis Oficial", "handle": "", "kind": "faceless", "lang": "es",
-          "desc": "Shorts faceless de consciencia/despertar.", "cmd": "npx tsx scripts/admin.ts kat-es {n}",
-          "outputsDir": "data/output/awakening", "channel": "data/youtube/channel_kat-es.json", "ytToken": "data/youtube/tokens/kat-es.json" },
-        { "id": "kat-en", "name": "Katharsis Code", "handle": "", "kind": "faceless", "lang": "en",
-          "desc": "Faceless awakening shorts (EN).", "cmd": "npx tsx scripts/admin.ts kat-en {n}",
-          "outputsDir": "data/output/awakening-en", "channel": "data/youtube/channel_kat-en.json", "ytToken": "data/youtube/tokens/kat-en.json" },
-        { "id": "signal", "name": "Signal From The Future", "handle": "", "kind": "faceless", "lang": "en",
-          "desc": "Faceless tech/future/finance shorts.", "cmd": "npx tsx scripts/admin.ts signal {n}",
-          "outputsDir": "data/output/signal", "channel": "data/youtube/channel_signal.json", "ytToken": "data/youtube/tokens/signal.json" },
-        { "id": "claseo", "name": "ClaseoShow", "handle": "@ClaseoShow", "kind": "faceless", "lang": "es",
+        {
+          "id": "wealth",
+          "name": "World Wealth Mindset",
+          "handle": "",
+          "kind": "faceless",
+          "lang": "en",
+          "desc": "Shorts faceless de mentalidad financiera.",
+          "cmd": "npx tsx scripts/admin.ts wealth {n}",
+          "outputsDir": "data/output/wealth",
+          "channel": "data/youtube/channel_wealth.json",
+          "ytToken": "data/youtube/tokens/wealth.json"
+        },
+        {
+          "id": "kat-es",
+          "name": "Katharsis Oficial",
+          "handle": "",
+          "kind": "faceless",
+          "lang": "es",
+          "desc": "Shorts faceless de consciencia/despertar.",
+          "cmd": "npx tsx scripts/admin.ts kat-es {n}",
+          "outputsDir": "data/output/awakening",
+          "channel": "data/youtube/channel_kat-es.json",
+          "ytToken": "data/youtube/tokens/kat-es.json"
+        },
+        {
+          "id": "kat-en",
+          "name": "Katharsis Code",
+          "handle": "",
+          "kind": "faceless",
+          "lang": "en",
+          "desc": "Faceless awakening shorts (EN).",
+          "cmd": "npx tsx scripts/admin.ts kat-en {n}",
+          "outputsDir": "data/output/awakening-en",
+          "channel": "data/youtube/channel_kat-en.json",
+          "ytToken": "data/youtube/tokens/kat-en.json"
+        },
+        {
+          "id": "signal",
+          "name": "Signal From The Future",
+          "handle": "",
+          "kind": "faceless",
+          "lang": "en",
+          "desc": "Faceless tech/future/finance shorts.",
+          "cmd": "npx tsx scripts/admin.ts signal {n}",
+          "outputsDir": "data/output/signal",
+          "channel": "data/youtube/channel_signal.json",
+          "ytToken": "data/youtube/tokens/signal.json"
+        },
+        {
+          "id": "claseo",
+          "name": "ClaseoShow",
+          "handle": "@ClaseoShow",
+          "kind": "faceless",
+          "lang": "es",
           "desc": "Empoderamiento femenino — videos 9:16 con voz de mujer: situaciones reales (embarazo en soledad, abandono, madre soltera, autoestima, relaciones tóxicas) → solución y empoderamiento.",
           "cmd": "npx tsx scripts/gen-claseo.ts {n}",
-          "outputsDir": "data/output/claseo", "channel": "data/youtube/channel_claseo.json", "ytToken": "data/youtube/tokens/claseo.json" }
+          "outputsDir": "data/output/claseo",
+          "channel": "data/youtube/channel_claseo.json",
+          "ytToken": "data/youtube/tokens/claseo.json"
+        }
       ]
     },
     {
       "key": "edu",
       "title": "🦉 SabiKids — 4 canales educativos",
       "projects": [
-        { "id": "sabi-es", "name": "Sabi Kids · Español", "handle": "@SabiKids", "kind": "edu", "lang": "es",
+        {
+          "id": "sabi-es",
+          "name": "Sabi Kids · Español",
+          "handle": "@SabiKids",
+          "kind": "edu",
+          "lang": "es",
           "desc": "Reels educativos (animales, colores, números…). Genera los 4 idiomas: botón abajo.",
-          "cmd": "npx tsx scripts/admin.ts sabikids {n}", "filter": "reel_es",
-          "outputsDir": "data/output/reels/edu-veo", "channel": "data/youtube/channel_es.json", "ytToken": "data/youtube/tokens/es.json" },
-        { "id": "sabi-en", "name": "Sabi Kids · English", "handle": "@SabiKidsEN", "kind": "edu-view", "lang": "en",
-          "desc": "Educational reels for kids (EN).", "filter": "reel_en",
-          "outputsDir": "data/output/reels/edu-veo", "channel": "data/youtube/channel_en.json", "ytToken": "data/youtube/tokens/en.json" },
-        { "id": "sabi-it", "name": "Sabi Kids · Italiano", "handle": "@SabiKidsIT", "kind": "edu-view", "lang": "it",
-          "desc": "Video educativi per bambini (IT).", "filter": "reel_it",
-          "outputsDir": "data/output/reels/edu-veo", "channel": "data/youtube/channel_it.json", "ytToken": "data/youtube/tokens/it.json" },
-        { "id": "sabi-zh", "name": "知宝 ZhiBao · 中文", "handle": "@ZhiBao", "kind": "edu-view", "lang": "zh",
-          "desc": "儿童早教视频（中文）。", "filter": "reel_zh",
-          "outputsDir": "data/output/reels/edu-veo", "channel": "data/youtube/channel_zh.json", "ytToken": "data/youtube/tokens/zh.json" }
+          "cmd": "npx tsx scripts/admin.ts sabikids {n}",
+          "filter": "reel_es",
+          "outputsDir": "data/output/reels/edu-veo",
+          "channel": "data/youtube/channel_es.json",
+          "ytToken": "data/youtube/tokens/es.json"
+        },
+        {
+          "id": "sabi-en",
+          "name": "Sabi Kids · English",
+          "handle": "@SabiKidsEN",
+          "kind": "edu-view",
+          "lang": "en",
+          "desc": "Educational reels for kids (EN).",
+          "filter": "reel_en",
+          "outputsDir": "data/output/reels/edu-veo",
+          "channel": "data/youtube/channel_en.json",
+          "ytToken": "data/youtube/tokens/en.json"
+        },
+        {
+          "id": "sabi-it",
+          "name": "Sabi Kids · Italiano",
+          "handle": "@SabiKidsIT",
+          "kind": "edu-view",
+          "lang": "it",
+          "desc": "Video educativi per bambini (IT).",
+          "filter": "reel_it",
+          "outputsDir": "data/output/reels/edu-veo",
+          "channel": "data/youtube/channel_it.json",
+          "ytToken": "data/youtube/tokens/it.json"
+        },
+        {
+          "id": "sabi-zh",
+          "name": "知宝 ZhiBao · 中文",
+          "handle": "@ZhiBao",
+          "kind": "edu-view",
+          "lang": "zh",
+          "desc": "儿童早教视频（中文）。",
+          "filter": "reel_zh",
+          "outputsDir": "data/output/reels/edu-veo",
+          "channel": "data/youtube/channel_zh.json",
+          "ytToken": "data/youtube/tokens/zh.json"
+        }
       ]
     }
   ]

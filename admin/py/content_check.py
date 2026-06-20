@@ -36,6 +36,8 @@ for g in REG["groups"]:
     for p in g["projects"]:
         tf = absf(p.get("ytToken", "")); conn = bool(tf and os.path.exists(tf))
         kind = p.get("kind", ""); name = p["id"]
+        if p.get("paused"):
+            print(f"{name:<26}{kind:<16}{'pausado':<22}⏸  en pausa (a propósito)"); continue
         if not conn:
             print(f"{name:<26}{kind:<16}{'—':<22}❌ SIN CONECTAR"); continue
         if kind == "faceless":
