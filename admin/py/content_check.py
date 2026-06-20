@@ -59,6 +59,10 @@ for g in REG["groups"]:
             note = f"{len(pend)} pendientes / {len(prods)} en backlog"
             if not prods: note = "SIN backlog (genera con gen-formats)"
             print(f"{name:<26}{kind:<16}{'cron: sabikids':<22}{mark} {note}")
+        elif kind == "music-sleep":
+            prods = products(p["outputsDir"], p.get("filter"))
+            pend = [f for f in prods if f not in done]
+            print(f"{name:<26}{kind:<16}{'auto-genera 8h':<22}✅ {len(pend)} listos · se auto-genera (cero Veo)")
         else:
             print(f"{name:<26}{kind:<16}{'?':<22}⚠️  kind no manejado por el cron")
 print("-"*92)

@@ -225,6 +225,23 @@
           "ytToken": "data/youtube/tokens/zh.json"
         }
       ]
+    },
+    {
+      "key": "dormir-bebes",
+      "title": "🌙 Dormir Bebés (sleep music, pantalla negra — auto-genera)",
+      "projects": [
+        {
+          "id": "dormir-bebes",
+          "name": "Dormir Bebés",
+          "handle": "",
+          "kind": "music-sleep",
+          "lang": "es",
+          "desc": "Sleep music: 1 pista en loop 8h, PANTALLA NEGRA. Auto-genera (cero Veo) + publica.",
+          "outputsDir": "data/output/dormir-bebes",
+          "channel": "data/youtube/channel_dormir-bebes.json",
+          "ytToken": "data/youtube/tokens/dormir-bebes.json"
+        }
+      ]
     }
   ]
 }

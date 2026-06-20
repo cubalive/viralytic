@@ -47,6 +47,14 @@ if sabi:
     else:
         print(f"== SabiKids backlog OK ({mins} mín por idioma), no hace falta generar")
 
+# Dormir Bebés: motor autónomo (pista en loop 8h, pantalla negra, cero Veo). Auto-genera si backlog < 2.
+SLEEP_MIN = 2
+for p in [pp for g in REG["groups"] for pp in g["projects"] if pp.get("kind") == "music-sleep" and not pp.get("paused")]:
+    if len(pend_of(p)) < SLEEP_MIN:
+        print(f"== auto-generando {p['id']} (8h, pantalla negra, cero Veo)")
+        r = run(["python", "py/gen_dormir_bebes.py", "8"])
+        print("  ", "ok" if r.returncode == 0 else f"err {r.stderr[-200:] if r.stderr else ''}")
+
 # Música real (Zuri/Vallenato): el motor NECESITA una canción; no se puede auto-crear.
 # Avisar cuando un canal de música se quede sin backlog (para subir canción / decidir AI-music).
 for g in REG["groups"]:
@@ -103,5 +111,18 @@ for g in REG["groups"]:
                 m = re.search(r'\{"id".*?\}', r.stdout or "")
                 if m:
                     j = json.loads(m.group(0)); CAL.append({"project": p["id"], "channel": p["name"], "file": f, "videoId": j["id"], "url": j["url"], "when": now.isoformat(), "privacy": j.get("privacy"), "title": os.path.basename(f)[:-4], "ts": now.isoformat()}); done_files.add(f); print("  publicado", f)
+        elif kind == "music-sleep":
+            # Dormir Bebés: publica 1/día desde el backlog, con el título SEO (es_title.txt).
+            lang = p.get("lang", "es")
+            pend = [f for f in products(p["outputsDir"], p.get("filter")) if f not in done_files]
+            for f in pend[:1]:
+                dd = os.path.dirname(f)
+                tfile = absf(os.path.join(dd, f"{lang}_title.txt"))
+                title = open(tfile, encoding="utf-8").read().strip() if os.path.exists(tfile) else "Dormir Bebes"
+                desc = absf(os.path.join(dd, f"{lang}_desc.txt")); tags = absf(os.path.join(dd, f"{lang}_tags.txt"))
+                r = run(["python", "py/yt_schedule.py", tf, absf(f), "now", lang, title, desc if os.path.exists(desc) else "-", tags if os.path.exists(tags) else "-", ""])
+                m = re.search(r'\{"id".*?\}', r.stdout or "")
+                if m:
+                    j = json.loads(m.group(0)); CAL.append({"project": p["id"], "channel": p["name"], "file": f, "videoId": j["id"], "url": j["url"], "when": now.isoformat(), "privacy": j.get("privacy"), "title": title, "ts": now.isoformat()}); done_files.add(f); print("  publicado", f)
 json.dump(CAL, open(CALF, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 print("DONE cron")
