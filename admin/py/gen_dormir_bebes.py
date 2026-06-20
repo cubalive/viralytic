@@ -57,8 +57,9 @@ cmd = [
     "-f", "lavfi", "-i", f"color=c=black:s=1920x1080:r=4",
     "-stream_loop", "-1", "-i", track,
     "-t", str(target),
+    "-vf", "lutyuv=y=0",  # NEGRO TOTAL Y=0 (TV se ve apagado, no negro limitado)
     "-c:v", "libx264", "-preset", "veryfast", "-tune", "stillimage",
-    "-pix_fmt", "yuv420p", "-color_range", "tv", "-g", "120",
+    "-pix_fmt", "yuv420p", "-color_range", "pc", "-g", "120",
     "-c:a", "aac", "-b:a", "160k",
     "-movflags", "+faststart",
     outf,
