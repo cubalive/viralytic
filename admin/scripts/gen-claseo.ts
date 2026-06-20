@@ -27,6 +27,13 @@ const poolDir = path.join(baseDir, '_pool');
 await ensureDir(poolDir);
 const esc = (s: string) => s.replace(/\\/g, '/').replace(/:/g, '\\:');
 const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 44);
+// Envuelve el subtítulo en máx 2 líneas balanceadas para que NUNCA se salga de la pantalla.
+const wrap2 = (s: string) => {
+  const w = (s || '').trim().split(/\s+/).filter(Boolean);
+  if (w.length <= 3) return w.join(' ');
+  const mid = Math.ceil(w.length / 2);
+  return w.slice(0, mid).join(' ') + '\n' + w.slice(mid).join(' ');
+};
 
 // Imágenes emotivas FACELESS (siluetas / espaldas / detalle) — reutilizables, esquivan filtro de rostros.
 const THEMES = [
@@ -96,10 +103,10 @@ async function renderOne(item: { theme: string; sub: string }, idx: number): Pro
     const segDur = Math.max(0.6, (i + 1 < times.length ? times[i + 1] : voiceDur) - times[i]);
     const img = pool[(off + i) % pool.length];
     const out = path.join(dir, `seg_${String(i).padStart(2, '0')}.mp4`);
-    const txt = out + '.txt'; await fsp.writeFile(txt, chunks[i] || '', 'utf8');
+    const txt = out + '.txt'; await fsp.writeFile(txt, wrap2(chunks[i] || ''), 'utf8');
     const frames = Math.max(1, Math.round(segDur * 30));
     const z = i % 2 === 0 ? `min(1.0+0.004*on,1.14)` : `max(1.15-0.004*on,1.02)`;
-    const draw = `drawtext=fontfile='${esc(config.fonts.latin)}':textfile='${esc(txt)}':fontcolor=white:fontsize=70:borderw=7:bordercolor=black@0.9:shadowcolor=black@0.5:shadowx=0:shadowy=3:x=(w-text_w)/2:y=h*0.72:line_spacing=10:alpha='if(lt(t,0.2),t/0.2,1)'`;
+    const draw = `drawtext=fontfile='${esc(config.fonts.latin)}':textfile='${esc(txt)}':fontcolor=white:fontsize=58:borderw=6:bordercolor=black@0.9:shadowcolor=black@0.5:shadowx=0:shadowy=3:x=(w-text_w)/2:y=h*0.70:line_spacing=12:alpha='if(lt(t,0.2),t/0.2,1)'`;
     const vf = `scale=1296:2304:force_original_aspect_ratio=increase,crop=1296:2304,zoompan=z='${z}':d=${frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,${draw}`;
     await ff(['-loop', '1', '-i', img, '-t', segDur.toFixed(2), '-vf', vf, '-r', '30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', out]);
     await fsp.unlink(txt).catch(() => {});
