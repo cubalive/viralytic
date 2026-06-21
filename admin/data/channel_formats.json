@@ -1,5 +1,5 @@
 {
-  "_note": "Receta de producción por canal: formato(s) de retención + sonido viral + reglas. Derivado de formats.json. Los motores y el estratega (format_select.py) la usan para la mejor producción por canal.",
+  "_note": "Receta de producción por canal: formato(s) + sonido viral + reglas. CANÓNICO: la biblioteca de formatos y el estratega viven en TypeScript: src/formats/library.ts (EDU_FORMATS ~25 + MUSIC_FORMATS ~15, con descartados recomendado_para:[]) + src/formats/selector.ts (selectEduFormats/selectMusicFormats = los prompts maestros) + gen-formats.ts/produce-edu-veo.ts (render edu por formato) + cli.ts (npm run brief). Este archivo es solo el mapa por-canal (la biblioteca es por tipo).",
   "channels": {
     "claseo": {
       "tipo": "women", "formatos": ["storytelling_emotivo", "texto_sobre_broll"], "sonido": "esperanzador",
