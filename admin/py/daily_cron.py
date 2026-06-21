@@ -21,7 +21,7 @@ def tok_access(t):
     d = urllib.parse.urlencode({"client_id": cid, "client_secret": cs, "refresh_token": t["refresh_token"], "grant_type": "refresh_token"}).encode()
     return json.load(urllib.request.urlopen("https://oauth2.googleapis.com/token", data=d, timeout=30))["access_token"]
 def isProduct(n):
-    return n in ("master_16x9.mp4", "video.mp4") or re.match(r"^(reel|short)_\d+\.mp4$", n) or re.match(r"^reel_(es|en|it|zh|pt|hi|pa)\.mp4$", n) or (not n.startswith("reel_") and re.search(r"_(ES|EN|ZH|IT|PT|HI|PA)\.mp4$", n))
+    return n in ("master_16x9.mp4", "video.mp4") or re.match(r"^(reel|short)_\d+(_[a-z0-9_]+)?\.mp4$", n) or re.match(r"^reel_(es|en|it|zh|pt|hi|pa)\.mp4$", n) or (not n.startswith("reel_") and re.search(r"_(ES|EN|ZH|IT|PT|HI|PA)\.mp4$", n))
 def products(dirr, filt):
     out = []; root = absf(dirr)
     for d, subs, fs in os.walk(root):
@@ -130,18 +130,38 @@ for g in REG["groups"]:
             # Solo se dispara una vez (en sabi-es, kind="edu"); los sabi-en/it/zh son "edu-view" (solo stats).
             run(["npx", "tsx", "scripts/admin.ts", "sabikids", "5"]); print("  sabikids pub 5/idioma desde backlog")
         elif kind in ("music-zuri", "music-vallenato"):
+            lang = p.get("lang", "es")
+            # Vallenato: generar los 7 reels de cada canción con master pero sin reels (necesita karaoke.ass)
+            if kind == "music-vallenato":
+                base = absf(p["outputsDir"])
+                for d in (os.listdir(base) if os.path.isdir(base) else []):
+                    sd = os.path.join(base, d)
+                    if not os.path.isdir(sd) or d.startswith("_"): continue
+                    fns = os.listdir(sd)
+                    if any(x in fns for x in ("video.mp4", "master_16x9.mp4")) and "karaoke.ass" in fns and not any(re.match(r"reel_\d", x) for x in fns):
+                        print(f"  generando reels de {d}…"); run(["npx", "tsx", "scripts/gen-vallenato-reels.ts", d])
             pend = [f for f in products(p["outputsDir"], p.get("filter")) if f not in done_files]
             reels = [f for f in pend if re.search(r"(reel|short)_\d", f)]; masters = [f for f in pend if f not in reels]
-            pub = reels[:2]
+            nreels = 3 if kind == "music-vallenato" else 2
+            pub = reels[:nreels]
             day_ok = (wd in (5, 2)) if kind == "music-zuri" else (wd in (0, 2, 4))  # sáb=5,mié=2 / lun-mié-vie
-            if day_ok and masters: pub = masters[:1] + reels[:2]
-            lang = p.get("lang", "es")
+            if day_ok and masters: pub = masters[:1] + reels[:nreels]
+            VPH = {"profundo": "💔 La frase que más duele", "coro": "🎶 El coro que se queda", "duele": "😢 La parte que duele", "karaoke": "🎤 Letra · Karaoke", "pregunta": "💭 ¿Te pasó?", "carta": "💌 Para alguien especial", "intro": "🪗 Estreno"}
             for f in pub:
                 dd = os.path.dirname(f); desc = absf(os.path.join(dd, f"{lang}_desc.txt")); tags = absf(os.path.join(dd, f"{lang}_tags.txt")); th = absf(os.path.join(dd, f"{lang}_thumb.png"))
-                r = run(["python", "py/yt_schedule.py", tf, absf(f), "now", lang, os.path.basename(f)[:-4], desc if os.path.exists(desc) else "-", tags if os.path.exists(tags) else "-", th if os.path.exists(th) else ""])
+                song = open(absf(os.path.join(dd, f"{lang}_title.txt")), encoding="utf-8").read().strip() if os.path.exists(absf(os.path.join(dd, f"{lang}_title.txt"))) else ""
+                short = open(absf(os.path.join(dd, "title.txt")), encoding="utf-8").read().strip() if os.path.exists(absf(os.path.join(dd, "title.txt"))) else song
+                rm = re.match(r"reel_\d+_([a-z]+)", os.path.basename(f))
+                if kind == "music-vallenato" and rm:
+                    title = (f"{VPH.get(rm.group(1), '🪗 Vallenato')} 🪗 {short} #Shorts")[:95] if short else (os.path.basename(f)[:-4] + " #Shorts")
+                elif kind == "music-vallenato" and os.path.basename(f) in ("video.mp4", "master_16x9.mp4") and song:
+                    title = song
+                else:
+                    title = os.path.basename(f)[:-4]
+                r = run(["python", "py/yt_schedule.py", tf, absf(f), "now", lang, title, desc if os.path.exists(desc) else "-", tags if os.path.exists(tags) else "-", th if os.path.exists(th) else ""])
                 m = re.search(r'\{"id".*?\}', r.stdout or "")
                 if m:
-                    j = json.loads(m.group(0)); CAL.append({"project": p["id"], "channel": p["name"], "file": f, "videoId": j["id"], "url": j["url"], "when": now.isoformat(), "privacy": j.get("privacy"), "title": os.path.basename(f)[:-4], "ts": now.isoformat()}); done_files.add(f); print("  publicado", f)
+                    j = json.loads(m.group(0)); CAL.append({"project": p["id"], "channel": p["name"], "file": f, "videoId": j["id"], "url": j["url"], "when": now.isoformat(), "privacy": j.get("privacy"), "title": title, "ts": now.isoformat()}); done_files.add(f); print("  publicado", f)
         elif kind == "music-sleep":
             # Dormir Bebés: publica 1/día desde el backlog, con el título SEO (es_title.txt).
             lang = p.get("lang", "es")
