@@ -31,6 +31,18 @@ const SCENES = [
   'the trio on a hilltop overlooking the glowing valley at sunset, seen from behind, wide shot',
   'the trio running happily down a flower-lined forest path, side view',
   'Zuri waving with a big smile, friends jumping behind, wide shot under lanterns',
+  'the trio playing in a colorful flower field with butterflies, wide shot, bright daylight',
+  'the trio sitting on a giant glowing flower, smiling, medium shot',
+  'Zuri blowing a glowing dandelion while her friends watch, medium shot',
+  'the trio looking up at a bright rainbow over the forest, seen from behind, wide shot',
+  'the trio having a picnic on a checkered blanket in a sunny clearing, wide shot',
+  'Zuri peeking playfully from behind a big tree while her friends laugh, medium shot',
+  'the trio swinging on vine swings, joyful, wide shot',
+  'the trio in a warm happy group hug, medium shot',
+  'Zuri spinning with glowing ribbons while her friends cheer, wide shot',
+  'the trio crossing stepping stones over a sparkling stream, side view',
+  'the trio waving at colorful forest birds under a bright sky, wide shot',
+  'Zuri leading her friends in a happy march with music notes around, wide shot, daylight',
 ];
 
 let made = 0;
